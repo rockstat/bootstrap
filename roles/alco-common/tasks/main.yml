@@ -1,0 +1,80 @@
+---
+- debug:
+    msg: 'ansible_hostname:{{ansible_hostname}} inventory_hostname:{{inventory_hostname}} inventory_hostname_short:{{inventory_hostname_short}}'
+
+- debug:
+    msg: 'alco_docker_ip:{{alco_docker_ip}} alco_docker_netmask:{{alco_docker_netmask}} alco_docker_network:{{alco_docker_network}}'
+
+- name: Updating apt repos
+  apt: update_cache=yes
+  become: yes
+
+- name: Dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - python-dev
+    - git
+    - python-pip
+    - python-setuptools
+    - gzip
+    - unzip
+    - curl
+    - wget
+    - software-properties-common
+    - apt-transport-https
+    - ufw
+
+- name: Locale
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
+  become: yes
+
+- name: Updating locale
+  command: update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+  become: yes
+
+- name: Seting timezone to UTC
+  timezone:
+    name: Etc/UTC
+  become: yes
+
+- name: Installing ntp
+  apt: name=ntp state=present
+  become: yes
+
+- name: Creating alco user
+  user: name={{alco_user}} groups=sudo shell=/bin/bash
+  become: yes
+
+
+- name: Updating sudoers
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^{{alco_user}}'
+    line: '{{alco_user}} ALL=(ALL) NOPASSWD: ALL'
+  become: yes
+
+
+- name: Set authorized key took from file
+  authorized_key:
+    user: "{{alco_user}}"
+    state: present
+    key: '{{ item }}'
+  with_file:
+    - "{{alco_key_file}}"
+
+- name: Update /etc/hosts
+  lineinfile: dest=/etc/hosts regexp='.*\#ansible_line$' line='127.0.0.1    {{ inventory_hostname_short|default(inventory_hostname) }} \#ansible_line' state=present
+  tags: ['hostname']
+
+- name: Changing hostname to match inventory_hostname_short(inventory_hostname)
+  hostname:
+    name: "{{ inventory_hostname_short|default(inventory_hostname) }}"
+  register: "hostname_status"
+  when: ansible_hostname != inventory_hostname_short|default(inventory_hostname)
+  ignore_errors: yes
+  tags: ['hostname']
+
+- import_tasks: ufw.yml
+  tags: ['ufw']

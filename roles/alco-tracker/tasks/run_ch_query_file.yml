@@ -1,0 +1,7 @@
+- command: 'cat alco-tracker/docs/{{file}}.sql'
+  register: query
+
+- name: "Running {{file}} queries"
+  command: "clickhouse-client -h localhost -d {{ alco_db_name }}"
+  args:
+    stdin: "{{ query.stdout }}"

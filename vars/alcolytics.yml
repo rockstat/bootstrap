@@ -1,0 +1,32 @@
+
+alco_user: alco
+alco_key_file: './public_keys/{{action_user}}.pub'
+alco_home_dir: '/home/{{action_user}}'
+alco_home: '/home/{{action_user}}'
+
+action_user: '{{alco_user}}'
+
+# Default initial user
+initial_user: root
+
+# Docker
+alco_docker_ip: 172.16.25.1
+alco_docker_net: 172.16.25.1/24
+alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
+alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
+
+alco_docker_net_name: alconet
+alco_docker_interface: docker1
+
+# ClickHouse
+alco_db_name: alco
+alco_db_pass: alco
+alco_ch_port: 8123
+alco_ch_proxy_port: 9090
+
+# Email config
+alco_email_from: "Alcolytics Setup <hello@alcolytics.ru>"
+alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
+alco_email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
+send_email: false
+

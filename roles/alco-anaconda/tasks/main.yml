@@ -1,0 +1,33 @@
+- set_fact:
+    anaconda_run_cmd: /opt/conda/bin/conda install jupyter -y --quiet && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''
+
+- name: Creating Anaconda container
+  docker_container:
+    name: anaconda
+    hostname: anaconda
+    recreate: yes
+    state: started
+    pull: true
+    restart: yes
+    restart_policy: always
+    memory: '{{anaconda_docker_memory_limit}}'
+    image: continuumio/anaconda3
+    purge_networks: yes
+    networks:
+      - name: '{{anaconda_docker_net_name}}'
+    exposed_ports:
+      - 8888
+    ports:
+      - '{{anaconda_docker_bind_addr}}:{{anaconda_docker_port}}:{{anaconda_docker_port}}'
+    volumes:
+      - /srv/jupyter:/opt/notebooks
+    command: '/bin/bash -c "{{anaconda_run_cmd}}"'
+
+
+- name: Cloning Simple ClickHouse repo
+  git:
+    repo: https://github.com/alcolytics/simple-clickhouse.git
+    dest: /srv/jupyter/simple-clickhouse
+  ignore_errors: true
+  become: yes
+

@@ -1,0 +1,17 @@
+---
+letsencrypt_email: main@example.com
+letsencrypt_domain: example.com
+letsencrypt_certbot_version: v0.21.1
+letsencrypt_certbot_verbose: true
+letsencrypt_pause_services: []
+letsencrypt_force_renew: true
+letsencrypt_certbot_args: []
+letsencrypt_certbot_default_args:
+  - certonly
+  - --standalone
+  - --expand
+  - --text
+  - -n
+  - --no-self-upgrade
+  - -m '{{letsencrypt_email}}'
+  - --agree-tos

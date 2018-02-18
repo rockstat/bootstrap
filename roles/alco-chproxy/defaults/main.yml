@@ -1,0 +1,23 @@
+---
+chproxy_docker_bind_addr_default: 127.0.0.1
+chproxy_docker_http_allow_net: 127.0.0.0/24
+chproxy_docker_net_name: bridge
+chproxy_ch_port_default: 8123
+chproxy_ch_addr_default: 127.0.0.1
+chproxy_port_default: 9090
+chproxy_users_default:
+  - name: '{{alco_db_name}}'
+    password: '{{alco_db_pass}}'
+    allow_cors: true
+    to_cluster: "default"
+    to_user: "default"
+    max_concurrent_queries: 2
+    max_queue_size: 100
+    max_queue_time: "30s"
+    max_execution_time: "30s"
+
+chproxy_clusters_default:
+  - name: "default"
+    nodes:
+      - "{{ chproxy_ch_addr|default(chproxy_ch_addr_default) }}:{{chproxy_ch_port|default(chproxy_ch_port_default)}}"
+

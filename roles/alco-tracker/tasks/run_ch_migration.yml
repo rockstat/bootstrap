@@ -1,0 +1,18 @@
+- name: "Checking {{migration.name}} migration"
+  command: "clickhouse-client -h localhost -d {{ alco_db_name }}"
+  args:
+    stdin: "SELECT name FROM migrations WHERE name = '{{migration.name}}'"
+  register: check
+
+- name: "Running {{migration.name}} query"
+  command: 'clickhouse-client -h localhost -d {{ alco_db_name }}'
+  args:
+    stdin: "{{item}}"
+  with_items: '{{migration.queries}}'
+  when: check.stdout == ''
+
+- name: "Inserting {{migration.name}} query"
+  command: 'clickhouse-client -h localhost -d {{ alco_db_name }}'
+  args:
+    stdin: "INSERT INTO migrations (name) VALUES('{{migration.name}}')"
+  when: check.stdout == ''

@@ -1,0 +1,20 @@
+- name: Creating Grafana container
+  docker_container:
+    name: grafana
+    hostname: grafana
+    state: started
+    recreate: yes
+    pull: true
+    restart: yes
+    restart_policy: always
+    image: grafana/grafana #:4.6.3
+    env:
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource,vertamedia-clickhouse-datasource,grafana-piechart-panel,petrslavotinek-carpetplot-panel,jdbranham-diagram-panel,raintank-worldping-app
+    purge_networks: yes
+    networks:
+      - name: '{{ gragana_docker_net_name }}'
+    volumes:
+      - /srv/grafana:/var/lib/grafana
+    ports:
+      - '{{ grafana_docker_bind_addr }}:3000:3000'
+  tags: ['grafana']

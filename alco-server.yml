@@ -1,0 +1,46 @@
+---
+- name: Preparing system for Alcolytics
+  hosts: alco
+  remote_user: '{{initial_user}}'
+  become: yes
+  vars_files:
+    - 'vars/alcolytics.yml'
+  tasks:
+    - import_role:
+        name: alco-common
+      vars:
+      tags: ['common']
+
+    - import_role:
+        name: jaywink.letsencrypt
+      vars:
+        letsencrypt_domain: "{{ tracker_domain }}"
+        letsencrypt_request_www: false
+        letsencrypt_email: "{{ contact_email }}"
+        letsencrypt_pause_services: ['nginx']
+      tags: ['ssl']
+
+    - import_role:
+        name: jdauphant.nginx
+      vars_file:
+        - 'vars/nginx.yml'
+      tags: ['nginx']
+
+    - import_role:
+        name: alco-docker
+      vars:
+      tags: ['docker']
+
+    - import_role:
+        name: alco-clickhouse
+      vars:
+        clickhouse_networks_default: ["::1", "127.0.0.1", "{{ alco_docker_net }}"]
+        clickhouse_dbs_custom: [{name: '{{alco_db_name}}'}]
+        clickhouse_path_data: "/srv/clickhouse/"
+        clickhouse_path_tmp: "/srv/clickhouse/tmp/"
+      tags: ['clickhouse']
+
+    - import_role:
+        name: alco-netdata
+      vars:
+      tags: ['netdata']

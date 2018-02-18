@@ -1,0 +1,19 @@
+---
+- name: Preparing system for Ansible
+  hosts: all
+  gather_facts: false
+  serial: 1
+  become: yes
+  remote_user: '{{initial_user}}'
+  vars_files:
+    - 'vars/alcolytics.yml'
+  vars:
+    alco_key: "{{ lookup('file', alco_key_file) }}"
+    keys_file: ~/.ssh/authorized_keys
+  pre_tasks:
+    - name: Install python for Ansible
+      register: output
+      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      changed_when: output.stdout != ""
+    - name: Copy key
+      raw: 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && grep -qF "{{alco_key}}" {{keys_file}} || echo "{{alco_key}}" >> {{keys_file}}'

@@ -1,0 +1,13 @@
+- name: stop service
+  systemd:
+    name: netdata
+    state: stopped
+  when: netdata_present.stat.exists == True
+
+- name: start and enable
+  systemd:
+    name: netdata
+    state: started
+    enabled: yes
+    daemon_reload: yes
+

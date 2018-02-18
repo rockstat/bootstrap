@@ -1,0 +1,35 @@
+Йо!
+Для вашего проекта сгенерирован установочный код:
+
+<script type="text/javascript">
+  !function (win, doc, stag, shost, alco, el, head) {
+    if(win.alco) return;
+    alco = win.alco = function () {
+      var args = Array.prototype.slice.call(arguments);
+      alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
+    };
+    alco.push = alco;
+    alco.loaded = !0;
+    alco.snippet = 1;
+    alco.queue = [];
+    alco.server = 'https://' + shost;
+    alco.load = function (src) {
+      el = doc.createElement(stag);
+      el.async = !0;
+      el.src = src;
+      head = doc.getElementsByTagName(stag)[0];
+      head.parentNode.insertBefore(el, head);
+    };
+    alco.load(alco.server + '/lib.js');
+  }(window, document, 'script', '{{ tracker_domain }}');
+  alco('configure', {
+    projectId: 1
+  });
+  alco('page');
+</script>
+
+
+Крайне рекомендуется установить его перед </head>, но на крайняк на первое время можно воткнуть и через GTM.
+Можете обратить внимание, сниппет грузит данные с вашего сервера alcolytics и по https.
+
+Если возникнуть вопросы, можете задать их тут: hello@alcolytics.ru
