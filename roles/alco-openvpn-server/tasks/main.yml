@@ -101,7 +101,7 @@
 - name: Sending client cert to email
   command: >
     curl -s --user 'api:{{mailgun_api_key}}' https://api.mailgun.net/v3/alcolytics.ru/messages
-        -F from={{alco_email_from|quote}}
+        -F from={{mailgun_sender|quote}}
         -F to={{contact_email|quote}}
         -F subject={{alco_email_subj_key|quote}}
         -F text={{lookup('template', 'vpn_email.j2')|quote}}
@@ -110,7 +110,7 @@
         -F attachment=@{{ovpn_keys_dir}}/alco_user3.ovpn
         -F attachment=@{{ovpn_keys_dir}}/alco_user4.ovpn
         -F attachment=@{{ovpn_keys_dir}}/alco_user5.ovpn
-  when: mailgun_api_key is defined and send_email == True
+  when: mailgun_api_key is defined and send_email == 'yes'
   args:
     warn: false
   tags: ['ovpn_email']

@@ -1,3 +1,4 @@
+playbook_version: 1.1.1
 
 alco_user: alco
 alco_key_file: './public_keys/{{action_user}}.pub'
@@ -6,17 +7,15 @@ alco_home: '/home/{{action_user}}'
 
 action_user: '{{alco_user}}'
 
-# Default initial user
-initial_user: root
-
 # Docker
-alco_docker_ip: 172.16.25.1
-alco_docker_net: 172.16.25.1/24
-alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
-alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
-
 alco_docker_net_name: alconet
 alco_docker_interface: docker1
+alco_docker_net: 172.16.25.1/24
+alco_docker_ip: "{{alco_docker_net|ipaddr('address')}}"
+alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
+alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
+alco_docker_user: '{{alco_user}}'
+
 
 # ClickHouse
 alco_db_name: alco
@@ -25,8 +24,47 @@ alco_ch_port: 8123
 alco_ch_proxy_port: 9090
 
 # Email config
-alco_email_from: "Alcolytics Setup <hello@alcolytics.ru>"
+mailgun_sender: "Alcolytics Setup <hello@alcolytics.ru>"
 alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
 alco_email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
 send_email: false
 
+alco_nginx_http_params:
+  - access_log off
+  - error_log /var/log/nginx/error.log
+  - tcp_nopush on
+  - tcp_nodelay on
+  - keepalive_timeout 60
+  - keepalive_requests 1000
+  - access_log "/var/log/nginx/access.log"
+
+alco_vhost_default:
+  - listen 80 default_server
+  - server_name _
+  - return 301 https://$host$request_uri
+
+alco_vhost_tracker:
+  - server_name {{tracker_domain}}
+  - listen 443 ssl http2
+  - ssl_certificate_key /etc/letsencrypt/live/{{tracker_domain}}/privkey.pem
+  - ssl_certificate     /etc/letsencrypt/live/{{tracker_domain}}/cert.pem
+  - add_header 'Cache-Control' 'no-store, must-revalidate'
+  - expires off
+  - root {{alco_home_dir}}/alco-tracker/public
+  - location / { try_files $uri $uri/index.html @node; }
+  - location @node {
+      proxy_redirect   off;
+      proxy_buffering  off;
+      proxy_set_header Host             $host;
+      proxy_set_header X-Real-IP       $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_pass       http://alco-tracker;
+    }
+
+alco_config_gzip:
+  - gzip on
+  - gzip_min_length 10240
+  - gzip_proxied expired no-cache no-store private auth
+  - gzip_types text/plain text/css text/javascript application/javascript application/x-javascript
+
+alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 weight=10; }'

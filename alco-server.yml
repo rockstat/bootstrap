@@ -1,7 +1,7 @@
 ---
 - name: Preparing system for Alcolytics
   hosts: alco
-  remote_user: '{{initial_user}}'
+  remote_user: '{{ initial is defined|ternary(initial_user is defined|ternary(initial_user, "root"), alco_user) }}'
   become: yes
   vars_files:
     - 'vars/alcolytics.yml'
@@ -12,23 +12,32 @@
       tags: ['common']
 
     - import_role:
-        name: jaywink.letsencrypt
+        name: alco-letsencrypt
       vars:
-        letsencrypt_domain: "{{ tracker_domain }}"
-        letsencrypt_request_www: false
-        letsencrypt_email: "{{ contact_email }}"
+        letsencrypt_domains_groups:
+          - email: '{{contact_email}}'
+            domains: ['{{tracker_domain}}']
         letsencrypt_pause_services: ['nginx']
       tags: ['ssl']
 
     - import_role:
         name: jdauphant.nginx
-      vars_file:
-        - 'vars/nginx.yml'
+      vars:
+        nginx_official_repo: yes
+        keep_only_specified: yes
+        nginx_http_params: '{{alco_nginx_http_params}}'
+        nginx_sites:
+          default: '{{alco_vhost_default}}'
+          tracker: '{{alco_vhost_tracker}}'
+        nginx_configs:
+          gzip: '{{alco_config_gzip}}'
+          upstream:
+            - '{{alco_upstream_tracker}}'
+
       tags: ['nginx']
 
     - import_role:
         name: alco-docker
-      vars:
       tags: ['docker']
 
     - import_role:

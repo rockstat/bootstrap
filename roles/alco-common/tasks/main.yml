@@ -15,6 +15,7 @@
     - python-dev
     - git
     - python-pip
+    - python-pkg-resources
     - python-setuptools
     - gzip
     - unzip

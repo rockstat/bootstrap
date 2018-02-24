@@ -3,6 +3,7 @@
   git:
     repo: https://github.com/alcolytics/alco-tracker.git
     force: yes
+    version: HEAD
     dest: ./alco-tracker
 
 
@@ -73,15 +74,20 @@
 
 - set_fact:
     snippet: "{{ lookup('template', 'snippet.j2') }}"
+  tags: ['tracker_email']
+
+- debug:
+    msg: 'mailgun_api_key: {{mailgun_api_key}} send_email:{{send_email}} contact_email:{{contact_email}}'
+  tags: ['tracker_email']
 
 - name: Sending email with snippet
   command: |
     curl -s --user 'api:{{mailgun_api_key}}' https://api.mailgun.net/v3/alcolytics.ru/messages
-        -F from={{alco_email_from|quote}}
+        -F from={{mailgun_sender|quote}}
         -F to={{contact_email|quote}}
         -F subject={{alco_email_subj_snip|quote}}
         -F text={{ snippet|quote }}
-  when: mailgun_api_key is defined and send_email == True
+  when: mailgun_api_key is defined and send_email == 'yes'
   args:
     warn: false
-  tags: ['email']
+  tags: ['tracker_email']

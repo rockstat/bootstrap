@@ -40,63 +40,89 @@ Ansible playbook для автоматической установки Alcolyti
     locale-gen en_US.UTF-8
     export LANG=en_US.UTF-8
     export LC_ALL=en_US.UTF-8
-    
-Загрузка и запуск скрипта установки
-    
-    # dev git clone git@github.com:madiedinro/alco-boostrap.git
-    git clone https://github.com/madiedinro/alco-boostrap.git
-    cd alco-boostrap
+ 
+Загрузка скрипта установки
+        
+    cd ~
+    git clone https://github.com/alcolytics/alco-bootstrap          
+
+Генерация ssh ключа
+
+    cd ~
+    ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
+    cp alco.pub alco-boostrap/public_keys
+    mv alco* ~/.ssh/
     
 Ниже есть блок поо создание файла инвентаря, сделайте это. 
 Запуск процесса установки
     
-    ansible-playbook alco-server.yml --connection=local
-    
-    ansible-playbook alco-platform.yml --connection=local
+    cd ~/alco-boostrap
+    ansible-playbook alco.yml --connection=local
 
 ## С другого компьюетра
 
-Установите ansible и python-netaddr при помощи используемого менеджера пакетов.
-Ниже есть блок поо создание файла инвентаря, сделайте это.    
+Установите ansible и python-netaddr при помощи используемого в вашей ОС менеджера пакетов.
+Ниже есть блок про создание файла инвентаря, сделайте это.
 
-Запуск процесса установки. Если вход по паролю, добавьте ` --ask-pass`
+**Установка необходимых зависимостей Ansible.** 
+
+Дополнительно, при первой установке:
+
+* Если авторизация на сервере по паролю, добавьте ` --ask-pass`
+* Если вашему пользователю требуется авторизация для `sudo`, добавьте `--ask-become-pass`
     
-    ansible-playbook alco-server-initial.yml
-    
-Если запускаете первый раз, то добавьте `-u <дефолтовый пользователь на сервере>`
-    
-    ansible-playbook alco-server.yml
-    
-    ansible-playbook alco-platform.yml
+
+    ansible-playbook ansible-requirement.yml
+
+
+**Установка системы**
+
+Загрузка скрипта установки
+        
+    cd ~
+    git clone https://github.com/alcolytics/alco-bootstrap      
+
+Генерация ssh ключа
+
+    cd ~
+    ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
+    cp alco.pub alco-boostrap/public_keys
+    mv alco* ~/.ssh/
+
+
+Дополнительно, при первой установке:
+
+* Добавьте `-e "initial=yes"`.
+* Если авторизация на сервере по паролю, добавьте ` --ask-pass`
+* Если вашему пользователю требуется авторизация для `sudo`, добавьте `--ask-become-pass`
+
+
+    ansible-playbook alco.yml
+
 
 ## Создание файла инвентаря
 
 Создайте файл `inventory/all`
 
     [alcogroup]
-    alcostat ansible_host=<домен трекера> initial_user=root
-    
+    alcostat ansible_host=<домен трекера>
     
     [alcogroup:vars]
     mixpanel_token=<токен mixpanel, если есть>
     tracker_domain=<домен трекера>
     contact_email=<контактная почта>
     
-    
     [alco:children]
     alcogroup
     
     
     [alco:vars]
-    
-    # Ключ от сервиса mailgun. Если поставить, на почту придут все данные
-    mailgun_api_key:
-    # Что-то вроде "Alcolytics Setup <hello@alcolytics.ru>" но на своем домене
-    alco_email_from_custom: <почта с домена в mailgun>
-    
-Помимо этого сгенерируйте SSH ключ и положите его публичную часть в public_keys/alco.pub
-    
-    
+    # Ключ от сервиса mailgun, если есть.
+    # Обычным пользователям это не нужно. Используется при поддержке нескольких серверов и требует доп настройки. 
+    #mailgun_api_key:
+    #mailgun_sender: <Alcolytics Setup <hello@alcolytics.ru> 
+        
+
 ## Вопросы и общение
 
 * Канал в telegram https://t.me/alcolytic

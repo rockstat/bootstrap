@@ -1,0 +1,20 @@
+
+- set_fact:
+    letsencrypt_certbot_combined_args: "{{letsencrypt_certbot_renew + letsencrypt_certbot_default_args + letsencrypt_certbot_args}}"
+    letsencrypt_certbot_domains: " -m '{{item.email}}' {% for domain in item.domains %} -d {{domain}} {% endfor %}"
+
+- name: Obtain or renew cert for domain
+  shell: ./certbot-auto {{(letsencrypt_certbot_combined_args + [letsencrypt_certbot_domains])|join(' ')}} 2>&1
+  args:
+    chdir: /opt/certbot
+    executable: /bin/bash
+  ignore_errors: true
+  register: _certbot_command
+
+- set_fact: _signing_successful='{{ certbot_success_message in _certbot_command.stdout }}'
+
+- set_fact: _signing_skipped='{{ (certbot_skip_renewal_message in _certbot_command.stdout) and not letsencrypt_force_renew }}'
+
+- debug: msg="{{ (_certbot_command.stdout_lines if _certbot_command.stdout_lines is defined else _certbot_command.stderr_lines) | pprint }}"
+  when: letsencrypt_certbot_verbose or ((not _signing_successful) and not _signing_skipped)
+
