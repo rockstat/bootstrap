@@ -1,3 +1,5 @@
 alco_service_net_name: bridge
 alco_service_bind_addr: 127.0.0.1
 alco_service_tracker_port: 8081
+alco_service_path: ./alco-tracker
+alco_service_version: master

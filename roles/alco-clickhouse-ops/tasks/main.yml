@@ -1,0 +1,6 @@
+---
+- name: Running ClickHouse tasks
+  include_tasks: 'run_ch_{{op.type}}.yml'
+  loop_control:
+    loop_var: op
+  with_items: '{{alco_ch_ops_list}}'

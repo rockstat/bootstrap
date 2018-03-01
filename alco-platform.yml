@@ -2,15 +2,13 @@
 # https://github.com/jaywink/ansible-letsencrypt
 ---
 - name : Installing Alcolytics
-  hosts: alco
+  hosts: all
   remote_user: '{{alco_user}}'
-  vars_files:
-    - 'vars/alcolytics.yml'
   tasks:
     - import_role:
         name: alco-openvpn-server
       vars:
-        ovpn_keys_dir: '{{alco_home_dir}}/ovpn_keys'
+        ovpn_keys_dir: '{{ovpn_keys_dir}}'
         ovpn_docker_net_name: '{{alco_docker_net_name}}'
         ovpn_docker_network: '{{alco_docker_network}}'
         ovpn_docker_netmask: '{{alco_docker_netmask}}'
@@ -51,4 +49,14 @@
       vars:
         alco_service_bind_addr: '{{alco_docker_ip}}'
         alco_service_net_name: '{{alco_docker_net_name}}'
+        alco_service_path: '{{alco_tracker_path}}'
+        alco_service_version: '{{alco_tracker_branch}}'
       tags: ['tracker']
+
+    - import_role:
+        name: alco-clickhouse-ops
+      vars:
+        alco_ch_ops_list: '{{ch_operations}}'
+        alco_ch_ops_host: '127.0.0.1'
+        alco_ch_ops_db: '{{alco_db_name}}'
+      tags: ['ch-schema']

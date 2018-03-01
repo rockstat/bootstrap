@@ -1,0 +1,30 @@
+
+- name: 'Preparing migration {{use_name}}'
+  set_fact:
+    use_name: '{{op.name|default(op.file)|splitext|first}}'
+
+- name: Checking migration
+  command: "clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}"
+  args:
+    stdin: "SELECT name FROM migrations WHERE name = '{{use_name}}'"
+  register: check
+
+- name: Reading migration file
+  command: 'cat {{op.file}}'
+  register: queries
+  when: check.stdout == ''
+
+- name: Running migration
+  command: 'clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}'
+  args:
+    stdin: "{{query}}"
+  with_items: '{{queries.stdout|from_yaml}}'
+  loop_control:
+    loop_var: query
+  when: check.stdout == ''
+
+- name: Saving migration info
+  command: 'clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}'
+  args:
+    stdin: "INSERT INTO migrations (name) VALUES('{{use_name}}')"
+  when: check.stdout == ''

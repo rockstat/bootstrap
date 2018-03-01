@@ -30,7 +30,9 @@ Ansible playbook для автоматической установки Alcolyti
 
 Устновите минимальные необходимые зависимости
 
-    apt -y update && apt install -y python-minimal python-pip python-netaddr git locales
+    apt -y update
+    
+    apt install -y python-minimal python-pip python-netaddr git locales
     
     pip install ansible
     
@@ -44,23 +46,24 @@ Ansible playbook для автоматической установки Alcolyti
 Загрузка скрипта установки
         
     cd ~
-    git clone https://github.com/alcolytics/alco-bootstrap          
+    git clone https://github.com/alcolytics/alco-bootstrap
 
 Генерация ssh ключа
 
     cd ~
     ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
-    cp alco.pub alco-boostrap/public_keys
+    cp alco.pub alco-bootstrap /public_keys
     mv alco* ~/.ssh/
     
-Ниже есть блок поо создание файла инвентаря, сделайте это. 
+Ниже есть блок про создание файла инвентаря, сделайте это. 
 Запуск процесса установки
     
-    cd ~/alco-boostrap
+    cd ~/alco-bootstrap 
     ansible-playbook alco.yml --connection=local
 
 ## С другого компьюетра
 
+Подразумевается что у вас Linix/MacOS.
 Установите ansible и python-netaddr при помощи используемого в вашей ОС менеджера пакетов.
 Ниже есть блок про создание файла инвентаря, сделайте это.
 
@@ -86,9 +89,11 @@ Ansible playbook для автоматической установки Alcolyti
 
     cd ~
     ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
-    cp alco.pub alco-boostrap/public_keys
+    cp alco.pub alco-bootstrap/public_keys
     mv alco* ~/.ssh/
 
+
+    cd ~/alco-bootstrap 
 
 Дополнительно, при первой установке:
 
@@ -102,26 +107,43 @@ Ansible playbook для автоматической установки Alcolyti
 
 ## Создание файла инвентаря
 
-Создайте файл `inventory/all`
+Создайте файл `inventory/priv_all`
 
-    [alcogroup]
+    [priv_all]
     alcostat ansible_host=<домен трекера>
     
-    [alcogroup:vars]
+    [priv_all:vars]
     mixpanel_token=<токен mixpanel, если есть>
     tracker_domain=<домен трекера>
     contact_email=<контактная почта>
     
-    [alco:children]
-    alcogroup
-    
-    
-    [alco:vars]
     # Ключ от сервиса mailgun, если есть.
     # Обычным пользователям это не нужно. Используется при поддержке нескольких серверов и требует доп настройки. 
     #mailgun_api_key:
     #mailgun_sender: <Alcolytics Setup <hello@alcolytics.ru> 
         
+    [alco:children]
+    priv_all
+
+
+## Установка счетчика на сайт
+
+Обращайтесь к докам AlcoJS:
+
+* Репозиторий: https://github.com/alcolytics/alcojs
+* Документации: https://alco.readme.io/docs/js-api
+* Актуальный сниппет: https://github.com/alcolytics/alcojs/blob/master/snippet
+
+## Кастомизация конфигурации
+
+Вы можете поменять переобъявить любой из доступных параметров скрипта установки. 
+Для этого создайте файл `group_vars/priv_group`, где `gre`
+Базовый список это сама по себе дефолтовая конфигурация `group_vars/all`.
+Полный список доступных параметров можно найти в `roles/*/defaults/*` 
+
+## Изоляция данных, на случай если захотите что-нибудь комитнуть
+
+Монархически принято решение: файлы из group_vars и inventory следует именовать с префиксом priv, дабы не разводить бадак в .gitignore  
 
 ## Вопросы и общение
 

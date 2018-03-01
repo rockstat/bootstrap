@@ -1,0 +1,35 @@
+
+- name: Sending client cert to email
+  command: >
+    curl -s --user 'api:{{alco_email_mailgun_key}}' https://api.mailgun.net/v3/alcolytics.ru/messages
+        -F from={{alco_email_sender|quote}}
+        -F to={{alco_email_to|quote}}
+        -F subject={{alco_email_subj_key|quote}}
+        -F text={{lookup('template', 'vpn_email.j2')|quote}}
+        -F attachment=@{{alco_email_ovpn_keys_dir}}/alco_user1.ovpn
+        -F attachment=@{{alco_email_ovpn_keys_dir}}/alco_user2.ovpn
+        -F attachment=@{{alco_email_ovpn_keys_dir}}/alco_user3.ovpn
+        -F attachment=@{{alco_email_ovpn_keys_dir}}/alco_user4.ovpn
+        -F attachment=@{{alco_email_ovpn_keys_dir}}/alco_user5.ovpn
+  when: alco_email_mailgun_key is defined and alco_email_enabled == 'yes'
+  args:
+    warn: false
+  tags: ['ovpn']
+
+
+- set_fact:
+    snippet: "{{ lookup('template', 'snippet.j2') }}"
+  tags: ['tracker_email']
+
+
+- name: Sending email with snippet
+  command: |
+    curl -s --user 'api:{{alco_email_mailgun_key}}' https://api.mailgun.net/v3/alcolytics.ru/messages
+        -F from={{alco_email_sender|quote}}
+        -F to={{alco_email_to|quote}}
+        -F subject={{alco_email_subj_snip|quote}}
+        -F text={{ snippet|quote }}
+  when: alco_email_mailgun_key is defined and alco_email_enabled == 'yes'
+  args:
+    warn: false
+  tags: ['tracker']

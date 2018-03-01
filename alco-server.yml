@@ -1,10 +1,8 @@
 ---
 - name: Preparing system for Alcolytics
-  hosts: alco
+  hosts: all
   remote_user: '{{ initial is defined|ternary(initial_user is defined|ternary(initial_user, "root"), alco_user) }}'
   become: yes
-  vars_files:
-    - 'vars/alcolytics.yml'
   tasks:
     - import_role:
         name: alco-common
@@ -33,7 +31,6 @@
           gzip: '{{alco_config_gzip}}'
           upstream:
             - '{{alco_upstream_tracker}}'
-
       tags: ['nginx']
 
     - import_role:

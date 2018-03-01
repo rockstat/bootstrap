@@ -1,4 +1,4 @@
-playbook_version: 1.1.1
+playbook_version: 1.2.0
 
 alco_user: alco
 alco_key_file: './public_keys/{{action_user}}.pub'
@@ -16,6 +16,8 @@ alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
 alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
 alco_docker_user: '{{alco_user}}'
 
+# OVPN
+ovpn_keys_dir: '{{alco_home}}/ovpn_keys'
 
 # ClickHouse
 alco_db_name: alco
@@ -24,10 +26,13 @@ alco_ch_port: 8123
 alco_ch_proxy_port: 9090
 
 # Email config
-mailgun_sender: "Alcolytics Setup <hello@alcolytics.ru>"
-alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
-alco_email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
+email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
+email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
 send_email: false
+
+# Tracker
+alco_tracker_path: '{{alco_home}}/alco-tracker'
+alco_tracker_branch: master
 
 alco_nginx_http_params:
   - access_log off
@@ -68,3 +73,30 @@ alco_config_gzip:
   - gzip_types text/plain text/css text/javascript application/javascript application/x-javascript
 
 alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 weight=10; }'
+
+
+# Migrations
+
+ch_path: '{{alco_tracker_path}}/clickhouse_schema'
+ch_operations:
+  - type: query_file
+    file: '{{ch_path}}/table_events.sql'
+
+  - type: query_file
+    file: '{{ch_path}}/table_migrations.sql'
+
+  - type: query_file
+    file: '{{ch_path}}/table_webhooks.sql'
+
+  - type: migration
+    file: '{{ch_path}}/migration1_user_id_traits_and_page_num.yml'
+    name: user_id_traits_and_page_num
+
+  - type: migration
+    file: '{{ch_path}}/migration2_session_pagenum_and_eventnum.yml'
+    name: session_pageNum_and_eventNum
+
+  - type: migration
+    file: '{{ch_path}}/migration3_new_fields_cf_perf_scroll_page.yml'
+
+

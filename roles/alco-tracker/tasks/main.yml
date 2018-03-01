@@ -3,15 +3,18 @@
   git:
     repo: https://github.com/alcolytics/alco-tracker.git
     force: yes
-    version: HEAD
-    dest: ./alco-tracker
+    version: '{{alco_service_version}}'
+    dest: '{{alco_service_path}}'
 
 
 - name: Building Alcolytics tracker image
   docker_image:
     force: yes
-    path: ./alco-tracker
+    path: '{{alco_service_path}}'
     name: alcolytics/alco-tracker
+    buildargs:
+      ALCOJS_VERSION: '{{alco_service_version}}'
+
 
 - name: Creating Alcolytics tracker container
   docker_container:
@@ -24,7 +27,7 @@
     image: alcolytics/alco-tracker
     volumes:
       - /srv/upload_ch:/usr/src/app/upload_ch
-      - ./custom-config:/usr/src/app/config/custom
+      - ~/custom-config:/usr/src/app/config/custom
     purge_networks: yes
     networks:
       - name: '{{alco_service_net_name}}'
@@ -35,59 +38,6 @@
       STATSD_HOST: '{{alco_docker_ip}}'
       SXGEO_SERVICE: geoip-sypex:8080
       DEVICED_SERVICE: devicedetector:8080
-      MIXPANEL_TOKEN: "{{mixpanel_token}}"
+      MIXPANEL_TOKEN: "{{mixpanel_token|default('')}}"
 #      DEBUG: "*"
 
-- name: Running query from file
-  include_tasks: run_ch_query_file.yml
-  with_items:
-    - table_events
-    - table_migrations
-    - table_webhooks
-  loop_control:
-    loop_var: file
-
-- name: Running migrations
-  include_tasks: run_ch_migration.yml
-  with_items:
-    - name: user_id_traits_and_page_num
-      queries:
-        - "ALTER TABLE events ADD COLUMN page_number UInt16;"
-        - "ALTER TABLE events ADD COLUMN user_id String;"
-        - "ALTER TABLE events ADD COLUMN user_traits_key Array(String);"
-        - "ALTER TABLE events ADD COLUMN user_traits_value Array(String);"
-  loop_control:
-    loop_var: migration
-
-- name: Running migrations
-  include_tasks: run_ch_migration.yml
-  with_items:
-    - name: session_pageNum_and_eventNum
-      queries:
-        - "ALTER TABLE events ADD COLUMN session_pageNum UInt16 DEFAULT page_number;"
-        - "ALTER TABLE events ADD COLUMN session_eventNum UInt16;"
-        - "ALTER TABLE events ADD COLUMN user_gaId String;"
-        - "ALTER TABLE events ADD COLUMN user_ymId String;"
-        - "ALTER TABLE events MODIFY COLUMN isBot Int8;"
-  loop_control:
-    loop_var: migration
-
-- set_fact:
-    snippet: "{{ lookup('template', 'snippet.j2') }}"
-  tags: ['tracker_email']
-
-- debug:
-    msg: 'mailgun_api_key: {{mailgun_api_key}} send_email:{{send_email}} contact_email:{{contact_email}}'
-  tags: ['tracker_email']
-
-- name: Sending email with snippet
-  command: |
-    curl -s --user 'api:{{mailgun_api_key}}' https://api.mailgun.net/v3/alcolytics.ru/messages
-        -F from={{mailgun_sender|quote}}
-        -F to={{contact_email|quote}}
-        -F subject={{alco_email_subj_snip|quote}}
-        -F text={{ snippet|quote }}
-  when: mailgun_api_key is defined and send_email == 'yes'
-  args:
-    warn: false
-  tags: ['tracker_email']
