@@ -8,7 +8,7 @@
     - import_role:
         name: alco-openvpn-server
       vars:
-        ovpn_keys_dir: '{{ovpn_keys_dir}}'
+        ovpn_keys_dir: '{{vpn_keys_dir}}'
         ovpn_docker_net_name: '{{alco_docker_net_name}}'
         ovpn_docker_network: '{{alco_docker_network}}'
         ovpn_docker_netmask: '{{alco_docker_netmask}}'
@@ -56,7 +56,7 @@
     - import_role:
         name: alco-clickhouse-ops
       vars:
-        alco_ch_ops_list: '{{ch_operations}}'
+        alco_ch_ops_list: '{{ch_operations + ch_operations_custom|default([])}}'
         alco_ch_ops_host: '127.0.0.1'
         alco_ch_ops_db: '{{alco_db_name}}'
-      tags: ['ch-schema']
+      tags: ['schema']

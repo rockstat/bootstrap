@@ -4,9 +4,9 @@ letsencrypt_domains_groups: []
 #    domains:
 #      - '{{api_domain}}'
 #      - '{{manager_domain}}'
+letsencrypt_pause_services: []
 letsencrypt_certbot_version: master
 letsencrypt_certbot_verbose: false
-letsencrypt_pause_services: []
 letsencrypt_force_renew: false
 letsencrypt_certbot_args: []
 letsencrypt_certbot_default_args:

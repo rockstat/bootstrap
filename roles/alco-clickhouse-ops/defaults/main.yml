@@ -1,3 +1,4 @@
 alco_ch_ops_list: []
 alco_ch_ops_host: 127.0.0.1
 alco_ch_ops_db: default
+alco_ch_migrations_path: clickhouse_schema

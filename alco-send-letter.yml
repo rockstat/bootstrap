@@ -8,7 +8,7 @@
     - import_role:
         name: alco-mailer
       vars:
-        alco_email_ovpn_keys_dir: '{{ovpn_keys_dir}}'
+        alco_email_ovpn_keys_dir: '{{vpn_keys_dir}}'
         alco_email_sender: '{{mailgun_sender}}'
         alco_email_subj_key: '{{email_subj_key}}'
         alco_email_subj_snip: '{{email_subj_snip}}'

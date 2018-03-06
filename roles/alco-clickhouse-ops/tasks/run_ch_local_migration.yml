@@ -11,17 +11,11 @@
   register: check
   changed_when: False
 
-- name: Reading migration file
-  command: 'cat {{op.file}}'
-  register: queries
-  when: check.stdout == ''
-  changed_when: False
-
 - name: Running migration
   command: 'clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}'
   args:
     stdin: "{{query}}"
-  with_items: '{{queries.stdout|from_yaml}}'
+  with_items: "{{lookup('file', alco_ch_migrations_path + '/' + op.file) | from_yaml}}"
   loop_control:
     loop_var: query
   when: check.stdout == ''

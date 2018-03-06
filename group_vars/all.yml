@@ -17,7 +17,7 @@ alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
 alco_docker_user: '{{alco_user}}'
 
 # OVPN
-ovpn_keys_dir: '{{alco_home}}/ovpn_keys'
+vpn_keys_dir: '{{alco_home}}/ovpn_keys'
 
 # ClickHouse
 alco_db_name: alco
