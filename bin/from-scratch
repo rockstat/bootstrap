@@ -54,4 +54,4 @@ printf "\n"
 printf "[private]\nalcostat ansible_host=$domain\n\n[private:vars]\ntracker_domain=$domain\ncontact_email=$email\n\n" | sudo tee $INVENTORY
 
 printf "\nSuccess! Next steps:\n\n"
-printf "$ cd $LOCALREPO\n$ ansible-playbook alcolytics.yml --connection=local\n\nThat's all"
+printf "$ cd $LOCALREPO\n$ ansible-playbook alcolytics.yml --connection=local\n\nThat's all\n\n"

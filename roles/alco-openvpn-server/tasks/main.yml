@@ -71,13 +71,6 @@
   when: ovpn_cert_installed|failed
 
 
-- name: Checking clients certs exists
-  stat:
-    path: "{{ovpn_keys_dir}}/alco_{{item}}.ovpn"
-  register: keys_exists
-  with_items: "{{ ovpn_users }}"
-
-
 - name: Creating OpenVPN server container
   docker_container:
     name: openvpn
@@ -95,10 +88,16 @@
     ports:
       - '{{ovpn_port}}:1194/{{ovpn_proto}}'
 
+
+- name: Checking clients certs exists
+  stat:
+    path: "{{ovpn_keys_dir}}/alco_{{item}}.ovpn"
+  register: keys_exists
+  with_items: "{{ ovpn_users }}"
+
+
 - name: Generating OpenVPN user cert
   command: "docker exec openvpn easyrsa build-client-full {{ item.item }} nopass"
-  args:
-    creates: '{{ovpn_keys_dir}}/alco_{{item.item}}.ovpn'
   when: not item.stat.exists
   with_items: "{{ keys_exists.results }}"
   ignore_errors: true
@@ -108,18 +107,16 @@
 - name: Getting OpenVPN user config
   command: "docker exec openvpn ovpn_getclient {{ item.item }}"
   register: users_cfg
-  args:
-    creates: "{{ovpn_keys_dir}}/alco_{{item.item}}.ovpn"
-  when: not item.stat.exists
+  when: item.stat.exists == false
   with_items: "{{ keys_exists.results }}"
   no_log: True
 
 
-- name: Saving data
+- name: Writing clients certificates
   copy:
-    content: "{{ users_cfg.results[item.0].stdout }}"
-    dest: "{{ovpn_keys_dir}}/alco_{{item.1}}.ovpn"
+    content: "{{ item.stdout }}"
+    dest: "{{ovpn_keys_dir}}/alco_{{item.item.item}}.ovpn"
     force: no
-  when: item.skipped != False
+  when: not item|skipped
   with_items: "{{ users_cfg.results }}"
-#  no_log: True
+  no_log: True
