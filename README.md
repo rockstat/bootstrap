@@ -28,102 +28,51 @@ Ansible playbook для автоматической установки Alcolyti
 
 ## С сервера
 
-Устновите минимальные необходимые зависимости
+Требуется Ubuntu 16.04
+Основаная система настройки это Ansible, но ей для работы нужны некоторые пакеты, которых нет в дефолтовой поставке.
+Есть несколько путей.
 
+### Вариант 1: скрипт который все установит и сгенерит нужные файлы
+
+Запустить 
+
+    apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
+
+
+### Вариант 2: я задрот или параноик или что-то пошло не так
+
+
+Устновите минимальные необходимые зависимости и произведите преднастройку системы, последовательно выполнив все команды.
+
+    sudo -i
+    
     apt -y update
     
     apt install -y python-minimal python-pip python-netaddr git locales
-    
-    pip install ansible
-    
-Если возникает ошибка связанная с локалью, установите локаль и запустите еще раз
-        
+
     echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | sudo tee /etc/default/locale
     locale-gen en_US.UTF-8
     export LANG=en_US.UTF-8
     export LC_ALL=en_US.UTF-8
- 
-Загрузка скрипта установки
-        
-    cd ~
+    
+    pip install ansible
+    
     git clone https://github.com/alcolytics/alco-bootstrap
 
-Генерация ssh ключа
+    cd ~/alco-bootstrap
+    
+Теперь надо создать файл inventory/private вот с таким содержимым:
 
-    cd ~
-    ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
-    cp alco.pub alco-bootstrap /public_keys
-    mv alco* ~/.ssh/
+    [private]
+    alcostat ansible_host=alco.yourdomain.com
     
-Ниже есть блок про создание файла инвентаря, сделайте это. 
-Запуск процесса установки
+    [private:vars]
+    tracker_domain=alco.yourdomain.com
+    contact_email=youemail@example.com
+
+После этого, можно запускать процесс установки    
     
-    cd ~/alco-bootstrap 
     ansible-playbook alco.yml --connection=local
-
-## С другого компьюетра
-
-Подразумевается что у вас Linix/MacOS.
-Установите ansible и python-netaddr при помощи используемого в вашей ОС менеджера пакетов.
-Ниже есть блок про создание файла инвентаря, сделайте это.
-
-**Установка необходимых зависимостей Ansible.** 
-
-Дополнительно, при первой установке:
-
-* Если авторизация на сервере по паролю, добавьте ` --ask-pass`
-* Если вашему пользователю требуется авторизация для `sudo`, добавьте `--ask-become-pass`
-    
-
-    ansible-playbook ansible-requirement.yml
-
-
-**Установка системы**
-
-Загрузка скрипта установки
-        
-    cd ~
-    git clone https://github.com/alcolytics/alco-bootstrap      
-
-Генерация ssh ключа
-
-    cd ~
-    ssh-keygen -t rsa -b 4096 -f alco -C "your_email@example.com"
-    cp alco.pub alco-bootstrap/public_keys
-    mv alco* ~/.ssh/
-
-
-    cd ~/alco-bootstrap 
-
-Дополнительно, при первой установке:
-
-* Добавьте `-e "initial=yes"`.
-* Если авторизация на сервере по паролю, добавьте ` --ask-pass`
-* Если вашему пользователю требуется авторизация для `sudo`, добавьте `--ask-become-pass`
-
-
-    ansible-playbook alco.yml
-
-
-## Создание файла инвентаря
-
-Создайте файл `inventory/priv_all`
-
-    [priv_all]
-    alcostat ansible_host=<домен трекера>
-    
-    [priv_all:vars]
-    mixpanel_token=<токен mixpanel, если есть>
-    tracker_domain=<домен трекера>
-    contact_email=<контактная почта>
-    
-    # Ключ от сервиса mailgun, если есть.
-    # Обычным пользователям это не нужно. Используется при поддержке нескольких серверов и требует доп настройки. 
-    #mailgun_api_key:
-    #mailgun_sender: <Alcolytics Setup <hello@alcolytics.ru> 
-        
-    [alco:children]
-    priv_all
 
 
 ## Установка счетчика на сайт
@@ -136,10 +85,10 @@ Ansible playbook для автоматической установки Alcolyti
 
 ## Кастомизация конфигурации
 
-##№ Изсключение из гита
+### Изсключение из гита
 
-Монархически принято решение: `inventory` следует именовать с префиксом priv*, 
-дабы не разводить бадак в `.gitignore`. Проще всего использовать имя `private`  
+Монархически принято решение: свои файлы инвентаря следует именовать с префиксом priv, например `private`
+дабы не разводить бадак в `.gitignore`.  
 
 ### Конфигурация системы
 
@@ -147,23 +96,6 @@ Ansible playbook для автоматической установки Alcolyti
 Не изменяйтся основной файл `group_vars/all`, создайте отдельный файл совпадающий с названием группы хостов.
 Пример: делаете копию `inventory/all` под названием `inventory/private`, создаете файл конфигурации `group_vars/private`,
 все, указанные настройки перезапишут аналоги из `all`. 
-
-### Произвольная структура бд (свои миграции)
-
-Пример миграции находится в `clickhouse_schema/`. Чтобы миграция начала накатяваться при запуске скрипта,
-укажите в `group_vars/private` список файлов которые будут загружены. Загрузка происходит лишь единожды,
-название миграии будет записано в БД и в дальнейшем будет проигнорировано.
-
-    ch_operations_custom:
-
-      # Чистый SQL запрос
-      - type: query
-        query: 'SELECT count() FROM events'
-    
-      # Миграция из локального файла
-      - type: local_migration
-        file: migration1-test-local-migration.yml
-    
 
 
 ## Вопросы и общение
