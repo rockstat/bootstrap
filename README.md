@@ -52,7 +52,7 @@ Ansible playbook для автоматической установки Alcolyti
 ![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/docs/success.png)
 
     
-    ansible-playbook alco.yml --connection=local
+    ansible-playbook alcolytics.yml --connection=local
     
 
 ### Вариант 2: я задрот или параноик или что-то пошло не так
@@ -88,7 +88,7 @@ Ansible playbook для автоматической установки Alcolyti
 
 После этого, можно запускать процесс установки    
     
-    ansible-playbook alco.yml --connection=local
+    ansible-playbook alcolytics.yml --connection=local
 
 
 ## Установка счетчика на сайт
@@ -123,7 +123,7 @@ Ansible playbook для автоматической установки Alcolyti
 
     cd ~/alco-bootstrap
     git pull
-    ansible-playbook alco.yml --connection=local
+    ansible-playbook alcolytics.yml --connection=local
 
 
 ### Автоматическое централизованное обновление
