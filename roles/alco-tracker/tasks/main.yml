@@ -38,5 +38,6 @@
       SXGEO_SERVICE: geoip-sypex:8080
       DEVICED_SERVICE: devicedetector:8080
       MIXPANEL_TOKEN: "{{mixpanel_token|default('')}}"
+      LOG_LEVEL: '{{alco_service_log_level}}'
 #      DEBUG: "*"
 

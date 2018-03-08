@@ -8,7 +8,6 @@ alco_data_dir: '/srv/alco/data'
 alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
 alco_tracker_custom_config_dir: '{{alco_data_dir}}/custom_tracker_config'
 
-
 # Docker
 alco_docker_net_name: alconet
 alco_docker_interface: docker1
@@ -35,7 +34,8 @@ alco_email_enabled: false
 
 # Tracker
 alco_tracker_path: '{{alco_home_dir}}/alco-tracker'
-alco_tracker_branch: master
+alco_trackers_version: master
+alco_tracker_log_level: info
 
 # base firewall rules
 alco_firewall_rules:

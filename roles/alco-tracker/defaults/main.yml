@@ -5,3 +5,4 @@ alco_service_path: ./alco-tracker
 alco_service_version: master
 alco_service_upload_store: /srv/upload_ch
 alco_service_custom_configs_dir: ~/custom-config
+alco_service_log_level: info
