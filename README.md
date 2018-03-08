@@ -40,7 +40,7 @@ Ansible playbook для автоматической установки Alcolyti
 
 После успешного проникновения на объет следует выполнить: 
 
-    apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
+    apt -y update && apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
 
 И вуаля! Все необходимое установлено!
 
