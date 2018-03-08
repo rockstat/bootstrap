@@ -1,3 +1,4 @@
 anaconda_docker_port: 8888
 anaconda_docker_bind_addr: 127.0.0.1
 anaconda_docker_memory_limit: 2g
+anaconda_docker_data_dir: /srv/jupyter

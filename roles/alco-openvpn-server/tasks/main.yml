@@ -1,3 +1,9 @@
+# Currently not working because using old docker python lib
+#- name: Creating OpenVPN data volume
+#  docker_volume:
+#    name: '{{ovpn_docker_volume_name}}'
+
+# Docker volume hack
 - name: Check the existing docker volumes
   become: True
   shell: "python -c 'import docker; client=docker.from_env(); volumes=[_.name for _ in client.volumes.list()]; import json; print(json.dumps(volumes))'"
@@ -10,11 +16,12 @@
   become: True
   shell: "docker volume create {{ovpn_docker_volume_name}}"
   when: ovpn_docker_volume_name not in dockervolumeslist
+# end temp hack
 
-# Currently not working because using old docker python lib
-#- name: Creating OpenVPN data volume
-#  docker_volume:
-#    name: '{{ovpn_docker_volume_name}}'
+
+- name: Ensures clients keys dir exists
+  file: path={{ovpn_keys_dir}} state=directory
+
 
 - name: Checking server certs
   docker_container:
@@ -25,7 +32,9 @@
     cleanup: true
     command: 'test -f /etc/openvpn/pki/crl.pem'
   register: ovpn_cert_installed
+  changed_when: false
   ignore_errors: true
+
 
 - name: Removing old env config
   docker_container:
@@ -35,6 +44,7 @@
     detach: false
     cleanup: true
     command: "rm -f rm /etc/openvpn/ovpn_env.sh"
+
 
 - name: Configuring OpenVPN server
   docker_container:
@@ -47,6 +57,7 @@
     volumes: "{{ ovpn_docker_volumes }}"
     command: "ovpn_genconfig -D -N -d -p 'route {{ovpn_docker_network}} {{ovpn_docker_netmask}}' -u {{ovpn_proto}}://{{ tracker_domain }}:{{ovpn_port}}"
 
+
 - name: Generating OpenVPN server cert
   docker_container:
     name: openvpn-cmd
@@ -58,6 +69,14 @@
       EASYRSA_BATCH: 1
     command: "ovpn_initpki nopass"
   when: ovpn_cert_installed|failed
+
+
+- name: Checking clients certs exists
+  stat:
+    path: "{{ovpn_keys_dir}}/alco_{{item}}.ovpn"
+  register: keys_exists
+  with_items: "{{ ovpn_users }}"
+
 
 - name: Creating OpenVPN server container
   docker_container:
@@ -77,23 +96,30 @@
       - '{{ovpn_port}}:1194/{{ovpn_proto}}'
 
 - name: Generating OpenVPN user cert
-  command: "docker exec openvpn easyrsa build-client-full {{ item }} nopass"
-  with_items: "{{ ovpn_users }}"
+  command: "docker exec openvpn easyrsa build-client-full {{ item.item }} nopass"
+  args:
+    creates: '{{ovpn_keys_dir}}/alco_{{item.item}}.ovpn'
+  when: not item.stat.exists
+  with_items: "{{ keys_exists.results }}"
   ignore_errors: true
+  no_log: True
 
-- name: Ensures keys dir exists
-  file: path={{ovpn_keys_dir}} state=directory
 
 - name: Getting OpenVPN user config
-  command: "docker exec openvpn ovpn_getclient {{ item }}"
+  command: "docker exec openvpn ovpn_getclient {{ item.item }}"
   register: users_cfg
   args:
-    creates: "{{ovpn_keys_dir}}/alco_{{item.1}}.ovpn"
-  with_items: "{{ ovpn_users }}"
+    creates: "{{ovpn_keys_dir}}/alco_{{item.item}}.ovpn"
+  when: not item.stat.exists
+  with_items: "{{ keys_exists.results }}"
+  no_log: True
+
 
 - name: Saving data
   copy:
     content: "{{ users_cfg.results[item.0].stdout }}"
     dest: "{{ovpn_keys_dir}}/alco_{{item.1}}.ovpn"
-  when: users_cfg is defined and users_cfg.results[item.0].rc == 0
-  with_indexed_items: "{{ ovpn_users }}"
+    force: no
+  when: not item.skipped
+  with_items: "{{ users_cfg.results }}"
+  no_log: True

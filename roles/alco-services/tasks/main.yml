@@ -2,25 +2,25 @@
 - name: Cloning GeoIP Sypex
   git:
     repo: https://github.com/alcolytics/alco-geoip-sypex
-    dest: ./alco-geoip-sypex
+    dest: '{{alco_service_clone_to}}/alco-geoip-sypex'
 
 
 - name: Cloning Device Detector
   git:
     repo: https://github.com/alcolytics/alco-devicedetector
-    dest: ./alco-devicedetector
+    dest: '{{alco_service_clone_to}}/alco-devicedetector'
 
 
 - name: Building GeoIP Sypex image
   docker_image:
-    path: ./alco-geoip-sypex
+    path: '{{alco_service_clone_to}}/alco-geoip-sypex'
     name: alcolytics/geoip-sypex
     force: yes
 
 
 - name: Building Device Detector image
   docker_image:
-    path: ./alco-devicedetector
+    path: '{{alco_service_clone_to}}/alco-devicedetector'
     name: alcolytics/devicedetector
     force: yes
 

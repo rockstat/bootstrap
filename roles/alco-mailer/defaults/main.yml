@@ -1,7 +1,7 @@
-alco_email_ovpn_keys_dir: ~/keys
-alco_email_sender:
-alco_email_subj_key: 'Alcolytics | vpn keys'
-alco_email_subj_snip: 'Alcolytics | snippet'
-alco_email_enabled: false
-alco_email_mailgun_key:
-alco_email_to:
+amail_ovpn_keys_dir: ~/ovpn_keys
+amail_sender:
+amail_subj_key: 'Alcolytics | vpn keys'
+amail_subj_snip: 'Alcolytics | snippet'
+amail_enabled: false
+amail_mailgun_key:
+amail_to:

@@ -1,0 +1,15 @@
+---
+- name: Sending letters
+  hosts: all
+  remote_user: '{{alco_user}}'
+  tasks:
+    - import_role:
+        name: alco-mailer
+      vars:
+        amail_ovpn_keys_dir:  '{{alco_ovpn_keys_dir}}'
+        amail_sender:         '{{mailgun_sender}}'
+        amail_subj_key:       '{{alco_email_subj_key}}'
+        amail_subj_snip:      '{{alco_email_subj_snip}}'
+        amail_enabled:        '{{alco_email_enabled}}'
+        amail_mailgun_key:    '{{mailgun_api_key}}'
+        amail_to:             '{{contact_email}}'

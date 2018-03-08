@@ -1,22 +1,22 @@
 ---
 - name: Setting variables
   set_fact:
-    chproxy_docker_bind_addr: '{{chproxy_docker_bind_addr|default(chproxy_docker_bind_addr_default)}}'
-    chproxy_port: '{{chproxy_port|default(chproxy_port_default)}}'
+    chproxy_docker_bind_addr: '{{chproxy_docker_bind_addr}}'
+    chproxy_port: '{{chproxy_port}}'
 
 - name: Cloning CHProxy Dockerfile
   git:
     repo: https://github.com/alcolytics/alco-chproxy
-    dest: ./alco-chproxy
+    dest: '{{chproxy_clone_to}}'
 
 - name: Creating config
   template:
    src: config.yml.j2
-   dest: './alco-chproxy/config.yml'
+   dest: '{{chproxy_clone_to}}/config.yml'
 
 - name: Building CHProxy image
   docker_image:
-    path: ./alco-chproxy
+    path: '{{chproxy_clone_to}}'
     name: alcolytics/chproxy
     force: yes
 

@@ -20,14 +20,13 @@
     ports:
       - '{{anaconda_docker_bind_addr}}:{{anaconda_docker_port}}:{{anaconda_docker_port}}'
     volumes:
-      - /srv/jupyter:/opt/notebooks
+      - '{{anaconda_docker_data_dir}}:/opt/notebooks'
     command: '/bin/bash -c "{{anaconda_run_cmd}}"'
-
 
 - name: Cloning Simple ClickHouse repo
   git:
     repo: https://github.com/alcolytics/simple-clickhouse.git
-    dest: /srv/jupyter/simple-clickhouse
+    dest: '{{anaconda_docker_data_dir}}/simpleclickhouse'
   ignore_errors: true
   become: yes
 

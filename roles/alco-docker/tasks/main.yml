@@ -1,8 +1,4 @@
 ---
-
-- debug:
-    msg: 'alco_docker_user:{{alco_docker_user}} alco_docker_net_name:{{alco_docker_net_name}} alco_docker_interface:{{alco_docker_interface}} alco_docker_net:{{alco_docker_net}}'
-
 - name: Adding Docker key
   apt_key: >
     keyserver="hkp://p80.pool.sks-keyservers.net:80"
@@ -20,7 +16,7 @@
   apt: name=docker-engine state=present
 
 
-- name: Removing old lib
+- name: Removing old libs
   pip:
     name: '{{item}}'
     state: absent
@@ -29,7 +25,7 @@
     - docker-pycreds
     - docker
 
-- name: Installing docker
+- name: Installing docker lib
   pip:
     name: docker
     version: '2.7.0'

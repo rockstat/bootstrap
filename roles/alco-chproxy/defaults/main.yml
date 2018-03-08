@@ -1,10 +1,11 @@
 ---
-chproxy_docker_bind_addr_default: 127.0.0.1
+chproxy_clone_to: '~/alco-chproxy'
+chproxy_docker_bind_addr: 127.0.0.1
 chproxy_docker_http_allow_net: 127.0.0.0/24
 chproxy_docker_net_name: bridge
 chproxy_ch_port_default: 8123
 chproxy_ch_addr_default: 127.0.0.1
-chproxy_port_default: 9090
+chproxy_port: 9090
 chproxy_users_default:
   - name: '{{alco_db_name}}'
     password: '{{alco_db_pass}}'

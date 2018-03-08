@@ -48,14 +48,12 @@
   user: name={{alco_user}} groups=sudo shell=/bin/bash
   become: yes
 
-
 - name: Updating sudoers
   lineinfile:
     path: /etc/sudoers
     regexp: '^{{alco_user}}'
     line: '{{alco_user}} ALL=(ALL) NOPASSWD: ALL'
   become: yes
-
 
 - name: Set authorized key took from file
   authorized_key:

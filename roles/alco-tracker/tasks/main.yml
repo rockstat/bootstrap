@@ -2,10 +2,9 @@
 - name: Cloning Alcolytics tracker
   git:
     repo: https://github.com/alcolytics/alco-tracker.git
-    force: yes
     version: '{{alco_service_version}}'
     dest: '{{alco_service_path}}'
-
+    force: yes
 
 - name: Building Alcolytics tracker image
   docker_image:
@@ -26,8 +25,8 @@
     restart_policy: always
     image: alcolytics/alco-tracker
     volumes:
-      - /srv/upload_ch:/usr/src/app/upload_ch
-      - ~/custom-config:/usr/src/app/config/custom
+      - '{{alco_service_upload_store}}:/usr/src/app/upload_ch'
+      - '{{alco_service_custom_configs_dir}}:/usr/src/app/config/custom'
     purge_networks: yes
     networks:
       - name: '{{alco_service_net_name}}'

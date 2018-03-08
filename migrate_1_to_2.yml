@@ -1,0 +1,35 @@
+---
+- name: Migrating to alcolytics 2.0
+  hosts: all
+  remote_user: '{{alco_user}}'
+  become: yes
+  vars:
+    docker_service: docker.service
+    old_anaconda_data_dir: /srv/jupyter
+    old_ch_upload_dir: /srv/upload_ch
+  tasks:
+
+#    - name: Checking data dir exists
+#      stat:
+#        path: '{{alco_data_dir}}'
+#      register: ex
+#
+#    - name: Checking migration done
+#      meta: end_play
+#      when: ex.stat.exists == True
+#
+    - name: Creating new alco home_dir
+      file:
+        path: '{{alco_home_dir}}'
+        state: directory
+        mode: 0755
+
+    - name: Copying anaconda data to new location
+      command: creates={{alco_data_dir}} cp -R {{old_anaconda_data_dir}} {{alco_data_dir}}
+
+    - name: Copying alco-tracker upload data to new location
+      command: creates={{alco_data_ch_upload_dir}} cp -R {{old_ch_upload_dir}} {{alco_data_ch_upload_dir}}
+
+#    - name: Stoping docker service
+#      systemd: name={{docker_service}} state=stopped
+#

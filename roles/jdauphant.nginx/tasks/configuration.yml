@@ -1,7 +1,4 @@
 ---
-- name: Debugging sites
-  debug:
-    var: nginx_sites
 
 - name: Copy the nginx configuration file
   template:

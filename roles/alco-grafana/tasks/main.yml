@@ -14,7 +14,6 @@
     networks:
       - name: '{{ gragana_docker_net_name }}'
     volumes:
-      - /srv/grafana:/var/lib/grafana
+      - '{{grafana_data_dir}}:/var/lib/grafana'
     ports:
       - '{{ grafana_docker_bind_addr }}:3000:3000'
-  tags: ['grafana']

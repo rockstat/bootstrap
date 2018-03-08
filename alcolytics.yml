@@ -1,0 +1,119 @@
+---
+- name: Installing alcolytics
+  hosts: all
+  remote_user: "{{initial_user|default('root')}}"
+  become: yes
+  tasks:
+    - import_role:
+        name: dr.server
+      vars:
+        use_user: '{{alco_user}}'
+        use_key_file: '{{alco_key_file}}'
+        firewall_rules_custom: '{{alco_firewall_rules}}'
+      tags: ['base']
+    - import_role:
+        name: alco-letsencrypt
+      vars:
+        letsencrypt_domains_groups:
+          - email: '{{contact_email}}'
+            domains: ['{{tracker_domain}}']
+        letsencrypt_pause_services: ['nginx']
+      tags: ['ssl']
+
+    - import_role:
+        name: jdauphant.nginx
+      vars:
+        nginx_official_repo: yes
+        keep_only_specified: yes
+        nginx_http_params: '{{alco_nginx_http_params}}'
+        nginx_sites:
+          default: '{{alco_vhost_default}}'
+          tracker: '{{alco_vhost_tracker}}'
+        nginx_configs:
+          gzip: '{{alco_config_gzip}}'
+          upstream:
+            - '{{alco_upstream_tracker}}'
+      tags: ['nginx']
+
+    - import_role:
+        name: alco-docker
+      tags: ['docker']
+
+    - import_role:
+        name: alco-clickhouse
+      vars:
+        clickhouse_networks_default: ["::1", "127.0.0.1", "{{ alco_docker_net }}"]
+        clickhouse_dbs_custom: [{name: '{{alco_db_name}}'}]
+        clickhouse_path_data: "/srv/clickhouse/"
+        clickhouse_path_tmp: "/srv/clickhouse/tmp/"
+      tags: ['clickhouse']
+
+    - import_role:
+        name: alco-netdata
+      vars:
+      tags: ['netdata']
+
+# from platform file
+
+    - import_role:
+        name: alco-openvpn-server
+      vars:
+        ovpn_keys_dir: '{{alco_ovpn_keys_dir}}'
+        ovpn_docker_net_name: '{{alco_docker_net_name}}'
+        ovpn_docker_network: '{{alco_docker_network}}'
+        ovpn_docker_netmask: '{{alco_docker_netmask}}'
+        ovpn_port: '{{alco_ovpn_port}}'
+      tags: ['ovpn']
+
+    - import_role:
+        name: alco-chproxy
+      vars:
+        chproxy_docker_net_name: '{{alco_docker_net_name}}'
+        chproxy_docker_bind_addr: '{{alco_docker_ip}}'
+        chproxy_docker_http_allow_net: '{{alco_docker_net}}'
+        chproxy_ch_addr: '{{alco_docker_ip}}'
+        chproxy_clone_to: '{{alco_home_dir}}/alco-chproxy'
+      tags: ['chproxy']
+
+    - import_role:
+        name: alco-services
+      vars:
+        alco_service_bind_addr: '{{alco_docker_ip}}'
+        alco_service_net_name: '{{alco_docker_net_name}}'
+        alco_service_clone_to: '{{alco_home_dir}}'
+      tags: ['services']
+
+    - import_role:
+        name: alco-grafana
+      vars:
+        gragana_docker_net_name: '{{alco_docker_net_name}}'
+        grafana_docker_bind_addr: '{{alco_docker_ip}}'
+      tags: ['grafana']
+
+    - import_role:
+        name: alco-anaconda
+      vars:
+        anaconda_docker_data_dir: '{{alco_data_dir}}'
+        anaconda_docker_net_name: '{{alco_docker_net_name}}'
+        anaconda_docker_bind_addr: '{{alco_docker_ip}}'
+        anaconda_docker_memory_limit: '2g' #todo: use half of available size
+      tags: ['anaconda']
+
+    - import_role:
+        name: alco-tracker
+      vars:
+        alco_service_bind_addr: '{{alco_docker_ip}}'
+        alco_service_net_name: '{{alco_docker_net_name}}'
+        alco_service_path: '{{alco_tracker_path}}'
+        alco_service_version: '{{alco_trackers_version}}'
+        alco_service_upload_store: '{{alco_data_ch_upload_dir}}'
+        alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
+      tags: ['tracker']
+
+    - import_role:
+        name: alco-clickhouse-ops
+      vars:
+        alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
+        alco_ch_ops_host: '127.0.0.1'
+        alco_ch_ops_db: '{{alco_db_name}}'
+      tags: ['schema']

@@ -1,11 +1,13 @@
-playbook_version: 1.2.0
+playbook_version: 2.0.0
+initial_user: root
 
-alco_user: alco
-alco_key_file: './public_keys/{{action_user}}.pub'
-alco_home_dir: '/home/{{action_user}}'
-alco_home: '/home/{{action_user}}'
+alco_user: 'alco'
+alco_key_file: './public_keys/{{alco_user}}.pub'
+alco_home_dir: '/srv/alco'
+alco_data_dir: '/srv/alco/data'
+alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
+alco_tracker_custom_config_dir: '{{alco_data_dir}}/custom_tracker_config'
 
-action_user: '{{alco_user}}'
 
 # Docker
 alco_docker_net_name: alconet
@@ -17,7 +19,8 @@ alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
 alco_docker_user: '{{alco_user}}'
 
 # OVPN
-vpn_keys_dir: '{{alco_home}}/ovpn_keys'
+alco_ovpn_keys_dir: '{{alco_home_dir}}/ovpn_keys'
+alco_ovpn_port: 8080
 
 # ClickHouse
 alco_db_name: alco
@@ -26,14 +29,22 @@ alco_ch_port: 8123
 alco_ch_proxy_port: 9090
 
 # Email config
-email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
-email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
-send_email: false
+alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
+alco_email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
+alco_email_enabled: false
 
 # Tracker
-alco_tracker_path: '{{alco_home}}/alco-tracker'
+alco_tracker_path: '{{alco_home_dir}}/alco-tracker'
 alco_tracker_branch: master
 
+# base firewall rules
+alco_firewall_rules:
+  - { from_ip: '{{alco_docker_network}}/{{alco_docker_netmask}}'}
+  - { to_port: '80', proto: 'tcp'}
+  - { to_port: '443', proto: 'tcp'}
+  - { to_port: '{{alco_ovpn_port}}', proto: 'tcp'}
+
+# nginx params
 alco_nginx_http_params:
   - access_log off
   - error_log /var/log/nginx/error.log
@@ -78,25 +89,7 @@ alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 w
 # Migrations
 
 ch_path: '{{alco_tracker_path}}/clickhouse_schema'
-ch_operations:
-  - type: query_file
-    file: '{{ch_path}}/table_events.sql'
-
-  - type: query_file
-    file: '{{ch_path}}/table_migrations.sql'
-
-  - type: query_file
-    file: '{{ch_path}}/table_webhooks.sql'
-
-  - type: migration
-    file: '{{ch_path}}/migration1_user_id_traits_and_page_num.yml'
-    name: user_id_traits_and_page_num
-
-  - type: migration
-    file: '{{ch_path}}/migration2_session_pagenum_and_eventnum.yml'
-    name: session_pageNum_and_eventNum
-
-  - type: migration
-    file: '{{ch_path}}/migration3_new_fields_cf_perf_scroll_page.yml'
-
-
+ch_operations: []
+#
+#  - type: query_file
+#    file: '{{ch_path}}/table_migrations.sql'

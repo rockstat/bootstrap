@@ -42,6 +42,7 @@
   service: name="{{item.item}}" state=started
   when: (item.state is defined and item.state == "stopped")
   with_items: "{{ _services_stopped.results|default([]) }}"
+  no_log: True
 
 #- fail: msg="Error signing the certificate"
 #  when: not letsencrypt_test and not _signing_successful and not _signing_skipped
