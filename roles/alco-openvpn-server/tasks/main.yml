@@ -120,6 +120,6 @@
     content: "{{ users_cfg.results[item.0].stdout }}"
     dest: "{{ovpn_keys_dir}}/alco_{{item.1}}.ovpn"
     force: no
-  when: users_cfg is defined and not item.skipped
+  when: item.skipped != False
   with_items: "{{ users_cfg.results }}"
-  no_log: True
+#  no_log: True
