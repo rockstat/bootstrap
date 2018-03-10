@@ -1,11 +1,13 @@
 ---
+- name: Creating custom config dir
+  file:
+    path: '{{alco_tracker_custom_config_dir}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  tags: ['init-config']
 
-#- name: Creating new alco home_dir
-#  file:
-#    path: '{{alco_tracker_custom_config_dir}}'
-#    state: directory
-#    mode: 0755
-#  tags: ['init-config']
 
 - name: Init custom config
   template:
