@@ -44,12 +44,12 @@ Ansible playbook для автоматической установки Alcolyti
 
 И вуаля! Все необходимое установлено!
 
-![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/docs/setup_complete.png)
+![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/media/setup_complete.png)
 
 После этого скрипт продложит создать файл инвентаря, после останется только запустить основгной устанощик,
 который сделает всю грязную работу по установке и настройке кучи необходимого софта
 
-![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/docs/success.png)
+![Alcolytics sheme](https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/media/success.png)
 
     
     ansible-playbook alcolytics.yml --connection=local

@@ -105,7 +105,7 @@
         alco_service_bind_addr: '{{alco_docker_ip}}'
         alco_service_net_name: '{{alco_docker_net_name}}'
         alco_service_path: '{{alco_tracker_path}}'
-        alco_service_version: '{{alco_trackers_version}}'
+        alco_service_version: '{{alco_trackers_version|default(omit)}}'
         alco_service_upload_store: '{{alco_data_ch_upload_dir}}'
         alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
         alco_service_log_level: '{{alco_tracker_log_level}}'

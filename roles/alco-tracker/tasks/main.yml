@@ -1,4 +1,22 @@
 ---
+
+#- name: Creating new alco home_dir
+#  file:
+#    path: '{{alco_tracker_custom_config_dir}}'
+#    state: directory
+#    mode: 0755
+#  tags: ['init-config']
+
+- name: Init custom config
+  template:
+    src: config.yml.j2
+    force: no
+    dest: '{{alco_tracker_custom_config_dir}}/config.yml'
+    owner: root
+    group: root
+    mode: 0755
+  tags: ['init-config']
+
 - name: Cloning Alcolytics tracker
   git:
     repo: https://github.com/alcolytics/alco-tracker.git
@@ -13,7 +31,6 @@
     name: alcolytics/alco-tracker
     buildargs:
       ALCOJS_VERSION: '{{alco_service_version}}'
-
 
 - name: Creating Alcolytics tracker container
   docker_container:

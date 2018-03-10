@@ -2,7 +2,7 @@ playbook_version: 2.0.0
 initial_user: root
 
 alco_user: 'alco'
-alco_key_file: './public_keys/{{alco_user}}.pub'
+alco_key_file: './public_keys/alco.pub'
 alco_home_dir: '/srv/alco'
 alco_data_dir: '/srv/alco/data'
 alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
