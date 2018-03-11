@@ -32,11 +32,13 @@ Ansible playbook для автоматической установки Alcolyti
 
 ## Установщик установщика 
 
+Установка всего необходимого для Ansible
+
 ```
 apt -y update && apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
 ```
 
-Следом
+Запуск установщика Alcolytics
 
 
 ```
@@ -45,6 +47,12 @@ ansible-playbook alcolytics.yml --connection=local
 
 **Полная версия тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
 
+## Часть невысена в submodule 
+
+При клонировании и обрновлениии
+
+    git submodule init
+    git submodule update
 
 
 ## Вопросы и общение

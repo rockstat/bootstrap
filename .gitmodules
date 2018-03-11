@@ -1,0 +1,3 @@
+[submodule "roles/dr.server"]
+	path = roles/dr.server
+	url = https://github.com/madiedinro/dr.server.git
