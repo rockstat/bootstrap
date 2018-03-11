@@ -28,114 +28,23 @@ Ansible playbook для автоматической установки Alcolyti
 Основаная система настройки это Ansible, но ей для работы нужны некоторые пакеты, которых нет в дефолтовой поставке.
 Есть несколько путей.
 
-## С сервера
-
-### Вариант 1: скрипт который все установит и сгенерит нужные файлы
-
-Первым делом надо правдой или неправдой пробраться в консоль сервера. На MacOS это можно сделать в обычном териминале
-
-    ssh root@superduper.me
-    
-В Win для этих целей есть програмка putty
-
-После успешного проникновения на объет следует выполнить: 
-
-    apt -y update && apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
-
-И вуаля! Все необходимое установлено!
-
-![Alcolytics sheme](https://alcolytics.ru/media/setup_complete.png)
-
-После этого скрипт продложит создать файл инвентаря, после останется только запустить основгной устанощик,
-который сделает всю грязную работу по установке и настройке кучи необходимого софта
-
-![Alcolytics sheme](https://alcolytics.ru/media/success.png)
-
-    
-    ansible-playbook alcolytics.yml --connection=local
-    
-
-### Вариант 2: я задрот или параноик или что-то пошло не так
 
 
-Устновите минимальные необходимые зависимости и произведите преднастройку системы, последовательно выполнив все команды.
+## Установщик установщика 
 
-    sudo -i
-    
-    apt -y update
-    
-    apt install -y python-minimal python-pip python-netaddr git locales
+```
+apt -y update && apt -y install curl && bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
+```
 
-    echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | sudo tee /etc/default/locale
-    locale-gen en_US.UTF-8
-    export LANG=en_US.UTF-8
-    export LC_ALL=en_US.UTF-8
-    
-    pip install ansible
-    
-    git clone https://github.com/alcolytics/alco-bootstrap
-
-    cd ~/alco-bootstrap
-    
-Теперь надо создать файл inventory/private вот с таким содержимым:
-
-    [private]
-    alcostat ansible_host=alco.yourdomain.com
-    
-    [private:vars]
-    tracker_domain=alco.yourdomain.com
-    contact_email=youemail@example.com
-
-После этого, можно запускать процесс установки    
-    
-    ansible-playbook alcolytics.yml --connection=local
+Следом
 
 
-## Установка счетчика на сайт
+```
+ansible-playbook alcolytics.yml --connection=local
+```
 
-Обращайтесь к докам AlcoJS:
+**Полная версия тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
 
-* Репозиторий: https://github.com/alcolytics/alcojs
-* Документации: https://alco.readme.io/docs/js-api
-* Актуальный сниппет: https://github.com/alcolytics/alcojs/blob/master/snippet
-
-## Кастомизация конфигурации
-
-### Изсключение из гита
-
-Монархически принято решение: свои файлы инвентаря следует именовать с префиксом priv, например `private`
-дабы не разводить бадак в `.gitignore`.  
-
-### Конфигурация системы
-
-Полный список параметров можно найти в дефолтах ролей в `roles/*/defaults/*` 
-Не изменяйтся основной файл `group_vars/all`, создайте отдельный файл совпадающий с названием группы хостов.
-Пример: делаете копию `inventory/all` под названием `inventory/private`, создаете файл конфигурации `group_vars/private`,
-все, указанные настройки перезапишут аналоги из `all`. 
-
-
-## Обновление Alcolytics
-
-Проект развивается очень быстро, обновления могут выходить часто, вплоть до нескольких раз в день. 
-Обо всех важных или обязательных обновах можно узнать в телеге https://t.me/alcolytic
-
-Процесс обновления повторяет установку:
-
-    cd ~/alco-bootstrap
-    git pull
-    ansible-playbook alcolytics.yml --connection=local
-
-
-### Автоматическое централизованное обновление
-
-Имеется централизованная система автоматического обновления всех серверов Alcolytics. Она пока не на том уровне развития,
-чтобы прикрутить ее к личному кабинету (но скоро планируется). Для подключения достаточно найти в чате Dmitry Rodin (меня) и попросить 
-добавить сервер в список доставки обновлений.
-
-Скажу сразу, по дефолту предусмотрена функция удаленного обновления, для этого в проекте имеется
-специальный ключ public_keys/alco.pub, при помощи которого сервер обновлений может подключатся к серверу Alcolytics 
-для выполнения необходимых операция. Если вы не желаете иметь ничего общего с сервером обновлений, 
-просто удалите этот файлик.
 
 
 ## Вопросы и общение
