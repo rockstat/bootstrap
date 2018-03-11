@@ -1,0 +1,6 @@
+
+- name: restat alco-tracker container
+  docker_container:
+    name: alco-tracker
+    state: started
+
