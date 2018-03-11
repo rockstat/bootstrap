@@ -2,7 +2,7 @@ playbook_version: 2.0.0
 initial_user: root
 
 alco_user: 'alco'
-alco_key_file: './public_keys/{{alco_user}}.pub'
+alco_key_file: './public_keys/alco.pub'
 alco_home_dir: '/srv/alco'
 alco_data_dir: '/srv/alco/data'
 alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
@@ -89,15 +89,19 @@ alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 w
 # Migrations
 
 ch_path: '{{alco_tracker_path}}/clickhouse_schema'
-ch_operations: []
+ch_operations:
 
 #  # Чистый SQL запрос
 #  - type: query
 #    query: 'SELECT count() FROM events'
 #
-#  # Миграция из локального файла
+# Миграция из локального файла
 #  - type: local_migration
-#    file: migration1-test-local-migration.yml
+#    file: 2-migration-ren-table.yml
+
+#   Файл миграции в репе трекера
+  - type: migration
+    file: '{{ch_path}}/2-migration-ren-table.yml'
 ##
 ##  - type: query_file
 ##    file: '{{ch_path}}/table_migrations.sql'

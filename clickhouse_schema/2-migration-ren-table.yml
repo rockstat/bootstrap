@@ -1,4 +1,0 @@
-- RENAME TABLE huy TO vam
-- ALTER TABLE vam DROP COLUMN hren
-- SELECT count() FROM vam
--

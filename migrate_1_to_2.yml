@@ -23,7 +23,7 @@
         name: anaconda
         state: absent
 
-    - name: remove anaconda container
+    - name: remove alco-tracker container
       docker_container:
         name: alco-tracker
         state: absent

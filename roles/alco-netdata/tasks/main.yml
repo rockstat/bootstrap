@@ -42,5 +42,15 @@
   - name: Copy service file
     command: cp {{ netdata_install_dir }}/system/netdata.service /etc/systemd/system/netdata.service
 #    when: clone_or_pull.changed == True and ansible_service_mgr == "systemd"
-    notify: start and enable
+#    notify: start and enable
+
+  - name: reloading systemd daemon
+    systemd:
+      daemon_reload: yes
+
+  - name: start and enable
+    systemd:
+      name: netdata
+      state: started
+      enabled: yes
 
