@@ -1,12 +1,16 @@
 ---
 clickhouse_profiles_custom: {}
 clickhouse_profiles_default:
- default:
-   max_memory_usage: 10000000000
-   use_uncompressed_cache: 0
-   load_balancing: random
- readonly:
-   readonly: 1
+  default:
+    max_memory_usage: 4000000000 #1gb
+    use_uncompressed_cache: 0
+    load_balancing: random
+    max_rows_to_read: 500000000 #
+    max_rows_to_sort: 200000 #
+    max_execution_time: 1200 #c
+    max_threads: 3 #
+  readonly:
+    readonly: 1
 
 clickhouse_listen_host_custom: []
 clickhouse_listen_host_default:
@@ -45,7 +49,7 @@ clickhouse_users_default:
 clickhouse_users_custom: {}
 
 clickhouse_quotas_intervals_default:
- - { duration: 3600, queries: 0, errors: 0,result_rows: 0,read_rows: 0,execution_time: 0 }
+ - { duration: 3600, queries: 0, errors: 0,result_rows: 0,read_rows: 0, execution_time: 0 }
 
 clickhouse_quotas_default:
  - { name: "default", intervals: "{{ clickhouse_quotas_intervals_default }}",comment: "Default quota - count only" }
@@ -65,12 +69,14 @@ clickhouse_logger:
   count: 10
 
 clickhouse_config:
-  max_connections: 2048
-  keep_alive_timeout: 3
-  max_concurrent_queries: 100
-  uncompressed_cache_size: 8589934592
-  mark_cache_size: 5368709120
+  max_connections: 100
+  keep_alive_timeout: 10
+  max_concurrent_queries: 15
+
+  use_uncompressed_cache: 0
+  uncompressed_cache_size: 2589934592
+  mark_cache_size: 1368709120
   builtin_dictionaries_reload_interval: 3600
-  max_session_timeout: 3600
+  max_session_timeout: 600
   default_session_timeout: 60
 
