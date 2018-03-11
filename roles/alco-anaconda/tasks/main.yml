@@ -25,7 +25,7 @@
 
 - name: Cloning Simple ClickHouse repo
   git:
-    repo: https://github.com/alcolytics/simple-clickhouse.git
+    repo: https://github.com/madiedinro/simple-clickhouse
     dest: '{{anaconda_docker_data_dir}}/simpleclickhouse'
   ignore_errors: true
   become: yes
