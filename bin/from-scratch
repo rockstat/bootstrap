@@ -8,8 +8,9 @@ set -o pipefail
 IFS=$'\n\t'
 DEBIAN_FRONTEND=noninteractive
 
+ALCO_HOME=/srv/alco
 REPOSRC=https://github.com/alcolytics/alco-bootstrap
-LOCALREPO=alco-bootstrap
+LOCALREPO=$ALCO_HOME/alco-bootstrap
 
 printf "Setting language params...\n"
 
@@ -21,12 +22,11 @@ export LC_ALL=en_US.UTF-8
 printf "Updating system...\n"
 
 sudo apt-get -q -y update
-#sudo apt-get -q -y --force-yes upgrade
 sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
-#-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-#echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | sudo tee /etc/default/locale
-#sudo dpkg-reconfigure -f noninteractive locales
+#may be later
+#sudo apt-get -q -y --force-yes upgrade
+#-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 sudo pip install pip -U
 sudo pip install ansible
@@ -37,21 +37,31 @@ INVENTORY=$LOCALREPO/inventory/private
 if [ ! -d $LOCALREPO_VC_DIR ]
 then
     git clone $REPOSRC $LOCALREPO
+    cd $LOCALREPO
+    git submodule init
 else
     cd $LOCALREPO
     git pull $REPOSRC
-    cd ..
+    git submodule update
 fi
 
-printf "\n\nSetup complete!\nTime to configure your installation!\nLet me generate base inventory file for you\n"
-printf "press CTRL+C to abort\n\n"
-echo "Enter your tracking domain name (for example alco.txxx.com), then [ENTER]:"
-read domain
-echo "Enter email to receive notifications about SSL certificate expiration, then [ENTER]:"
-read email
+if [ ! -e $INVENTORY ]
+then
+    printf "\n\nSetup complete!\nTime to configure your installation!\nLet me generate base inventory file for you\n"
+    printf "press CTRL+C to abort\n\n"
+    echo "Enter your tracking domain name (for example alco.txxx.com), then [ENTER]:"
+    read domain
+    echo "Enter email to receive notifications about SSL certificate expiration, then [ENTER]:"
+    read email
 
-printf "\n"
-printf "[private]\nalcostat ansible_host=$domain\n\n[private:vars]\ntracker_domain=$domain\ncontact_email=$email\n\n" | sudo tee $INVENTORY
+    printf "\n"
+    printf "[private]\nalcostat ansible_host=$domain\n\n[private:vars]\ntracker_domain=$domain\ncontact_email=$email\n\n" | sudo tee $INVENTORY
+fi
 
-printf "\nSuccess! Next steps:\n\n"
-printf "$ cd $LOCALREPO\n$ ansible-playbook alcolytics.yml --connection=local\n\nThat's all\n\n"
+cd $LOCALREPO
+
+printf "\nSuccess!\n\n"
+printf "$ cd $LOCALREPO && ansible-playbook alcolytics.yml --connection=local\n\nThat's all\n\n"
+
+
+
