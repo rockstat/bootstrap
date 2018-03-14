@@ -1,0 +1,20 @@
+---
+- name: Removing old CH repo
+  hosts: all
+  remote_user: '{{alco_user}}'
+  become: yes
+  vars:
+    clickhouse_repo: "deb http://repo.yandex.ru/clickhouse/xenial stable main"
+  tasks:
+    - name: remove repo key
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: E0C56BD4
+        state: absent
+      become: true
+
+    - name: remove ClickHouse repo
+      apt_repository:
+        repo: "{{ clickhouse_repo }}"
+        state: absent
+      become: true

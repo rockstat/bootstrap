@@ -21,7 +21,7 @@ clickhouse_listen_host_default:
 clickhouse_listen_host: "{{ clickhouse_listen_host_default + clickhouse_listen_host_custom }}"
 clickhouse_http_port: 8123
 
-clickhouse_repo: "deb http://repo.yandex.ru/clickhouse/xenial stable main"
+clickhouse_repo: "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/"
 clickhouse_package:
   - clickhouse-client
   - clickhouse-server-base
@@ -80,3 +80,11 @@ clickhouse_config:
   max_session_timeout: 600
   default_session_timeout: 60
 
+clickhouse_sources_dir: ./alco-clickhouse
+clickhouse_setup_carbron: false
+clickhouse_setup_graphite: false
+clickhouse_docker_net_name: bridge
+clickhouse_docker_bind_addr: 127.0.0.1
+clickhouse_carbon_bind_port: 2003
+clickhouse_graphite_bind_port: 19090
+clickhouse_docker_ch_ip: 127.0.0.1
