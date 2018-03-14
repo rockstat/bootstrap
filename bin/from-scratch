@@ -28,8 +28,8 @@ sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
 #sudo apt-get -q -y --force-yes upgrade
 #-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-sudo pip install pip -U
-sudo pip install ansible
+sudo -H pip install pip -U
+sudo -H pip install ansible
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private

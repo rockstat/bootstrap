@@ -32,23 +32,26 @@ Ansible playbook для автоматической установки Alcolyti
 
 ## Установщик установщика 
 
+
+
 Установка минимальных curl, если нет
 ```bash
 sudo apt -y update && sudo apt -y install curl
 ```
 
-Предконфигурация системы и получение свежей версии скрипта установки. Это скрипт из `bin/from-scratch`
+Предконфигурация системы и получение свежей версии playbook-a. Это скрипт из `bin/from-scratch`
 ```bash
-sudo bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
+bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
 ```
 
-
-Запуск установщика Alcolytics
+Запуск playbook Alcolytics
 ```bash
+cd /srv/alco/alco-bootstrap
+
 ansible-playbook alcolytics.yml --connection=local
 ```
 
-**Полная версия тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
+**Полная документация тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
 
 ## Вопросы и общение
 
