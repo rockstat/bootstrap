@@ -4,3 +4,6 @@
 [submodule "roles/dr.exposeur"]
 	path = roles/dr.exposeur
 	url = https://github.com/madiedinro/dr.exposeur.git
+[submodule "roles/dr.openvpn-client"]
+	path = roles/dr.openvpn-client
+	url = https://github.com/madiedinro/dr.openvpn-client.git

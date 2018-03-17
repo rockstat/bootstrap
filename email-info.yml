@@ -4,7 +4,7 @@
   remote_user: '{{alco_user}}'
   tasks:
     - import_role:
-        name: alco-mailer
+        name: alco-pechkin
       vars:
         amail_ovpn_keys_dir:  '{{alco_ovpn_keys_dir}}'
         amail_sender:         '{{mailgun_sender}}'

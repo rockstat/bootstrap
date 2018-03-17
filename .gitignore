@@ -1,3 +1,6 @@
-inventory/
+inventory/priv*
 group_vars/priv*
 public_keys/priv*
+roles/dr.exposeur
+roles/dr.server
+ovpn_keys/*

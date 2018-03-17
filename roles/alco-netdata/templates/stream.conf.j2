@@ -1,6 +1,8 @@
+#config https://github.com/firehol/netdata/blob/master/conf.d/stream.conf
+
 {% if netdata_backend == True %}
 
-[API_KEY]
+[{{netdata_stream_api_key}}]
     enabled = yes
     default history = 3600
     default memory mode = save
@@ -9,7 +11,7 @@
 
 [stream]
     enabled = no
-    destination = netdata_stream_host:netdata_stream_port
+    destination = {{netdata_stream_host}}:{{netdata_stream_port}}
     api key = {{netdata_stream_api_key}}
 
 {% else %}
@@ -17,7 +19,7 @@
 
 [stream]
     enabled = yes
-    destination = netdata_stream_host:netdata_stream_port
+    destination = {{netdata_stream_host}}:{{netdata_stream_port}}
     api key = {{netdata_stream_api_key}}
 
 {% endif %}

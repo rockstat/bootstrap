@@ -33,8 +33,11 @@
 
   - name: Creating config
     template:
-     src: netdata.conf.j2
-     dest: '{{ netdata_install_dir }}/netdata/etc/netdata/netdata.conf'
+     src: '{{item}}.j2'
+     dest: '{{ netdata_install_dir }}/netdata/etc/netdata/{{item}}'
+    with_items:
+      - netdata.conf
+      - stream.conf
     become: yes
 
   - name: Creating stream config
@@ -57,6 +60,6 @@
   - name: start and enable
     systemd:
       name: netdata
-      state: started
+      state: restarted
       enabled: yes
 

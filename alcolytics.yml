@@ -12,10 +12,19 @@
       tags: ['base']
 
     - import_role:
-        name: dr.server
+        name: dr.exposeur
       vars:
-        expo_rules_custom: '{{alco_firewall_rules + alco_priv_ufw_rules|default([]) + alco_group_ufw_rules|default([])}}'
-      tags: ['base']
+        expo_reset_ufw: true
+        expo_rules: '{{alco_firewall_rules + alco_priv_ufw_rules|default([]) + alco_group_ufw_rules|default([])}}'
+      tags: ['firewall']
+
+    - import_role:
+        name: dr.openvpn-client
+      vars:
+        openvpnc_key: '{{alco_internal_vpn_key}}'
+      when: alco_internal_vpn_connect == True and vpn_id is defined
+      tags: ['ovpn-client']
+
 
     - import_role:
         name: alco-letsencrypt
@@ -58,6 +67,10 @@
     - import_role:
         name: alco-netdata
       vars:
+        netdata_allow_dashboard_from: 'localhost {{alco_netdata_from}}'
+        netdata_allow_badges_from: 'localhost {{alco_netdata_from}}'
+        netdata_allow_connections_from: '*'
+        netdata_allow_streaming_from: '*'
       tags: ['netdata']
 
 # from platform file
@@ -77,7 +90,6 @@
       vars:
         chproxy_docker_net_name: '{{alco_docker_net_name}}'
         chproxy_docker_bind_addr: '{{alco_docker_ip}}'
-        chproxy_docker_http_allow_net: '{{alco_docker_net}}'
         chproxy_ch_addr: '{{alco_docker_ip}}'
         chproxy_clone_to: '{{alco_home_dir}}/alco-chproxy'
       tags: ['chproxy']

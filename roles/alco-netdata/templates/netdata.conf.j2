@@ -48,17 +48,18 @@
 [web]
 	# mode = multi-threaded
 	# listen backlog = 4096
-	# default port = 19999
-	# bind to = *
+  default port = 19999
+	bind to = *
 	# web files owner = netdata
 	# web files group = netdata
 	# disconnect idle clients after seconds = 60
 	# respect do not track policy = no
 	# x-frame-options response header =
-	# allow connections from = localhost *
-	# allow dashboard from = localhost *
-	# allow badges from = *
-	# allow streaming from = *
+	allow connections from = {{netdata_allow_connections_from}}
+	allow dashboard from = {{netdata_allow_dashboard_from}}
+	allow badges from = {{netdata_allow_badges_from}}
+	allow streaming from = {{netdata_allow_streaming_from}}
+	allow netdata.conf from = {{netdata_allow_conf_from}}
 	# allow netdata.conf from = localhost fd* 10.* 192.168.* 172.16.* 172.17.* 172.18.* 172.19.* 172.20.* 172.21.* 172.22.* 172.23.* 172.24.* 172.25.* 172.26.* 172.27.* 172.28.* 172.29.* 172.30.* 172.31.*
 	# enable gzip compression = yes
 	# gzip compression strategy = default
