@@ -14,7 +14,7 @@
     - import_role:
         name: dr.server
       vars:
-        expo_rules_custom: '{{alco_firewall_rules}}'
+        expo_rules_custom: '{{alco_firewall_rules + alco_priv_ufw_rules|default([]) + alco_group_ufw_rules|default([])}}'
       tags: ['base']
 
     - import_role:
