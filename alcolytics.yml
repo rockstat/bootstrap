@@ -33,6 +33,7 @@
           gzip: '{{alco_config_gzip}}'
           upstream:
             - '{{alco_upstream_tracker}}'
+          ssl: '{{alco_nginx_ssl_params}}'
       tags: ['nginx']
 
     - import_role:

@@ -277,6 +277,43 @@
     -->
     <!-- <max_table_size_to_drop>0</max_table_size_to_drop> -->
 
+    <graphite_rollup>
+    	<!-- default -->
+    	<default>
+    		<retention>
+    			<age>0</age>
+    			<precision>60</precision>
+    		</retention>
+    		<retention>
+    			<age>864000</age>
+    			<precision>900</precision>
+    		</retention>
+    		<retention>
+    			<age>1728000</age>
+    			<precision>1800</precision>
+    		</retention>
+    		<retention>
+    			<age>3456000</age>
+    			<precision>3600</precision>
+    		</retention>
+    		<retention>
+    			<age>10368000</age>
+    			<precision>21600</precision>
+    		</retention>
+    		<retention>
+    			<age>34560000</age>
+    			<precision>43200</precision>
+    		</retention>
+    		<retention>
+    			<age>63072000</age>
+    			<precision>86400</precision>
+    		</retention>
+    		<retention>
+    			<age>94608000</age>
+    			<precision>604800</precision>
+    		</retention>
+    	</default>
+    </graphite_rollup>
     <!-- Example of parameters for GraphiteMergeTree table engine -->
     <graphite_rollup_example>
         <pattern>
