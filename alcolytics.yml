@@ -9,8 +9,14 @@
       vars:
         use_user: '{{alco_user}}'
         use_key_file: '{{alco_key_file}}'
-        firewall_rules_custom: '{{alco_firewall_rules}}'
       tags: ['base']
+
+    - import_role:
+        name: dr.server
+      vars:
+        expo_rules_custom: '{{alco_firewall_rules}}'
+      tags: ['base']
+
     - import_role:
         name: alco-letsencrypt
       vars:

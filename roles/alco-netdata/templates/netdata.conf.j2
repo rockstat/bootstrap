@@ -105,23 +105,24 @@
 	# max URL name length = 50
 	# allow from = *
 
+{% if netdata_backend == True %}
 [backend]
 	# host tags =
-	# enabled = no
-	# data source = average
-	# type = graphite
-	# destination = localhost
-	# prefix = netdata
-	# hostname = m33v4
-	# update every = 10
-	# buffer on failures = 10
-	# timeout ms = 20000
-	# send names instead of ids = yes
-	# send charts matching = *
-
+	enabled = yes
+	data source = average
+	type = {{netdata_backend_type}}
+	destination = {{netdata_backend_dest}}
+	prefix = {{netdata_backend_prefix}}
+	hostname = {{netdata_hostname}}
+	update every = 10
+	buffer on failures = 10
+	timeout ms = 20000
+	send names instead of ids = yes
+	send charts matching = *
+{% endif %}
 [statsd]
-	# enabled = yes
-	# update every (flushInterval) = 1
+	enabled = yes
+	update every (flushInterval) = 1
 	# udp messages to process at once = 10
 	# create private charts for metrics matching = *
 	# max private charts allowed = 200

@@ -1,3 +1,16 @@
 netdata_binary: /usr/sbin/netdata
 netdata_install_dir: /opt/netdata
 netdata_version: v1.9.0
+netdata_hostname: '{{inventory_hostname_short|default(inventory_hostname)}}'
+
+netdata_backend: false
+netdata_backend_type: graphite
+netdata_stream_host: 127.0.0.1
+netdata_stream_port: 8899
+netdata_backend_prefix: nd
+netdata_backend_api_key: none
+netdata_backend_dest: 127.0.0.1
+
+netdata_stream: false
+netdata_stream_api_key: none
+netdata_stream_dest: localhost
