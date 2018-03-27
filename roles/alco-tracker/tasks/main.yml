@@ -33,6 +33,7 @@
     name: alcolytics/alco-tracker
     buildargs:
       ALCOJS_VERSION: '{{alco_service_version}}'
+  tags: ['tracker-rebuild']
 
 - name: Creating Alcolytics tracker container
   docker_container:
@@ -58,4 +59,5 @@
       DEVICED_SERVICE: devicedetector:8080
       MIXPANEL_TOKEN: "{{mixpanel_token|default('')}}"
       LOG_LEVEL: '{{alco_service_log_level}}'
+  tags: ['tracker-rebuild']
 

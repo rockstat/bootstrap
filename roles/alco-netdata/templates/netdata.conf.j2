@@ -48,17 +48,18 @@
 [web]
 	# mode = multi-threaded
 	# listen backlog = 4096
-	# default port = 19999
-	# bind to = *
+  default port = 19999
+	bind to = *
 	# web files owner = netdata
 	# web files group = netdata
 	# disconnect idle clients after seconds = 60
 	# respect do not track policy = no
 	# x-frame-options response header =
-	# allow connections from = localhost *
-	# allow dashboard from = localhost *
-	# allow badges from = *
-	# allow streaming from = *
+	allow connections from = {{netdata_allow_connections_from}}
+	allow dashboard from = {{netdata_allow_dashboard_from}}
+	allow badges from = {{netdata_allow_badges_from}}
+	allow streaming from = {{netdata_allow_streaming_from}}
+	allow netdata.conf from = {{netdata_allow_conf_from}}
 	# allow netdata.conf from = localhost fd* 10.* 192.168.* 172.16.* 172.17.* 172.18.* 172.19.* 172.20.* 172.21.* 172.22.* 172.23.* 172.24.* 172.25.* 172.26.* 172.27.* 172.28.* 172.29.* 172.30.* 172.31.*
 	# enable gzip compression = yes
 	# gzip compression strategy = default
@@ -105,23 +106,24 @@
 	# max URL name length = 50
 	# allow from = *
 
+{% if netdata_backend == True %}
 [backend]
 	# host tags =
-	# enabled = no
-	# data source = average
-	# type = graphite
-	# destination = localhost
-	# prefix = netdata
-	# hostname = m33v4
-	# update every = 10
-	# buffer on failures = 10
-	# timeout ms = 20000
-	# send names instead of ids = yes
-	# send charts matching = *
-
+	enabled = yes
+	data source = average
+	type = {{netdata_backend_type}}
+	destination = {{netdata_backend_dest}}
+	prefix = {{netdata_backend_prefix}}
+	hostname = {{netdata_hostname}}
+	update every = 10
+	buffer on failures = 10
+	timeout ms = 20000
+	send names instead of ids = yes
+	send charts matching = *
+{% endif %}
 [statsd]
-	# enabled = yes
-	# update every (flushInterval) = 1
+	enabled = yes
+	update every (flushInterval) = 1
 	# udp messages to process at once = 10
 	# create private charts for metrics matching = *
 	# max private charts allowed = 200

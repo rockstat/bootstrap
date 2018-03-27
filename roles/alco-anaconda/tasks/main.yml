@@ -27,6 +27,7 @@
   git:
     repo: https://github.com/madiedinro/simple-clickhouse
     dest: '{{anaconda_docker_data_dir}}/simpleclickhouse'
+    force: yes
   ignore_errors: true
   become: yes
 

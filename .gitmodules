@@ -1,3 +1,12 @@
 [submodule "roles/dr.server"]
 	path = roles/dr.server
 	url = https://github.com/madiedinro/dr.server.git
+[submodule "roles/dr.exposeur"]
+	path = roles/dr.exposeur
+	url = https://github.com/madiedinro/dr.exposeur.git
+[submodule "roles/dr.openvpn-client"]
+	path = roles/dr.openvpn-client
+	url = https://github.com/madiedinro/dr.openvpn-client.git
+[submodule "roles/dr.letsencrypt"]
+	path = roles/dr.letsencrypt
+	url = https://github.com/madiedinro/dr.letsencrypt.git
