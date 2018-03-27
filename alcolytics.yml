@@ -7,8 +7,8 @@
     - import_role:
         name: dr.server
       vars:
-        use_user: '{{alco_user}}'
-        use_key_file: '{{alco_key_file}}'
+        drs_user: '{{alco_user}}'
+        drs_pub_key_file: '{{alco_key_file}}'
       tags: ['base']
 
     - import_role:
