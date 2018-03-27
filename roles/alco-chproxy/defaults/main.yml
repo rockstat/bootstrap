@@ -1,24 +1,42 @@
 ---
-chproxy_clone_to: '~/alco-chproxy'
-chproxy_docker_bind_addr: 127.0.0.1
-chproxy_docker_net_name: bridge
-chproxy_ch_port_default: 8123
-chproxy_ch_addr_default: 127.0.0.1
-chproxy_docker_http_allow_net: 0.0.0.0
-chproxy_port: 9090
+chproxy_container: alco-chproxy
+chproxy_build_root: /tmp
+chproxy_build_path: '{{chproxy_build_root}}/{{chproxy_container}}'
+chproxy_docker_image: alcolytics/chproxy
+chproxy_docker_expose: 127.0.0.1:9090
+chproxy_docker_attach_net: bridge
+chproxy_docker_networks:
+  - name: '{{chproxy_docker_attach_net}}'
+
+
+# User can define own allowed networks
+chproxy_allowed_networks: []
+chproxy_allowed_networks_default:
+  - 127.0.0.0/24
+  - 172.16.0.0/16
+
+chproxy_def_user: default
+chproxy_def_password: default
+chproxy_def_dest_user: default
+chproxy_def_cluster: default
+chproxy_def_node: 127.0.0.1:8123
+chproxy_def_cluster_nodes:
+  - '{{chproxy_def_node}}'
+
+chproxy_users: []
 chproxy_users_default:
-  - name: '{{alco_db_name}}'
-    password: '{{alco_db_pass}}'
+  - name: '{{chproxy_def_user}}'
+    password: '{{chproxy_def_password}}'
     allow_cors: true
-    to_cluster: "default"
-    to_user: "default"
+    to_cluster: '{{chproxy_def_cluster}}'
+    to_user: '{{chproxy_def_dest_user}}'
     max_concurrent_queries: 2
     max_queue_size: 100
-    max_queue_time: "30s"
-    max_execution_time: "30s"
+    max_queue_time: 30s
+    max_execution_time: 30s
 
+chproxy_clusters: []
 chproxy_clusters_default:
-  - name: "default"
-    nodes:
-      - "{{ chproxy_ch_addr|default(chproxy_ch_addr_default) }}:{{chproxy_ch_port|default(chproxy_ch_port_default)}}"
+  - name: '{{chproxy_def_cluster}}'
+    nodes: '{{chproxy_def_cluster_nodes}}'
 

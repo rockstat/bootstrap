@@ -1,0 +1,17 @@
+FROM debian:stretch-slim
+
+ENV CHPROXY_VERSION 1.10.4
+
+RUN set -ex \
+  && apt update \
+  && apt install ca-certificates openssl tar gzip wget --no-install-recommends -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && wget https://github.com/Vertamedia/chproxy/releases/download/${CHPROXY_VERSION}/chproxy-linux-amd64-${CHPROXY_VERSION}.tar.gz \
+  && tar xzvf chproxy-linux-amd64-${CHPROXY_VERSION}.tar.gz \
+  && mv chproxy /bin/chproxy
+
+COPY config.yml /config.yml
+
+EXPOSE 9090
+
+CMD ["/bin/chproxy", "-config=/config.yml"]

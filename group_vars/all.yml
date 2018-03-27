@@ -79,15 +79,13 @@ alco_vhost_default:
   - server_name _
   - return 301 https://$host$request_uri
 
-alco_vhost_tracker:
-  - server_name {{tracker_domain}}
+alco_nginx_vhost_def:
   - listen 443 ssl http2
-  - ssl_certificate_key /etc/letsencrypt/live/{{tracker_domain}}/privkey.pem
-  - ssl_certificate     /etc/letsencrypt/live/{{tracker_domain}}/fullchain.pem
-  - ssl_trusted_certificate /etc/letsencrypt/live/{{tracker_domain}}/chain.pem
   - add_header 'Cache-Control' 'no-store, must-revalidate'
   - expires off
-  - root {{alco_home_dir}}/alco-tracker/public
+
+
+alco_nginx_node_loc:
   - location / { try_files $uri $uri/index.html @node; }
   - location @node {
       proxy_redirect   off;
@@ -98,13 +96,38 @@ alco_vhost_tracker:
       proxy_pass       http://alco-tracker;
     }
 
+alco_nginx_vhost_tracker:
+  - server_name {{tracker_domain}}
+  - root {{alco_home_dir}}/alco-tracker/public
+  - ssl_certificate_key /etc/letsencrypt/live/{{tracker_domain}}/privkey.pem
+  - ssl_certificate     /etc/letsencrypt/live/{{tracker_domain}}/fullchain.pem
+  - ssl_trusted_certificate /etc/letsencrypt/live/{{tracker_domain}}/chain.pem
+
+alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 weight=10; }'
+
 alco_config_gzip:
   - gzip on
   - gzip_min_length 10240
   - gzip_proxied expired no-cache no-store private auth
   - gzip_types text/plain text/css text/javascript application/javascript application/x-javascript
 
-alco_upstream_tracker: 'upstream alco-tracker { server {{alco_docker_ip}}:8081 weight=10; }'
+alco_vhost_tracker: '{{alco_nginx_vhost_def + alco_nginx_vhost_tracker + alco_nginx_node_loc}}'
+
+alco_nginx_sites:
+  default: '{{alco_vhost_default}}'
+  tracker: '{{alco_vhost_tracker}}'
+
+alco_nginx_upstreams:
+  - '{{alco_upstream_tracker}}'
+
+
+# SSL
+
+alco_ssl_certs:
+  - email: '{{contact_email}}'
+    domains:
+      - '{{tracker_domain}}'
+
 
 
 # Migrations

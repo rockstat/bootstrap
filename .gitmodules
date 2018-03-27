@@ -7,3 +7,6 @@
 [submodule "roles/dr.openvpn-client"]
 	path = roles/dr.openvpn-client
 	url = https://github.com/madiedinro/dr.openvpn-client.git
+[submodule "roles/dr.letsencrypt"]
+	path = roles/dr.letsencrypt
+	url = https://github.com/madiedinro/dr.letsencrypt.git

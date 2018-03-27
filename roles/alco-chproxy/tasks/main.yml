@@ -1,36 +1,39 @@
 ---
-- name: Setting variables
-  set_fact:
-    chproxy_docker_bind_addr: '{{chproxy_docker_bind_addr}}'
-    chproxy_port: '{{chproxy_port}}'
-
 - name: Cloning CHProxy Dockerfile
   git:
-    repo: https://github.com/alcolytics/alco-chproxy
-    dest: '{{chproxy_clone_to}}'
+    repo: '{{chproxy_repo}}'
+    dest: '{{chproxy_build_path}}'
+  when: chproxy_repo is defined
 
-- name: Creating config
+- name: Rendering CHProxy files
   template:
-   src: config.yml.j2
-   dest: '{{chproxy_clone_to}}/config.yml'
+    src: '{{item}}.j2'
+    dest: '{{chproxy_build_path}}/{{item}}'
+  with_items:
+    - config.yml
+    - Dockerfile
 
-- name: Building CHProxy image
+- name: Building CHProxy docker image
   docker_image:
-    path: '{{chproxy_clone_to}}'
-    name: alcolytics/chproxy
+    path: '{{chproxy_build_path}}'
+    name: '{{chproxy_docker_image}}'
     force: yes
 
-- name: Creating CHProxy container
+- name: Removing old container
   docker_container:
     name: chproxy
-    hostname: chproxy
+    state: absent
+
+- name: Creating and starting CHProxy docker container
+  docker_container:
+    name: '{{chproxy_container}}'
+    hostname: '{{chproxy_container}}'
     recreate: yes
     state: started
     restart: yes
     restart_policy: always
-    image: alcolytics/chproxy
+    image: '{{chproxy_docker_image}}'
     purge_networks: yes
-    networks:
-      - name: '{{chproxy_docker_net_name}}'
+    networks: '{{chproxy_docker_networks}}'
     ports:
-      - '{{chproxy_docker_bind_addr}}:{{chproxy_port}}:9090'
+      - '{{chproxy_docker_expose}}:{{chproxy_internal_port}}'
