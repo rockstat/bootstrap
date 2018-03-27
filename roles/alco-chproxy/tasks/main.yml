@@ -5,6 +5,11 @@
     dest: '{{chproxy_build_path}}'
   when: chproxy_repo is defined
 
+- name: Checking build exists
+  file:
+    path: '{{chproxy_build_path}}'
+    state: directory
+
 - name: Rendering CHProxy files
   template:
     src: '{{item}}.j2'
