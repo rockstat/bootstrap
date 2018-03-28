@@ -39,6 +39,7 @@ then
     git clone $REPOSRC $LOCALREPO
     cd $LOCALREPO
     git submodule init
+    git submodule update
 else
     cd $LOCALREPO
     git pull --rebase
