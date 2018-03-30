@@ -29,7 +29,7 @@ sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
 #-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 sudo -H pip install pip -U
-supo -H pip install setuptools
+sudo -H pip install setuptools
 sudo -H pip install ansible
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
