@@ -22,7 +22,7 @@
     - import_role:
         name: dr.openvpn-client
       vars:
-        openvpnc_key: '{{alco_internal_vpn_key}}'
+        openvpnc_key: '{{alco_internal_vpn_key|default(omit)}}'
       when: alco_internal_vpn_connect == True and vpn_id is defined
       tags: ['ovpn-client']
 
@@ -61,7 +61,7 @@
       tags: ['clickhouse']
 
     - import_role:
-        name: alco-netdata
+        name: dr.netdata
       vars:
         netdata_allow_dashboard_from: 'localhost {{alco_netdata_from}}'
         netdata_allow_badges_from: 'localhost {{alco_netdata_from}}'
