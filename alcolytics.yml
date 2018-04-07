@@ -65,7 +65,7 @@
       vars:
         netdata_allow_dashboard_from: '{{alco_netdata_from}}'
         netdata_allow_badges_from: '{{alco_netdata_from}}'
-        netdata_allow_conf_from: '{{alco_docker_net}}'
+        netdata_allow_conf_from: '{{alco_netdata_from}}'
         netdata_allow_connections_from: '{{alco_netdata_streaming_from}}'
         netdata_allow_streaming_from: '{{alco_netdata_streaming_from}}'
       tags: ['netdata']
