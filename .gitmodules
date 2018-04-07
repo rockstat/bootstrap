@@ -13,3 +13,6 @@
 [submodule "roles/dr.prostges-container"]
 	path = roles/dr.prostges-container
 	url = https://github.com/madiedinro/dr.prostges-container
+[submodule "roles/dr.netdata"]
+	path = roles/dr.netdata
+	url = https://github.com/madiedinro/dr.netdata
