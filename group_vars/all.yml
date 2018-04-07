@@ -26,6 +26,7 @@ alco_ovpn_port: 8080
 alco_internal_vpn_connect: false
 alco_internal_vpn_net: 192.168.222.0/24
 alco_internal_vpn_net_pattern: 192.168.222.*
+alco_internal_vpn_host_ip: "{{alco_internal_vpn_net|ipaddr(1)|ipaddr('address')}}"
 
 # netdata
 alco_netdata_from: 'localhost {{alco_docker_net_pattern}}'
