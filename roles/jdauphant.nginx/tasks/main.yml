@@ -6,7 +6,7 @@
     - "../vars/empty.yml"
   tags: [always]
 
-- include_tasks: nginx-official-repo.yml
+- import_tasks: nginx-official-repo.yml
   tags: [packages, nginx]
 
 - name: Install the nginx packages for all other distributions
@@ -17,18 +17,18 @@
   with_items: "{{ nginx_pkgs }}"
   environment: "{{ nginx_env }}"
 
-- include_tasks: ensure-dirs.yml
+- import_tasks: ensure-dirs.yml
   tags: [configuration, nginx]
 
-- include_tasks: remove-defaults.yml
+- import_tasks: remove-defaults.yml
   when: not keep_only_specified
   tags: [configuration, nginx]
 
-- include_tasks: remove-extras.yml
+- import_tasks: remove-extras.yml
   when: keep_only_specified
   tags: [configuration, nginx]
 
-- include_tasks: remove-unwanted.yml
+- import_tasks: remove-unwanted.yml
   tags: [configuration, nginx]
 
 - import_tasks: configuration.yml

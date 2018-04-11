@@ -31,7 +31,7 @@
       vars:
         letsencrypt_domains_groups: '{{alco_ssl_certs}}'
         letsencrypt_pause_services: ['nginx']
-      tags: ['ssl']
+      tags: ssl
 
     - import_role:
         name: jdauphant.nginx
@@ -40,6 +40,7 @@
         keep_only_specified: yes
         nginx_http_params: '{{alco_nginx_http_params}}'
         nginx_sites: '{{alco_nginx_sites}}'
+        nginx_auth_basic_files: '{{alco_nginx_auth_basic_files}}'
         nginx_configs:
           gzip: '{{alco_config_gzip}}'
           upstream: '{{alco_nginx_upstreams}}'
@@ -83,14 +84,16 @@
       tags: ['ovpn']
 
     - import_role:
-        name: alco-chproxy
+        name: alco-ch-proxy
       vars:
         chproxy_docker_attach_net: '{{alco_docker_net_name}}'
         chproxy_docker_expose: '{{alco_docker_ip}}:9090'
         chproxy_build_root: '{{alco_home_dir}}'
-        chproxy_def_user: alco
-        chproxy_def_password: alco
+        chproxy_zero_user: alco
+        chproxy_zero_password: alco
         chproxy_def_node: '{{alco_docker_ip}}:8123'
+        chproxy_clusters: '{{hst_chproxy_clusters|default(omit)}}'
+        chproxy_users: '{{hst_chproxy_users|default(omit)}}'
       tags: ['chproxy']
 
     - import_role:
@@ -106,6 +109,7 @@
       vars:
         gragana_docker_net_name: '{{alco_docker_net_name}}'
         grafana_docker_bind_addr: '{{alco_docker_ip}}'
+        grafana_plugins: '{{alco_grafana_plugins_default + alco_grafana_plugins|default([])}}'
       tags: ['grafana']
 
     - import_role:

@@ -23,17 +23,18 @@ chproxy_def_node: 127.0.0.1:8123
 chproxy_def_cluster_nodes:
   - '{{chproxy_def_node}}'
 
+chproxy_def_max_concurrent_queries: 5
+chproxy_def_max_queue_size: 100
+chproxy_def_max_queue_time: 30s
+chproxy_def_max_execution_time: 30s
+chproxy_def_allow_cors: true
+
 chproxy_users: []
 chproxy_users_default:
-  - name: '{{chproxy_def_user}}'
-    password: '{{chproxy_def_password}}'
-    allow_cors: true
+  - name: '{{chproxy_zero_user|default(chproxy_def_user)}}'
+    password: '{{chproxy_zero_password|default(chproxy_def_password)}}'
     to_cluster: '{{chproxy_def_cluster}}'
     to_user: '{{chproxy_def_dest_user}}'
-    max_concurrent_queries: 2
-    max_queue_size: 100
-    max_queue_time: 30s
-    max_execution_time: 30s
 
 chproxy_clusters: []
 chproxy_clusters_default:

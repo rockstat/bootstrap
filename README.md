@@ -28,11 +28,7 @@ Ansible playbook для автоматической установки Alcolyti
 Основаная система настройки это Ansible, но ей для работы нужны некоторые пакеты, которых нет в дефолтовой поставке.
 Есть несколько путей.
 
-
-
 ## Установщик установщика 
-
-
 
 Установка минимальных curl, если нет
 ```bash
@@ -52,6 +48,13 @@ ansible-playbook alcolytics.yml --connection=local
 ```
 
 **Полная документация тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
+
+## Доступ к Grafana, Jupyter, Netdata без vpn
+
+Генерируем пароль для 
+```
+printf "dr:`openssl passwd -apr1`\n"
+```
 
 ## Вопросы и общение
 
