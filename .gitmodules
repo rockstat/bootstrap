@@ -16,3 +16,15 @@
 [submodule "roles/dr.netdata"]
 	path = roles/dr.netdata
 	url = https://github.com/madiedinro/dr.netdata
+[submodule "roles/dr.docker"]
+	path = roles/dr.docker
+	url = https://github.com/madiedinro/dr.docker
+[submodule "roles/dr.influxdb"]
+	path = roles/dr.influxdb
+	url = https://github.com/madiedinro/dr.influxdb-role
+[submodule "roles/dr.openvpn-server"]
+	path = roles/dr.openvpn-server
+	url = https://github.com/madiedinro/dr.openvpn-server
+[submodule "roles/dr.chronograf-role"]
+	path = roles/dr.chronograf-role
+	url = https://github.com/madiedinro/dr.chronograf-role
