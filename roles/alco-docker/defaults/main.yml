@@ -1,9 +1,0 @@
-alco_docker_create_network: true
-
-alco_docker_net_name: alconet
-alco_docker_interface: docker1
-alco_docker_net: 172.16.25.1/24
-alco_docker_ip: "{{alco_docker_net|ipaddr('address')}}"
-alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
-alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
-alco_docker_user: root

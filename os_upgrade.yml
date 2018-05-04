@@ -1,0 +1,29 @@
+---
+- name: System upgrade
+  hosts: all
+  serial: 1
+  remote_user: "{{initial_user|default('root')}}"
+  become: yes
+  tasks:
+    - name: Updating tree and install aptitude
+      apt:
+        name: aptitude
+        update_cache: yes
+    
+    - name: Upgrading
+      apt:
+        upgrade: dist
+
+    - name: reboot the server
+      shell: sleep 2 && shutdown -r now
+      async: 1
+      poll: 0
+
+    - name: Wait for server come back
+      wait_for_connection:
+        delay: 15
+        timeout: 300
+
+    - debug:
+        msg: "We're back again. Running on {{ inventory_hostname }}"
+

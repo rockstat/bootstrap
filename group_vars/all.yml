@@ -4,7 +4,7 @@ initial_user: root
 alco_user: 'alco'
 alco_key_file: './public_keys/alco.pub'
 alco_home_dir: '/srv/alco'
-alco_data_dir: '/srv/alco/data'
+alco_data_dir: '{{alco_home_dir}}/data'
 alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
 alco_tracker_custom_config_dir: '{{alco_data_dir}}/custom_tracker_config'
 
@@ -52,12 +52,17 @@ alco_internal_vpn_host_ip: "{{alco_internal_vpn_net|ipaddr(1)|ipaddr('address')}
 alco_netdata_from: 'localhost {{alco_docker_net_pattern}}'
 alco_netdata_streaming_from: 'localhost {{alco_docker_net_pattern}}'
 
-
 # ClickHouse
 alco_db_name: alco
 alco_db_pass: alco
 alco_ch_port: 8123
 alco_ch_proxy_port: 9090
+
+
+# chproxy def
+hst_chproxy_clusters: []
+hst_chproxy_users: []
+
 
 # Email config
 alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
@@ -76,7 +81,6 @@ alco_firewall_rules:
   - { to_port: '443'}
   - { to_port: '{{alco_ovpn_port}}'}
 
-
 # nginx params
 
 # nginx auth
@@ -86,7 +90,6 @@ alco_nginx_auth_basic_files:
 #
 #  tools:
 #    - dr:$apr1$.aUTart5$SSq.......
-
 
 alco_nginx_ssl_params:
   - ssl_session_cache shared:SSL:10m
@@ -147,7 +150,6 @@ alco_nginx_vhost_tracker:
 
 
 alco_nginx_vhost_tools:
-  - '{{alco_nginx_vhost_def}}'
   - root {{alco_home_dir}}/alco-tracker/public
   - ssl_certificate_key /etc/letsencrypt/live/{{tools_domain}}/privkey.pem
   - ssl_certificate     /etc/letsencrypt/live/{{tools_domain}}/fullchain.pem
@@ -158,7 +160,7 @@ alco_nginx_vhost_tools:
 alco_nginx_sites:
   default: '{{alco_vhost_default}}'
   tracker: '{{alco_nginx_vhost_def + alco_nginx_vhost_tracker + alco_nginx_node_loc}}'
-  grafana: '{{alco_nginx_vhost_tools|flatten + [alco_nginx_tools_loc|replace("_name_", "grafana")]}}'
+  grafana: '{{alco_nginx_vhost_def + alco_nginx_vhost_tools + [alco_nginx_tools_loc|replace("_name_", "grafana")]}}'
 
 alco_config_gzip:
   - gzip on
@@ -190,7 +192,6 @@ alco_ssl_certs:
 # ClickHouse Migrations
 ch_path: '{{alco_tracker_path}}/clickhouse_schema'
 ch_operations:
-
 #  # Чистый SQL запрос
 #  - type: query
 #    query: 'SELECT count() FROM events'
@@ -198,12 +199,9 @@ ch_operations:
 # Миграция из локального файла
 #  - type: local_migration
 #    file: 2-migration-ren-table.yml
-
 #   Таблица с миграций
   - type: query_file
     file: '{{ch_path}}/table_migrations.sql'
-
-
 #   Файл миграции в репе трекера
   - type: migration
     file: '{{ch_path}}/2-migration-ren-table.yml'

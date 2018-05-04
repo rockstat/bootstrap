@@ -1,0 +1,38 @@
+- name: Monitoring server
+  hosts: monitoring-server
+  remote_user: '{{initial_user|default("root")}}'
+  become: yes
+  tasks:
+    - import_role:
+        name: dr.influxdb
+      vars:
+        influxdb_tsb_enabled: "true"
+        influxdb_tsb_bind_address: ":4242"
+        influxdb_tsb_database: "opentsdb"
+        influxdb_tsb_retention_policy: ""
+        influxdb_tsb_consistency_level: "one"
+        influxdb_tsb_tls_enabled: "false"
+        influxdb_tsb_certificate: "/etc/ssl/influxdb.pem"
+        influxdb_tsb_log_point_errors: "true"
+        influxdb_tsb_batch_size: 1000
+        influxdb_tsb_batch_pending: 5
+        influxdb_tsb_batch_timeout: "1s"
+        influxdb_subscriber_enabled: "false"
+      tags: ['influxdb']
+
+    - import_role:
+        name: dr.chronograf
+      vars:
+        chronograf_port: 18888
+      tags: ['chronograf']
+
+    - import_role:
+        name: dr.openvpn-server
+      vars:
+        openvpn_clients_net: 192.168.222.0/24
+        openvpn_port: 8079
+        openvpn_client_prefix: node
+        openvpn_clients: 20
+      tags: ['openvpn']
+
+

@@ -20,7 +20,9 @@
 
 
 - name: Ensures clients keys dir exists
-  file: path={{ovpn_keys_dir}} state=directory
+  file: 
+    path: '{{ovpn_keys_dir}}'
+    state: directory
 
 
 - name: Checking server certs
@@ -30,7 +32,7 @@
     volumes: "{{ ovpn_docker_volumes }}"
     detach: false
     cleanup: true
-    command: 'test -f /etc/openvpn/pki/crl.pem'
+    command: 'test -f /etc/openvpn/pki/issued/{{ovpn_domain}}.crt'
   register: ovpn_cert_installed
   changed_when: false
   ignore_errors: true
@@ -89,11 +91,17 @@
       - '{{ovpn_port}}:1194/{{ovpn_proto}}'
 
 
+- name: Revoke OpenVPN user cert
+  command: "docker exec openvpn ovpn_revokeclient {{ item }}"
+  with_items: "{{ ovpn_users_revoke }}"
+  ignore_errors: true
+
+
 - name: Checking clients certs exists
   stat:
     path: "{{ovpn_keys_dir}}/alco_{{item}}.ovpn"
   register: keys_exists
-  with_items: "{{ ovpn_users }}"
+  with_items: "{{ ovpn_users|difference(ovpn_users_revoke) }}"
 
 
 - name: Generating OpenVPN user cert

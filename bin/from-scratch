@@ -30,7 +30,7 @@ sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
 
 sudo -H pip install pip -U
 sudo -H pip install setuptools
-sudo -H pip install ansible
+sudo -H pip install ansible==2.4.4.0
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private
@@ -40,7 +40,7 @@ then
     git clone $REPOSRC $LOCALREPO
     cd $LOCALREPO
     git submodule init
-    git submodule update
+    git submodule update --rebase --remote
 else
     cd $LOCALREPO
     git pull --rebase

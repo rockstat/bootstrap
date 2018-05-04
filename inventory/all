@@ -2,7 +2,7 @@
 # Сделайте копию этого файла с именем private, он будет исключен из гита, в нем уже вводите свои данные.
 
 [private]
-#alcostat ansible_host=alco.yourdomain.com
+#somestat ansible_host=alco.yourdomain.com
 
 [private:vars]
 #tracker_domain=alco.yourdomain.com

@@ -5,6 +5,14 @@
     dest: '{{chproxy_build_path}}'
   when: chproxy_repo is defined
 
+- debug: var={{item}}
+  with_items:
+    - chproxy_clusters
+    - chproxy_clusters_default
+    - chproxy_clusters|list + chproxy_clusters_default
+    - chproxy_users
+    - hproxy_users_default
+
 - name: Checking build exists
   file:
     path: '{{chproxy_build_path}}'
