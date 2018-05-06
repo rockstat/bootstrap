@@ -6,7 +6,7 @@
   remote_user: "{{initial_user|default('root')}}"
   become: yes
   vars:
-    alco_key: "{{ lookup('file', alco_key_file) }}"
+    alco_key: "{{ lookup('file', support_key_file) }}"
     auth_keys_f: ~/.ssh/authorized_keys
   pre_tasks:
     - name: Install python for Ansible

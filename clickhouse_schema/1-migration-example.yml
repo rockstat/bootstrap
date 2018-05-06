@@ -1,2 +1,0 @@
-- "ALTER TABLE events ADD COLUMN test1 UInt16;"
-- "ALTER TABLE events ADD COLUMN test2 UInt16;"

@@ -1,8 +1,8 @@
 playbook_version: 2.1.3
 initial_user: root
 
-alco_user: 'alco'
-alco_key_file: './public_keys/alco.pub'
+support_user: '0x011'
+support_key_file: './public_keys/support.pub'
 alco_home_dir: '/srv/alco'
 alco_data_dir: '{{alco_home_dir}}/data'
 alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
@@ -36,7 +36,7 @@ alco_docker_net_pattern: 172.16.25.*
 alco_docker_ip: "{{alco_docker_net|ipaddr(1)|ipaddr('address')}}"
 alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
 alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
-alco_docker_user: '{{alco_user}}'
+alco_docker_user: '{{support_user}}'
 
 # OVPN
 alco_ovpn_keys_dir: '{{alco_home_dir}}/ovpn_keys'

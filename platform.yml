@@ -7,14 +7,14 @@
     - import_role:
         name: dr.server
       vars:
-        drs_user: '{{alco_user}}'
-        drs_pub_key_file: '{{alco_key_file}}'
+        drs_user: '{{support_user}}'
+        drs_pub_key_file: '{{support_key_file}}'
       tags: ['base']
 
     - import_role:
         name: dr.docker
       vars:
-        drd_user: "{{alco_user}}"
+        drd_user: "{{support_user}}"
         drd_create_network: yes
         drd_net_name: '{{alco_docker_net_name}}'
         drd_interface: '{{alco_docker_interface}}'
@@ -114,12 +114,23 @@
       tags: ['grafana']
 
     - import_role:
-        name: alco-anaconda
+        name: dr.docker-container
       vars:
-        anaconda_docker_data_dir: '{{alco_data_dir}}'
-        anaconda_docker_net_name: '{{alco_docker_net_name}}'
-        anaconda_docker_bind_addr: '{{alco_docker_ip}}'
-        anaconda_docker_memory_limit: '2g' #todo: use half of available size
+        anaconda_eport: 8888
+        anaconda_cmd_parts: 
+          - "/opt/conda/bin/conda install jupyter -y --quiet && "
+          - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
+          - "--ip='*' --port={{anaconda_eport}} --no-browser --allow-root --NotebookApp.token=''"
+        drdc_repo: '{{def_api_repo}}'
+        drdc_name: '{{def_api_service}}'
+        drdc_network: '{{alco_docker_net_name}}'
+        drdc_env: '{{def_env|combine({"KEY": "value"})}}'
+        drdc_memory_limit: '2g'
+        drdc_cmd: "/bin/bash -c \"{{anaconda_cmd_parts|join(' ')}}\""
+        drdc_volumes:
+          - '{{alco_data_dir}}:/opt/notebooks'
+        drdc_ports:
+          - "{{alco_docker_ip}}:{{anaconda_eport}}:{{anaconda_eport}}"
       tags: ['anaconda']
 
     - import_role:

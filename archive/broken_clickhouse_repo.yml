@@ -1,7 +1,7 @@
 ---
 - name: Removing old CH repo
   hosts: all
-  remote_user: '{{alco_user}}'
+  remote_user: '{{support_user}}'
   become: yes
   vars:
     clickhouse_repo: "deb http://repo.yandex.ru/clickhouse/xenial stable main"

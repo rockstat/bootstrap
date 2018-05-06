@@ -6,11 +6,11 @@
         -F to={{amail_to|quote}}
         -F subject={{amail_subj_key|quote}}
         -F text={{lookup('template', 'vpn_email.j2')|quote}}
-        -F attachment=@{{amail_ovpn_keys_dir}}/alco_user1.ovpn
-        -F attachment=@{{amail_ovpn_keys_dir}}/alco_user2.ovpn
-        -F attachment=@{{amail_ovpn_keys_dir}}/alco_user3.ovpn
-        -F attachment=@{{amail_ovpn_keys_dir}}/alco_user4.ovpn
-        -F attachment=@{{amail_ovpn_keys_dir}}/alco_user5.ovpn
+        -F attachment=@{{amail_ovpn_keys_dir}}/vpn_user1.ovpn
+        -F attachment=@{{amail_ovpn_keys_dir}}/vpn_user2.ovpn
+        -F attachment=@{{amail_ovpn_keys_dir}}/vpn_user3.ovpn
+        -F attachment=@{{amail_ovpn_keys_dir}}/vpn_user4.ovpn
+        -F attachment=@{{amail_ovpn_keys_dir}}/vpn_user5.ovpn
   when: amail_mailgun_key is defined and amail_enabled == 'yes'
   args:
     warn: false

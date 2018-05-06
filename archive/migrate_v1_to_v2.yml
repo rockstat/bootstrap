@@ -1,7 +1,7 @@
 ---
 - name: Migrating to alcolytics 2.0
   hosts: all
-  remote_user: '{{alco_user}}'
+  remote_user: '{{support_user}}'
   become: yes
   vars:
     docker_service: docker.service

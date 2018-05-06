@@ -1,7 +1,7 @@
 ---
 - name: Sending letters
   hosts: all
-  remote_user: '{{alco_user}}'
+  remote_user: '{{support_user}}'
   tasks:
     - import_role:
         name: alco-pechkin
