@@ -50,6 +50,7 @@ alco_internal_vpn_host_ip: "{{alco_internal_vpn_net|ipaddr(1)|ipaddr('address')}
 
 # netdata
 alco_netdata_from: 'localhost {{alco_docker_net_pattern}}'
+alco_netdata_conf_from: 'localhost'
 alco_netdata_streaming_from: 'localhost {{alco_docker_net_pattern}}'
 
 # ClickHouse
@@ -175,19 +176,16 @@ alco_nginx_upstreams:
   - 'upstream netdata { server {{alco_docker_ip}}:19999 weight=10; }'
 
 
-
-
 # SSL
 alco_ssl_certs:
   - email: '{{contact_email}}'
     domains:
       - '{{tracker_domain}}'
+
   - email: '{{contact_email}}'
     domains:
       - 'tools.{{tracker_domain}}'
-      - 'jupyter.{{tracker_domain}}'
-      - 'grafana.{{tracker_domain}}'
-      - 'netdata.{{tracker_domain}}'
+
 
 # ClickHouse Migrations
 ch_path: '{{alco_tracker_path}}/clickhouse_schema'

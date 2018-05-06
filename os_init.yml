@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Install python for Ansible
       register: output
-      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python)"
       changed_when: output.stdout != ""
     - name: Copy key
       raw: 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && grep -qF "{{alco_key}}" {{auth_keys_f}} || echo "{{alco_key}}" >> {{auth_keys_f}}'
