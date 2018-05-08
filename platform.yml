@@ -1,5 +1,5 @@
 ---
-- name: Installing alcolytics
+- name: Installing platform
   hosts: all
   remote_user: "{{initial_user|default('root')}}"
   become: yes
@@ -9,7 +9,7 @@
       vars:
         drs_user: '{{support_user}}'
         drs_pub_key_file: '{{support_key_file}}'
-      tags: ['base']
+      tags: ['os']
 
     - import_role:
         name: dr.docker
@@ -19,7 +19,7 @@
         drd_net_name: '{{alco_docker_net_name}}'
         drd_interface: '{{alco_docker_interface}}'
         drd_net: '{{alco_docker_net}}'
-        tags: ['docker']
+      tags: ['docker']
       become: yes
 
     - import_role:
