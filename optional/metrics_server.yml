@@ -6,6 +6,7 @@
     - import_role:
         name: dr.influxdb
       vars:
+        influxdb_http_bind_address: ":18086"
         influxdb_tsb_enabled: "true"
         influxdb_tsb_bind_address: ":4242"
         influxdb_tsb_database: "opentsdb"
@@ -24,6 +25,7 @@
         name: dr.chronograf
       vars:
         chronograf_port: 18888
+        chronograf_influxdb_url: http://172.16.25.1:18086
       tags: ['chronograf']
 
     - import_role:

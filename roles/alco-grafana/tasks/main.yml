@@ -1,3 +1,11 @@
+- name: Creating grafana data dir
+  file:
+    path: '{{grafana_data_dir}}'
+    state: directory
+    owner: 472
+    group: 472
+
+
 - name: Creating Grafana container
   docker_container:
     name: grafana

@@ -28,3 +28,9 @@
 [submodule "roles/dr.chronograf-role"]
 	path = roles/dr.chronograf-role
 	url = https://github.com/madiedinro/dr.chronograf-role
+[submodule "roles/dr.docker-container"]
+	path = roles/dr.docker-container
+	url = https://github.com/madiedinro/dr.docker-contrainer
+[submodule "roles/dr.chronograf"]
+	path = roles/dr.chronograf
+	url = https://github.com/madiedinro/dr.chronograf-role

@@ -1,5 +1,0 @@
-alco_service_net_name: bridge
-alco_service_bind_addr: 127.0.0.1
-alco_service_geoip_port: 8087
-alco_service_deviced_port: 8086
-alco_service_clone_to: ~
