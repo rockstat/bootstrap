@@ -10,7 +10,7 @@ server-side data collector; services for geo-coding and detecting client device 
 a new server deployment system.
 [Read more](https://rockstat.ru/about)
 
-![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png)
+![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png?3)
 
 ## Установка
 
