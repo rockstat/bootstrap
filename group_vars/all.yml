@@ -1,19 +1,160 @@
-playbook_version: 2.1.3
-initial_user: root
+playbook_version: 3.0.0
+
+# ########## Base ##########
+branch: master
+names:
+  kernel: kernel
+  splash: splash
+  band: band
+
+contact_email: will@be.overriden
+domain: will-be-overriden.by.hostvars
+domains:
+  tools: 'tools.{{domain}}'
+  grafana: 'tools.{{domain}}'
+
+# should override before setup
+passwd:
+  ch_default: chpass123
+  chp_zero: chpass666
 
 support_user: '0x011'
 support_key_file: './public_keys/support.pub'
-alco_home_dir: '/srv/alco'
-alco_data_dir: '{{alco_home_dir}}/data'
-alco_data_ch_upload_dir: '{{alco_data_dir}}/ch_upload'
-alco_tracker_custom_config_dir: '{{alco_data_dir}}/custom_tracker_config'
+support_key: "{{ lookup('file', support_key_file) }}"
+home_dir: '/srv/platform'
+data_dir: '{{home_dir}}/data'
+dirs:
+  kernel_custom_config: "{{data_dir}}/kernel_custom_config"
+  grafana_data: "{{home_dir}}/grafana"
+  splash: "{{home_dir}}/{{names.splash}}"
+  clickhouse: "/srv/clickhouse"
+  clickhouse_tmp: "/srv/clickhouse_tmp"
 
-# additional domains
-tools_domain: 'tools.{{tracker_domain}}'
+# ports
+ports:
+  band: 10000
+  kernel: 10001
+  kernel_ws: 10002
+  kernel_wss: 10003
+  heavyload: 10010
+  #tools
+  grafana: 3000
+  jupyter: 8888
+  netdata: 19999
+  openvpn: 8080
+  clickhouse: 8123
+  chproxy: 9090
 
+# ########## SSL ##########
+domains_ssl:
+  - email: '{{contact_email}}'
+    domains: "{{[domain] + domains.values()|list|unique}}"
+# ########## Docker ##########
+docker_net_name: custom
+docker_interface: docker1
+docker_net_pattern: 172.16.25.* # will be converted to 172.16.25.0/24
+docker_users: 
+  - '{{support_user}}'
+# calculable
+docker_net: "{{docker_net_pattern|replace('*', '0')}}/{{32 - (docker_net_pattern|regex_findall('(\\*)'))|count * 8}}"
+docker_host_ip: "{{docker_net|ipaddr(1)|ipaddr('address')}}"
+docker_netmask: "{{docker_net|ipaddr('netmask')}}"
+docker_network: "{{docker_net|ipaddr('network')}}"
+# ########## Clients VPN ##########
+covpn_keys_dir: '{{home_dir}}/ovpn_keys'
 
-# Grafana
-alco_grafana_plugins_default:
+# ########## Server-server VPN ##########
+s2s_vpn_connect: false
+s2s_vpn_net_pattern: 192.168.222.*
+s2s_vpn_net: "{{s2s_vpn_net_pattern|replace('*', '0')}}/{{32 - (s2s_vpn_net_pattern|regex_findall('(\\*)'))|count * 8}}"
+s2s_vpn_host_ip: "{{s2s_vpn_net|ipaddr(1)|ipaddr('address')}}"
+
+# ########## Netdata ##########
+netdata_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
+netdata_streaming_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
+netdata_conf_from: 'localhost'
+
+# ########## ClickHouse ##########
+clickhouse_db: stats
+
+# ########## ClickHouse Proxy ##########
+# chproxy_allow_from: []
+chproxy_allow_from_default:
+  - 127.0.0.0/24
+  - 172.16.0.0/16
+chproxy_def_max_concurrent_queries: 5
+chproxy_def_max_queue_size: 100
+chproxy_def_max_queue_time: 30s
+chproxy_def_max_execution_time: 30s
+chproxy_def_allow_cors: true
+# chproxy_users: []
+chproxy_users_default:
+  - name: "{{chproxy_zero_user|default('default')}}"
+    password: "{{chproxy_zero_password|default('default')}}"
+    to_cluster: "{{'default'}}"
+    to_user: "{{'default'}}"
+# chproxy_clusters: []
+chproxy_clusters_default:
+  - name: "{{'default'}}"
+    nodes:
+      - '{{docker_host_ip}}:{{ports.clickhouse}}'
+
+# ########## Mailer config ##########
+mailer_subj_key: "Ваши ключи OpenVPN ({{ domain }}) v{{ playbook_version }}"
+mailer_subj_snip: "Сниппет для сайта ({{ domain }}) v{{ playbook_version }}"
+mailer_enabled: false
+
+# ########## Mailer config ##########
+firewall_rules:
+  - { from_ip: '{{docker_net}}'}
+  - { to_port: '80'}
+  - { to_port: '443'}
+  - { to_port: '{{ports.openvpn}}'}
+
+# ########## nginx ##########
+nginx_auth_basic_files:
+  tools: []
+#    - dr:$apr1$.aUTart5$SSq.......
+# generate using: printf "dr:`openssl passwd -apr1`\n"
+
+nginx_vhost_80die:
+  - listen 80 default_server
+  - server_name _
+  - return 301 https://$host$request_uri
+
+nginx_common_params: 
+  cert: "{{domain}}"
+  root: "{{dirs.splash}}"
+  template: "nginx-site.conf.j2"
+  domain: "{{domain}}"
+
+nginx_grafana_params: {domain: "{{domains.grafana}}", htpassw: auth_basic/tools}
+nginx_kernel_params: {uploader: yes}
+
+nginx_config_gzip:
+  - gzip on
+  - gzip_min_length 10240
+  - gzip_proxied expired no-cache no-store private auth
+  - gzip_types text/plain text/css text/javascript application/javascript application/x-javascript
+nginx_ssl_params:
+  - ssl_session_cache shared:SSL:10m
+  - ssl_session_timeout 10m
+  - ssl_prefer_server_ciphers on
+  - ssl_ciphers ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DH+3DES:!ADH:!AECDH:!MD5
+  - ssl_protocols TLSv1 TLSv1.1 TLSv1.2
+  - ssl_stapling on
+  - ssl_stapling_verify on
+nginx_http_params_custom:
+  - access_log off
+  - error_log /var/log/nginx/error.log
+  - tcp_nopush on
+  - tcp_nodelay on
+  - keepalive_timeout 60
+  - keepalive_requests 1000
+  - access_log "/var/log/nginx/access.log"
+
+# ########## Grafana ##########
+grafana_plugins:
   - grafana-clock-panel
   - grafana-simple-json-datasource
   - vertamedia-clickhouse-datasource
@@ -24,185 +165,5 @@ alco_grafana_plugins_default:
   - ryantxu-ajax-panel
   - natel-discrete-panel
 # use this variable in your private config
-# alco_grafana_plugins:
+# grafana_plugins_custom:
   # - plugin that i want
-
-
-# Docker
-alco_docker_net_name: alconet
-alco_docker_interface: docker1
-alco_docker_net: 172.16.25.0/24
-alco_docker_net_pattern: 172.16.25.*
-alco_docker_ip: "{{alco_docker_net|ipaddr(1)|ipaddr('address')}}"
-alco_docker_netmask: "{{alco_docker_net|ipaddr('netmask')}}"
-alco_docker_network: "{{alco_docker_net|ipaddr('network')}}"
-alco_docker_user: '{{support_user}}'
-
-# OVPN
-alco_ovpn_keys_dir: '{{alco_home_dir}}/ovpn_keys'
-alco_ovpn_port: 8080
-
-# internal VPN (for supported servers)
-alco_internal_vpn_connect: false
-alco_internal_vpn_net: 192.168.222.0/24
-alco_internal_vpn_net_pattern: 192.168.222.*
-alco_internal_vpn_host_ip: "{{alco_internal_vpn_net|ipaddr(1)|ipaddr('address')}}"
-
-# netdata
-alco_netdata_from: 'localhost {{alco_docker_net_pattern}}'
-alco_netdata_conf_from: 'localhost'
-alco_netdata_streaming_from: 'localhost {{alco_docker_net_pattern}}'
-
-# ClickHouse
-alco_db_name: alco
-alco_db_pass: alco
-alco_ch_port: 8123
-alco_ch_proxy_port: 9090
-
-
-# chproxy def
-hst_chproxy_clusters: []
-hst_chproxy_users: []
-
-
-# Email config
-alco_email_subj_key: "Ваши ключи OpenVPN ({{ tracker_domain }}) v{{ playbook_version }}"
-alco_email_subj_snip: "Сниппет для сайта ({{ tracker_domain }}) v{{ playbook_version }}"
-alco_email_enabled: false
-
-# Tracker
-alco_tracker_path: '{{alco_home_dir}}/alco-tracker'
-alco_trackers_version: master
-alco_tracker_log_level: info
-
-# base firewall rules
-alco_firewall_rules:
-  - { from_ip: '{{alco_docker_network}}/{{alco_docker_netmask}}'}
-  - { to_port: '80'}
-  - { to_port: '443'}
-  - { to_port: '{{alco_ovpn_port}}'}
-
-# nginx params
-
-# nginx auth
-# generate using: printf "dr:`openssl passwd -apr1`\n"
-alco_nginx_auth_basic_files:
-  tools: []
-#
-#  tools:
-#    - dr:$apr1$.aUTart5$SSq.......
-
-alco_nginx_ssl_params:
-  - ssl_session_cache shared:SSL:10m
-  - ssl_session_timeout 10m
-  - ssl_prefer_server_ciphers on
-  - ssl_ciphers ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DH+3DES:!ADH:!AECDH:!MD5
-  - ssl_protocols TLSv1 TLSv1.1 TLSv1.2
-  - ssl_stapling on
-  - ssl_stapling_verify on
-
-alco_nginx_http_params:
-  - access_log off
-  - error_log /var/log/nginx/error.log
-  - tcp_nopush on
-  - tcp_nodelay on
-  - keepalive_timeout 60
-  - keepalive_requests 1000
-  - access_log "/var/log/nginx/access.log"
-
-alco_vhost_default:
-  - listen 80 default_server
-  - server_name _
-  - return 301 https://$host$request_uri
-
-alco_nginx_vhost_def:
-  - listen 443 ssl http2
-  - add_header 'Cache-Control' 'no-store, must-revalidate'
-  - expires off
-
-alco_nginx_tools_loc:
-  server_name _name_.{{tracker_domain}};
-  location / {
-    proxy_redirect   off;
-    proxy_buffering  off;
-    proxy_set_header Host            $host;
-    proxy_set_header X-Real-IP       $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_pass       http://_name_;
-  }
-
-alco_nginx_node_loc:
-  - location / { try_files $uri $uri/index.html @node; }
-  - location @node {
-      proxy_redirect   off;
-      proxy_buffering  off;
-      proxy_set_header Host             $host;
-      proxy_set_header X-Real-IP       $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_pass       http://alco-tracker;
-    }
-
-alco_nginx_vhost_tracker:
-  - server_name {{tracker_domain}}
-  - root {{alco_home_dir}}/alco-tracker/public
-  - ssl_certificate_key /etc/letsencrypt/live/{{tracker_domain}}/privkey.pem
-  - ssl_certificate     /etc/letsencrypt/live/{{tracker_domain}}/fullchain.pem
-  - ssl_trusted_certificate /etc/letsencrypt/live/{{tracker_domain}}/chain.pem
-
-
-alco_nginx_vhost_tools:
-  - root {{alco_home_dir}}/alco-tracker/public
-  - ssl_certificate_key /etc/letsencrypt/live/{{tools_domain}}/privkey.pem
-  - ssl_certificate     /etc/letsencrypt/live/{{tools_domain}}/fullchain.pem
-  - ssl_trusted_certificate /etc/letsencrypt/live/{{tools_domain}}/chain.pem
-  - auth_basic            "Restricted"
-  - auth_basic_user_file  auth_basic/tools
-
-alco_nginx_sites:
-  default: '{{alco_vhost_default}}'
-  tracker: '{{alco_nginx_vhost_def + alco_nginx_vhost_tracker + alco_nginx_node_loc}}'
-  grafana: '{{alco_nginx_vhost_def + alco_nginx_vhost_tools + [alco_nginx_tools_loc|replace("_name_", "grafana")]}}'
-
-alco_config_gzip:
-  - gzip on
-  - gzip_min_length 10240
-  - gzip_proxied expired no-cache no-store private auth
-  - gzip_types text/plain text/css text/javascript application/javascript application/x-javascript
-
-alco_nginx_upstreams:
-  - 'upstream alco-tracker { server {{alco_docker_ip}}:8081 weight=10; }'
-  - 'upstream grafana { server {{alco_docker_ip}}:3000 weight=10; }'
-  - 'upstream jupyter { server {{alco_docker_ip}}:8888 weight=10; }'
-  - 'upstream netdata { server {{alco_docker_ip}}:19999 weight=10; }'
-
-
-# SSL
-alco_ssl_certs:
-  - email: '{{contact_email}}'
-    domains:
-      - '{{tracker_domain}}'
-
-  - email: '{{contact_email}}'
-    domains:
-      - 'tools.{{tracker_domain}}'
-
-
-# ClickHouse Migrations
-ch_path: '{{alco_tracker_path}}/clickhouse_schema'
-ch_operations:
-#  # Чистый SQL запрос
-#  - type: query
-#    query: 'SELECT count() FROM events'
-#
-# Миграция из локального файла
-#  - type: local_migration
-#    file: 2-migration-ren-table.yml
-#   Таблица с миграций
-  - type: query_file
-    file: '{{ch_path}}/table_migrations.sql'
-#   Файл миграции в репе трекера
-  - type: migration
-    file: '{{ch_path}}/2-migration-ren-table.yml'
-##
-##  - type: query_file
-##    file: '{{ch_path}}/table_migrations.sql'

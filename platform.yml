@@ -1,9 +1,10 @@
 ---
 - name: Installing platform
-  hosts: all
+  hosts: rockstat
   remote_user: "{{initial_user|default('root')}}"
   become: yes
   tasks:
+
     - import_role:
         name: dr.server
       vars:
@@ -14,11 +15,13 @@
     - import_role:
         name: dr.docker
       vars:
-        drd_user: "{{support_user}}"
+        drd_users:
+        - "{{support_user}}"
         drd_create_network: yes
-        drd_net_name: '{{alco_docker_net_name}}'
-        drd_interface: '{{alco_docker_interface}}'
-        drd_net: '{{alco_docker_net}}'
+        drd_net_name: '{{docker_net_name}}'
+        drd_bind_ip: "{{docker_host_ip}}"
+        drd_interface: '{{docker_interface}}'
+        drd_net: '{{docker_net}}'
       tags: ['docker']
       become: yes
 
@@ -26,129 +29,196 @@
         name: dr.exposeur
       vars:
         expo_reset_ufw: true
-        expo_rules: '{{alco_firewall_rules + alco_priv_ufw_rules|default([]) + alco_group_ufw_rules|default([])}}'
-        expo_expose_rules: '{{alco_expose_rules|default([]) + alco_group_expose_rules|default([])}}'
+        expo_rules: '{{firewall_rules + priv_firewall_rules|default([]) + group_firewall_rules|default([])}}'
+        expo_expose_rules: '{{expose_rules|default([]) + priv_expose_rules|default([]) + group_expose_rules|default([])}}'
       tags: ['firewall']
 
     - import_role:
         name: dr.letsencrypt
       vars:
-        letsencrypt_domains_groups: '{{alco_ssl_certs}}'
+        letsencrypt_domains_groups: '{{domains_ssl}}'
         letsencrypt_pause_services: ['nginx']
       tags: ssl
 
+    - import_role:
+        name: dr.static-service
+      vars:
+        dr_name: splash
+        dr_dir: '{{dirs.splash}}'
+        dr_repo: https://github.com/rockstat/splash
+      tags: splash
     - import_role:
         name: jdauphant.nginx
       vars:
         nginx_official_repo: yes
         keep_only_specified: yes
-        nginx_http_params: '{{alco_nginx_http_params}}'
-        nginx_sites: '{{alco_nginx_sites}}'
-        nginx_auth_basic_files: '{{alco_nginx_auth_basic_files}}'
+        nginx_http_params: '{{nginx_http_params_custom}}'
+        nginx_sites:
+          default: "{{ nginx_vhost_80die }}"
+          kernel: "{{ nginx_common_params|combine(nginx_kernel_params) }}"
+          grafana: "{{ nginx_common_params|combine(nginx_grafana_params) }}"
+        nginx_auth_basic_files: '{{nginx_auth_basic_files}}'
         nginx_configs:
-          gzip: '{{alco_config_gzip}}'
-          upstream: '{{alco_nginx_upstreams}}'
-          ssl: '{{alco_nginx_ssl_params}}'
-      tags: ['nginx']
-
-    - import_role:
-        name: alco-clickhouse
-      vars:
-        clickhouse_users_custom: '{{ch_users|default([])}}'
-        clickhouse_networks_default: ["::1", "127.0.0.1", "{{ alco_docker_net }}"]
-        clickhouse_dbs_custom: [{name: '{{alco_db_name}}'}]
-        clickhouse_path_data: "/srv/clickhouse/"
-        clickhouse_path_tmp: "/srv/clickhouse/tmp/"
-      tags: ['clickhouse']
+          gzip: '{{nginx_config_gzip}}'
+          upstream:
+            - 'upstream kernel_upst { server {{docker_host_ip}}:{{ports.kernel}} weight=10; }'
+            - 'upstream heavyload_upst { server {{docker_host_ip}}:{{ports.heavyload}} weight=10; }' # upload service
+            - 'upstream grafana_upst { server {{docker_host_ip}}:{{ports.grafana}} weight=10; }'
+            - 'upstream jupyter { server {{docker_host_ip}}:{{ports.jupyter}} weight=10; }'
+            - 'upstream netdata { server {{docker_host_ip}}:{{ports.netdata}} weight=10; }'
+          ssl: '{{nginx_ssl_params}}'
+      tags: ['`nginx']
 
     - import_role:
         name: dr.netdata
       vars:
         drn_allow:
-          dashboard_from: '{{alco_netdata_from}}'
-          badges_from: '{{alco_netdata_from}}'
-          conf_from: '{{alco_netdata_conf_from}}'
-          connections_from: '{{alco_netdata_streaming_from}}'
-          streaming_from: '{{alco_netdata_streaming_from}}'
+          dashboard_from: '{{netdata_from}}'
+          badges_from: '{{netdata_from}}'
+          conf_from: '{{netdata_conf_from}}'
+          connections_from: '{{netdata_streaming_from}}'
+          streaming_from: '{{netdata_streaming_from}}'
         drn_stream: '{{netdata_stream_config|default({})}}'
         drn_backend: '{{netdata_backend_config|default({})}}'
       tags: ['netdata']
 
     - import_role:
-        name: alco-openvpn-server
+        name: dr.clickhouse
       vars:
-        ovpn_keys_dir: '{{alco_ovpn_keys_dir}}'
-        ovpn_docker_net_name: '{{alco_docker_net_name}}'
-        ovpn_docker_network: '{{alco_docker_network}}'
-        ovpn_docker_netmask: '{{alco_docker_netmask}}'
-        ovpn_port: '{{alco_ovpn_port}}'
-      tags: ['ovpn']
+        chr_users_custom: '{{clickhouse_users|default([])}}'
+        chr_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
+        chr_dbs_custom: [{name: '{{clickhouse_db}}'}]
+        chr_path_data: "{{dirs.clickhouse}}"
+        chr_path_tmp: "{{dirs.clickhouse_tmp}}"
+      tags: ['clickhouse']
 
-    - import_role:
-        name: alco-ch-proxy
-      vars:
-        chproxy_docker_attach_net: '{{alco_docker_net_name}}'
-        chproxy_docker_expose: '{{alco_docker_ip}}:9090'
-        chproxy_build_root: '{{alco_home_dir}}'
-        chproxy_zero_user: alco
-        chproxy_zero_password: alco
-        chproxy_def_node: '{{alco_docker_ip}}:8123'
-        chproxy_clusters: '{{hst_chproxy_clusters|default(omit)}}'
-        chproxy_users: '{{hst_chproxy_users|default(omit)}}'
+
+    # - import_role:
+    #     name: alco-openvpn-server
+    #   vars:
+    #     ovpn_keys_dir: '{{covpn_keys_dir}}'
+    #     ovpn_docker_net_name: '{{docker_net_name}}'
+    #     ovpn_docker_network: '{{docker_network}}'
+    #     ovpn_docker_netmask: '{{docker_netmask}}'
+    #     ovpn_port: '{{ports.openvpn}}'
+    #   tags: ['ovpn']
+
+
+    - name: CHProxy setup
+      block:
+      - name: Creating chproxy build directory
+        tempfile:
+          state: directory
+          suffix: build
+        register: build_dir
+
+      - name: Rendering CHProxy configs
+        template:
+          src: 'chproxy/{{item}}.j2'
+          dest: '{{build_dir.path}}/{{item}}'
+        with_items:
+          - config.yml
+          - Dockerfile
+
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'chproxy'
+          drdc_network: '{{docker_net_name}}'
+          drdc_dir: "{{build_dir.path}}"
+          drdc_memory_limit: '200m'
+          drdc_ports:
+            - "{{docker_host_ip}}:{{ports.chproxy}}:9090"
       tags: ['chproxy']
 
 
     - import_role:
-        name: alco-grafana
-      vars:
-        gragana_docker_net_name: '{{alco_docker_net_name}}'
-        grafana_docker_bind_addr: '{{alco_docker_ip}}'
-        grafana_plugins: '{{alco_grafana_plugins_default + alco_grafana_plugins|default([])}}'
-      tags: ['grafana']
-
-    - import_role:
         name: dr.docker-container
       vars:
-        anaconda_eport: 8888
-        anaconda_cmd_parts: 
+        tmp_cmd_parts: 
           - "/opt/conda/bin/conda install jupyter -y --quiet && "
           - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-          - "--ip='*' --port={{anaconda_eport}} --no-browser --allow-root --NotebookApp.token=''"
-        drdc_repo: '{{def_api_repo}}'
-        drdc_name: '{{def_api_service}}'
-        drdc_network: '{{alco_docker_net_name}}'
-        drdc_env: '{{def_env|combine({"KEY": "value"})}}'
+          - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''"
+        drdc_name: 'anaconda'
+        drdc_image: "continuumio/anaconda3"
+        drdc_network: '{{docker_net_name}}'
         drdc_memory_limit: '2g'
-        drdc_cmd: "/bin/bash -c \"{{anaconda_cmd_parts|join(' ')}}\""
+        drdc_cmd: "/bin/bash -c \"{{tmp_cmd_parts|join(' ')}}\""
         drdc_volumes:
-          - '{{alco_data_dir}}:/opt/notebooks'
+          - '{{data_dir}}:/opt/notebooks'
         drdc_ports:
-          - "{{alco_docker_ip}}:{{anaconda_eport}}:{{anaconda_eport}}"
+          - "{{docker_host_ip}}:{{ports.jupyter}}:8888"
       tags: ['anaconda']
 
-    - import_role:
-        name: alco-tracker
-      vars:
-        alco_service_bind_addr: '{{alco_docker_ip}}'
-        alco_service_net_name: '{{alco_docker_net_name}}'
-        alco_service_path: '{{alco_tracker_path}}'
-        alco_service_version: '{{alco_trackers_version|default(omit)}}'
-        alco_service_upload_store: '{{alco_data_ch_upload_dir}}'
-        alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
-        alco_service_log_level: '{{alco_tracker_log_level}}'
-      tags: ['tracker']
+    - name: Grafana setup
+      block:
+      - file:
+          state: directory
+          path: "{{dirs.grafana_data}}"
+          owner: 472
+          group: 472
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'grafana'
+          drdc_image: "grafana/grafana"
+          drdc_network: '{{docker_net_name}}'
+          drdc_env:
+            GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
+            GF_AUTH_BASIC: false
+            # GF_SECURITY_ADMIN_PASSWORD: secret
+          drdc_memory_limit: '500m'
+          drdc_volumes:
+            - '{{dirs.grafana_data}}:/var/lib/grafana'
+          drdc_ports:
+            - "{{docker_host_ip}}:{{ports.grafana}}:3000"
+      tags: ['grafana']
 
-    - import_role:
-        name: alco-clickhouse-ops
-      vars:
-        alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
-        alco_ch_ops_host: '127.0.0.1'
-        alco_ch_ops_db: '{{alco_db_name}}'
-      tags: ['schema']
+    - name: Heavyload setup
+      block:
+      - name: Creating Heavyload build directory
+        tempfile:
+          state: directory
+          suffix: build
+        register: heavyload_build
 
-    - import_role:
-        name: dr.openvpn-client
-      vars:
-        openvpnc_key: '{{alco_internal_vpn_key|default(omit)}}'
-      when: alco_internal_vpn_connect == True and vpn_id is defined
-      tags: ['ovpn-client']
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'heavyload'
+          drdc_network: '{{docker_net_name}}'
+          drdc_env:
+            WEBHOOK: "http://{{docker_host_ip}}:{{ports.kernel}}/wh/upload/nofiry"
+          drdc_repo: https://github.com/rockstat/heavyload
+          drdc_dir: "{{heavyload_build.path}}"
+          drdc_memory_limit: '200m'
+          drdc_ports:
+            - "{{docker_host_ip}}:{{ports.heavyload}}:8080"
+      tags: ['heavyload']
+
+    # - import_role:
+    #     name: alco-tracker
+    #   vars:
+    #     alco_service_bind_addr: '{{alco_docker_ip}}'
+    #     alco_service_net_name: '{{alco_docker_net_name}}'
+    #     alco_service_path: '{{alco_tracker_path}}'
+    #     alco_service_version: '{{alco_trackers_version|default(omit)}}'
+    #     alco_service_upload_store: '{{alco_data_ch_upload_dir}}'
+    #     alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
+    #     alco_service_log_level: '{{alco_tracker_log_level}}'
+    #   tags: ['tracker']
+
+    # - import_role:
+    #     name: alco-clickhouse-ops
+    #   vars:
+    #     alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
+    #     alco_ch_ops_host: '127.0.0.1'
+    #     alco_ch_ops_db: '{{alco_db_name}}'
+    #   tags: ['schema']
+
+    # - import_role:
+    #     name: dr.openvpn-client
+    #   vars:
+    #     openvpnc_key: '{{alco_internal_vpn_key|default(omit)}}'
+    #   when: alco_internal_vpn_connect == True and vpn_id is defined
+    #   tags: ['ovpn-client']

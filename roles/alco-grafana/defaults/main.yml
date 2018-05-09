@@ -1,8 +1,0 @@
----
-gragana_docker_net_name: bridge
-grafana_docker_bind_addr: 127.0.0.1
-grafana_data_dir: /srv/grafana
-grafana_plugins: 
-  - grafana-clock-panel
-  - grafana-piechart-panel
-  

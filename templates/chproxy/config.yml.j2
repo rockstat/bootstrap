@@ -1,13 +1,13 @@
 ---
 server:
   http:
-    listen_addr: ":{{chproxy_internal_port}}"
+    listen_addr: ":9090"
     allowed_networks:
-{% for net in chproxy_allowed_networks_default + chproxy_allowed_networks %}
+{% for net in chproxy_allow_from_default + chproxy_allow_from|default([]) %}
       - "{{ net }}"
 {% endfor %}
 users:
-{% for user in chproxy_users_default + chproxy_users %}
+{% for user in chproxy_users_default + chproxy_users|default([]) %}
   - name: "{{ user.name }}"
     password: "{{ user.password|default('') }}"
     allow_cors: {{ user.allow_cors|default(chproxy_def_allow_cors) }}
@@ -20,7 +20,7 @@ users:
 {% endfor %}
 # by default each cluster has `default` user which can be overridden by section `users`
 clusters:
-{% for cluster in chproxy_clusters_default + chproxy_clusters %}
+{% for cluster in chproxy_clusters_default + chproxy_clusters|default([]) %}
   - name: "{{ cluster.name }}"
     nodes:
 {% for node in cluster.nodes %}

@@ -34,3 +34,9 @@
 [submodule "roles/dr.chronograf"]
 	path = roles/dr.chronograf
 	url = https://github.com/madiedinro/dr.chronograf-role
+[submodule "roles/dr.static-service"]
+	path = roles/dr.static-service
+	url = https://github.com/madiedinro/dr.static-service
+[submodule "roles/dr.clickhouse"]
+	path = roles/dr.clickhouse
+	url = https://github.com/madiedinro/dr.clickhouse
