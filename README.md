@@ -41,9 +41,9 @@ ansible-playbook platform.yml --connection=local
 
 **Полная документация тут:** [rockstat.ru](https://rockstat.ru/server-setup)
 
-### Полезное
+## Полезное
 
-## Генерация пароля httpasswd
+### Генерация пароля httpasswd
 
 ```
 NEW_USER=dr
