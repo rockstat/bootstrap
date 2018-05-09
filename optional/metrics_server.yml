@@ -1,14 +1,13 @@
-- name: Monitoring server
-  hosts: monitoring-server
-  remote_user: '{{initial_user|default("root")}}'
+- name: Rockstat metrics server setup
+  hosts: rockstat-mon-server
   become: yes
   tasks:
     - import_role:
         name: dr.influxdb
       vars:
-        influxdb_http_bind_address: ":18086"
+        influxdb_http_bind_address: ":{{ports.influxhttp}}"
         influxdb_tsb_enabled: "true"
-        influxdb_tsb_bind_address: ":4242"
+        influxdb_tsb_bind_address: ":{{ports.influxtsb}}"
         influxdb_tsb_database: "opentsdb"
         influxdb_tsb_retention_policy: ""
         influxdb_tsb_consistency_level: "one"
@@ -24,17 +23,17 @@
     - import_role:
         name: dr.chronograf
       vars:
-        chronograf_port: 18888
-        chronograf_influxdb_url: http://172.16.25.1:18086
+        chronograf_port: "{{ports.chronograf}}"
+        chronograf_influxdb_url: "http://{{docker_host_ip}}:{{ports.influxhttp}}"
       tags: ['chronograf']
 
     - import_role:
         name: dr.openvpn-server
       vars:
-        openvpn_clients_net: 192.168.222.0/24
-        openvpn_port: 8079
+        openvpn_clients_net: "{{s2s_vpn_net}}"
+        openvpn_port: "{{ports.s2svpn}}"
         openvpn_client_prefix: node
         openvpn_clients: 20
-      tags: ['openvpn']
+      tags: ['s2s-ovpn-server']
 
 

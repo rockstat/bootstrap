@@ -22,3 +22,16 @@ from config
     ##  - type: query_file
     ##    file: '{{ch_path}}/table_migrations.sql'
 
+
+
+from playbook 
+
+
+
+    # - import_role:
+    #     name: alco-clickhouse-ops
+    #   vars:
+    #     alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
+    #     alco_ch_ops_host: '127.0.0.1'
+    #     alco_ch_ops_db: '{{alco_db_name}}'
+    #   tags: ['schema']

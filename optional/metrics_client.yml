@@ -1,0 +1,10 @@
+- name: Rockstat metrics client setup
+  hosts: rockstat-mon-client
+  become: yes
+  tasks:
+    - import_role:
+        name: dr.openvpn-client
+      vars:
+        openvpnc_key: '{{s2s_vpn_key}}'
+      when: s2s_vpn_connect is defined and s2s_vpn_connect == True and vpn_id is defined
+      tags: ['s2s-ovpn-client']

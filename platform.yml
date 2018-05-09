@@ -1,13 +1,14 @@
 ---
 - name: Installing platform
   hosts: rockstat
-  remote_user: "{{initial_user|default('root')}}"
   become: yes
+  vars_files:
+    - /vars/config.yml
   tasks:
-
     - import_role:
         name: dr.server
       vars:
+        drs_setup_user: yes
         drs_user: '{{support_user}}'
         drs_pub_key_file: '{{support_key_file}}'
       tags: ['os']
@@ -52,21 +53,21 @@
       vars:
         nginx_official_repo: yes
         keep_only_specified: yes
-        nginx_http_params: '{{nginx_http_params_custom}}'
+        nginx_http_params: '{{cfg_nginx_http_params}}'
         nginx_sites:
           default: "{{ nginx_vhost_80die }}"
           kernel: "{{ nginx_common_params|combine(nginx_kernel_params) }}"
           grafana: "{{ nginx_common_params|combine(nginx_grafana_params) }}"
         nginx_auth_basic_files: '{{nginx_auth_basic_files}}'
         nginx_configs:
-          gzip: '{{nginx_config_gzip}}'
+          gzip: '{{cfg_nginx_gzip_params}}'
           upstream:
-            - 'upstream kernel_upst { server {{docker_host_ip}}:{{ports.kernel}} weight=10; }'
-            - 'upstream heavyload_upst { server {{docker_host_ip}}:{{ports.heavyload}} weight=10; }' # upload service
-            - 'upstream grafana_upst { server {{docker_host_ip}}:{{ports.grafana}} weight=10; }'
+            - 'upstream kernel { server {{docker_host_ip}}:{{ports.kernel}} weight=10; }'
+            - 'upstream heavyload { server {{docker_host_ip}}:{{ports.heavyload}} weight=10; }'
+            - 'upstream grafana { server {{docker_host_ip}}:{{ports.grafana}} weight=10; }'
             - 'upstream jupyter { server {{docker_host_ip}}:{{ports.jupyter}} weight=10; }'
             - 'upstream netdata { server {{docker_host_ip}}:{{ports.netdata}} weight=10; }'
-          ssl: '{{nginx_ssl_params}}'
+          ssl: '{{cfg_nginx_ssl_params}}'
       tags: ['`nginx']
 
     - import_role:
@@ -155,7 +156,7 @@
       - file:
           state: directory
           path: "{{dirs.grafana_data}}"
-          owner: 472
+          owner: 472 # grafana container ids
           group: 472
       - import_role:
           name: dr.docker-container
@@ -207,18 +208,3 @@
     #     alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
     #     alco_service_log_level: '{{alco_tracker_log_level}}'
     #   tags: ['tracker']
-
-    # - import_role:
-    #     name: alco-clickhouse-ops
-    #   vars:
-    #     alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
-    #     alco_ch_ops_host: '127.0.0.1'
-    #     alco_ch_ops_db: '{{alco_db_name}}'
-    #   tags: ['schema']
-
-    # - import_role:
-    #     name: dr.openvpn-client
-    #   vars:
-    #     openvpnc_key: '{{alco_internal_vpn_key|default(omit)}}'
-    #   when: alco_internal_vpn_connect == True and vpn_id is defined
-    #   tags: ['ovpn-client']

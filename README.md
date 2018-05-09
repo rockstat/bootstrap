@@ -1,32 +1,31 @@
-# About Alcolytics
+# About Rockstat
 
 Is an open source platform for a web and product analytics. 
 It consists of a set of components: JavaScript tracking client for web applications; 
 server-side data collector; services for geo-coding and detecting client device type; 
 a new server deployment system.
-[Read more](https://alco.readme.io/docs)
+[Read more](https://rockstat.ru/about)
 
 Платформа для web и продуктовой аналитики с открытым исходным кодом.
 Включает в себя JavaScript трекер для сайта; сервис получения, обогащения,
 сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства;
 систему развертывания нового сервера.
-[Подробнее](https://alco.readme.io/docs) 
+[Подробнее](https://rockstat.ru/about) 
 
-![Alcolytics sheme](https://alcolytics.ru/media/alco-scheme.png)
+![Rockstat sheme](https://rockstat.ru/media/alco-scheme.png)
 
-# Alcolytics Bootstrap
+# Rockstat Bootstrap
 
-Ansible playbook для автоматической установки Alcolytics
+Ansible playbook для автоматической установки Rockstat
 Скрипт сделан для Ubuntu 16.04, на других работать не будет.
 
-Подразумевается, что у вас уже имеется сервер под Alcolytics под управлением OC Ubuntu 16.04
+Подразумевается, что у вас уже имеется сервер под Rockstat под управлением OC Ubuntu 16.04
 и поддомен alco.yourdomain.ru (или какой-либо другой) указывет на этот сервер
 
 # Установка
 
 Требуется Ubuntu 16.04
-Основаная система настройки это Ansible, но ей для работы нужны некоторые пакеты, которых нет в дефолтовой поставке.
-Есть несколько путей.
+Используется Ansible, но предварительно нужно подготовить систему. Есть несколько путей.
 
 ## Установщик установщика 
 
@@ -35,33 +34,48 @@ Ansible playbook для автоматической установки Alcolyti
 sudo apt -y update && sudo apt -y install curl
 ```
 
-Предконфигурация системы и получение свежей версии playbook-a. Это скрипт из `bin/from-scratch`
+Предконфигурация системы и получение свежей версии playbook-a. Это скрипт из `bin/runner`
 ```bash
-bash <(curl -Ss https://raw.githubusercontent.com/alcolytics/alco-bootstrap/master/bin/from-scratch)
+bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/runner)
 ```
 
-Запуск playbook Alcolytics
+Запуск playbook Rockstat
+
 ```bash
-cd /srv/alco/alco-bootstrap
+cd /srv/platform/bootstrap
 
-ansible-playbook alcolytics.yml --connection=local
+ansible-playbook platform.yml --connection=local
 ```
 
-**Полная документация тут:** [alco.readme.io](https://alco.readme.io/docs/server-setup)
+**Полная документация тут:** [rockstat.ru](https://rockstat.ru/server-setup)
 
-## Доступ к Grafana, Jupyter, Netdata без vpn
+### Полезное
 
-Генерируем пароль для 
+## Генерация пароля httpasswd
+
 ```
-printf "dr:`openssl passwd -apr1`\n"
+NEW_USER=dr
+printf "$NEW_USER:`openssl passwd -apr1`\n"
 ```
 
 ## Вопросы и общение
 
-* Канал в telegram https://t.me/alcolytic
-* Раздел поддержки в документации https://alco.readme.io/discuss
+* Telegram https://t.me/rockstats
+* Facebook https://fb.com/rockstatX
 
-## License
+## License and Authors
 
-This software is licensed under the MIT license. See [License File](LICENSE) for more information.
+* Author:: Dmitry Rodin <madiedinro@gmail.com>
+* Author:: Ivan Golubenko <fedorsymkin52@gmail.com>
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
