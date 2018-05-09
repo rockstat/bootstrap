@@ -1,4 +1,8 @@
-# About Rockstat
+# About
+
+Ansible playbook for deploy Rockstat platform
+
+## About Rockstat
 
 Is an open source platform for a web and product analytics. 
 It consists of a set of components: JavaScript tracking client for web applications; 
@@ -6,28 +10,16 @@ server-side data collector; services for geo-coding and detecting client device 
 a new server deployment system.
 [Read more](https://rockstat.ru/about)
 
-Платформа для web и продуктовой аналитики с открытым исходным кодом.
-Включает в себя JavaScript трекер для сайта; сервис получения, обогащения,
-сохранения и стриминга данных; сервисы гео-кодинга и определения типа клиентского устройства;
-систему развертывания нового сервера.
-[Подробнее](https://rockstat.ru/about) 
+![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png)
 
-![Rockstat sheme](https://rockstat.ru/media/alco-scheme.png)
+## Установка
 
-# Rockstat Bootstrap
-
-Ansible playbook для автоматической установки Rockstat
 Скрипт сделан для Ubuntu 16.04, на других работать не будет.
-
-Подразумевается, что у вас уже имеется сервер под Rockstat под управлением OC Ubuntu 16.04
-и поддомен alco.yourdomain.ru (или какой-либо другой) указывет на этот сервер
-
-# Установка
-
-Требуется Ubuntu 16.04
+Подразумевается, что у вас уже имеется сервер под управлением OC Ubuntu 16.04
+и поддомен stats.yourdomain.ru (или какой-либо другой) указывет на этот сервер
 Используется Ansible, но предварительно нужно подготовить систему. Есть несколько путей.
 
-## Установщик установщика 
+### Установщик установщика 
 
 Установка минимальных curl, если нет
 ```bash
