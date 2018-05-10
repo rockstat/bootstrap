@@ -5,3 +5,4 @@ public_keys/priv*
 ovpn_keys/*
 __pycache__
 /.vscode
+/temp_data
