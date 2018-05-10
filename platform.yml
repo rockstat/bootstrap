@@ -3,8 +3,9 @@
   hosts: rockstat
   become: yes
   vars_files:
-    - /vars/config.yml
+    - vars/config.yml
   tasks:
+
     - import_role:
         name: dr.server
       vars:
@@ -48,6 +49,7 @@
         dr_dir: '{{dirs.splash}}'
         dr_repo: https://github.com/rockstat/splash
       tags: splash
+
     - import_role:
         name: jdauphant.nginx
       vars:
@@ -58,7 +60,7 @@
           default: "{{ nginx_vhost_80die }}"
           kernel: "{{ nginx_common_params|combine(nginx_kernel_params) }}"
           grafana: "{{ nginx_common_params|combine(nginx_grafana_params) }}"
-        nginx_auth_basic_files: '{{nginx_auth_basic_files}}'
+        nginx_auth_basic_files: '{{htpasswd_files}}'
         nginx_configs:
           gzip: '{{cfg_nginx_gzip_params}}'
           upstream:
@@ -104,6 +106,18 @@
     #     ovpn_port: '{{ports.openvpn}}'
     #   tags: ['ovpn']
 
+    - name: Redis setup
+      block:
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: "redis"
+          drdc_image: "redis:4-alpine"
+          drdc_network: '{{docker_net_name}}'
+          drdc_memory_limit: '200m'
+          drdc_volumes: ["{{dirs.redis}}:/data"]
+          drdc_ports: ["{{docker_host_ip}}:{{ports.redis}}:6379"]
+      tags: ['redis']
 
     - name: CHProxy setup
       block:
@@ -120,7 +134,6 @@
         with_items:
           - config.yml
           - Dockerfile
-
       - import_role:
           name: dr.docker-container
         vars:
@@ -128,10 +141,8 @@
           drdc_network: '{{docker_net_name}}'
           drdc_dir: "{{build_dir.path}}"
           drdc_memory_limit: '200m'
-          drdc_ports:
-            - "{{docker_host_ip}}:{{ports.chproxy}}:9090"
+          drdc_ports: ["{{docker_host_ip}}:{{ports.chproxy}}:9090"]
       tags: ['chproxy']
-
 
     - import_role:
         name: dr.docker-container
@@ -145,10 +156,8 @@
         drdc_network: '{{docker_net_name}}'
         drdc_memory_limit: '2g'
         drdc_cmd: "/bin/bash -c \"{{tmp_cmd_parts|join(' ')}}\""
-        drdc_volumes:
-          - '{{data_dir}}:/opt/notebooks'
-        drdc_ports:
-          - "{{docker_host_ip}}:{{ports.jupyter}}:8888"
+        drdc_volumes: ['{{data_dir}}:/opt/notebooks']
+        drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter}}:8888"]
       tags: ['anaconda']
 
     - name: Grafana setup
@@ -168,7 +177,7 @@
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
             GF_AUTH_BASIC: false
             # GF_SECURITY_ADMIN_PASSWORD: secret
-          drdc_memory_limit: '500m'
+          drdc_memory_limit: '200m'
           drdc_volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
           drdc_ports:
@@ -208,3 +217,24 @@
     #     alco_service_custom_configs_dir: '{{alco_tracker_custom_config_dir}}'
     #     alco_service_log_level: '{{alco_tracker_log_level}}'
     #   tags: ['tracker']
+
+
+    - name: Kernel setup
+      block:
+      - import_role:
+          name: dr.docker-container
+        vars:
+          env:
+            PORT: 8080
+            PORT_WS: 8082
+            PORT_WSS: 8083
+          drdc_name: 'kernel'
+          drdc_repo: "https://github.com/rockstat/kernel"
+          drdc_network: '{{docker_net_name}}'
+          drdc_env: "{{env|combine(container_envs)}}"
+          drdc_memory_limit: '300m'
+          drdc_volumes:
+            - "{{dirs.kernel_custom_config}}:/app/config/custom"
+          drdc_ports:
+            - "{{docker_host_ip}}:{{ports.kernel}}:8080"
+      tags: ['kernel']

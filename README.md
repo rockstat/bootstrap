@@ -49,6 +49,11 @@ ansible-playbook platform.yml --connection=local
 NEW_USER=dr
 printf "$NEW_USER:`openssl passwd -apr1`\n"
 ```
+### Os params
+
+for redis
+
+    echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
 ## Вопросы и общение
 

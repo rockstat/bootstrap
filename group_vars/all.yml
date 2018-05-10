@@ -1,36 +1,29 @@
 playbook_version: 3.0.0
 
-# ########## Base ##########
-branch: master
-names:
-  kernel: kernel
-  splash: splash
-  band: band
-
+# ########## Main params ##########
+#version
+branch: HEAD
+#base
 contact_email: will@be.overriden
 domain: will-be-overriden.by.hostvars
 domains:
   tools: 'tools.{{domain}}'
   grafana: 'tools.{{domain}}'
-
-# should override before setup
-passwd:
-  ch_default: chpass123
-  chp_zero: chpass666
-
+#user
 support_user: '0x011'
 support_key_file: './public_keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
+#dirs
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 dirs:
   kernel_custom_config: "{{data_dir}}/kernel_custom_config"
   grafana_data: "{{home_dir}}/grafana"
-  splash: "{{home_dir}}/{{names.splash}}"
+  splash: "{{home_dir}}/splash"
   clickhouse: "/srv/clickhouse"
   clickhouse_tmp: "/srv/clickhouse_tmp"
+  redis: "/srv/redis"
 
-# ports
 ports:
   # services
   band: 10000
@@ -43,7 +36,10 @@ ports:
   jupyter: 8888
   netdata: 19999
   # servers
+  http: 80
+  https: 443
   openvpn: 8080
+  redis: 6379
   s2svpn: 8079
   clickhouse: 8123
   chproxy: 9090
@@ -51,10 +47,6 @@ ports:
   influxhttp: 18086
   influxtsb: 4242
 
-# ########## SSL ##########
-domains_ssl:
-  - email: '{{contact_email}}'
-    domains: "{{[domain] + domains.values()|list|unique}}"
 # ########## Docker ##########
 docker_net_name: custom
 docker_interface: docker1
@@ -62,10 +54,18 @@ docker_net_pattern: 172.16.25.* # will be converted to 172.16.25.0/24
 docker_users: 
   - '{{support_user}}'
 # calculable
-docker_net: "{{docker_net_pattern|replace('*', '0')}}/{{32 - (docker_net_pattern|regex_findall('(\\*)'))|count * 8}}"
-docker_host_ip: "{{docker_net|ipaddr(1)|ipaddr('address')}}"
+docker_net: "{{docker_net_pattern|ip_p2n}}"
+docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_network: "{{docker_net|ipaddr('network')}}"
+
+# ########## Common Envs ##########
+container_envs:
+  REDIS_DSN: "redis://redis:6379"
+  BAND_URL: "http://band:8080"
+  KERNEL_URL: "http://kernel:8080"
+  STATSD_HOST: "{{docker_host_ip}}"
+
 # ########## Clients VPN ##########
 covpn_keys_dir: '{{home_dir}}/ovpn_keys'
 
@@ -73,18 +73,48 @@ covpn_keys_dir: '{{home_dir}}/ovpn_keys'
 s2s_vpn_connect: false
 s2s_vpn_key: 'ovpn_keys/node{{vpn_id}}.ovpn'
 s2s_vpn_net_pattern: 192.168.222.*
-s2s_vpn_net: "{{s2s_vpn_net_pattern|replace('*', '0')}}/{{32 - (s2s_vpn_net_pattern|regex_findall('(\\*)'))|count * 8}}"
-s2s_vpn_host_ip: "{{s2s_vpn_net|ipaddr(1)|ipaddr('address')}}"
+s2s_vpn_net: "{{s2s_vpn_net_pattern|ip_p2n}}"
+s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 
 # ########## Netdata ##########
 netdata_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
 netdata_streaming_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
 netdata_conf_from: 'localhost'
 
+# ########## Firewall ##########
+firewall_rules:
+  - { from_ip: '{{docker_net}}'}
+  - { to_port: '{{ports.http}}'}
+  - { to_port: '{{ports.https}}'}
+  - { to_port: '{{ports.openvpn}}'}
+
+# ########## SSL ##########
+domains_ssl:
+  - email: '{{contact_email}}'
+    domains: "{{[domain] + domains.values()|list|unique}}"
+  
+# ########## Nginx ##########
+htpasswd_files:
+  tools: []
+
+nginx_vhost_80die:
+  - listen 80 default_server
+  - server_name _
+  - return 301 https://$host$request_uri
+
+nginx_common_params: 
+  cert: "{{domain}}"
+  root: "{{dirs.splash}}"
+  template: "nginx/site.conf.j2"
+  domain: "{{domain}}"
+
+nginx_grafana_params: {domain: "{{domains.grafana}}", htpasswd: auth_basic/tools}
+nginx_kernel_params: {uploader: yes}
+
 # ########## ClickHouse ##########
 clickhouse_db: stats
 
-# ########## ClickHouse Proxy ##########
+# ########## CHProxy ##########
 # chproxy_allow_from: []
 chproxy_allow_from_default:
   - 127.0.0.0/24
@@ -105,29 +135,3 @@ chproxy_clusters_default:
   - name: "{{'default'}}"
     nodes:
       - '{{docker_host_ip}}:{{ports.clickhouse}}'
-
-# ########## Mailer config ##########
-firewall_rules:
-  - { from_ip: '{{docker_net}}'}
-  - { to_port: '80'}
-  - { to_port: '443'}
-  - { to_port: '{{ports.openvpn}}'}
-
-# ########## Nginx ##########
-nginx_auth_basic_files:
-  tools: []
-
-nginx_vhost_80die:
-  - listen 80 default_server
-  - server_name _
-  - return 301 https://$host$request_uri
-
-nginx_common_params: 
-  cert: "{{domain}}"
-  root: "{{dirs.splash}}"
-  template: "nginx-site.conf.j2"
-  domain: "{{domain}}"
-
-nginx_grafana_params: {domain: "{{domains.grafana}}", htpasswd: auth_basic/tools}
-nginx_kernel_params: {uploader: yes}
-
