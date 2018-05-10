@@ -5,9 +5,9 @@
     - import_role:
         name: dr.influxdb
       vars:
-        influxdb_http_bind_address: ":{{ports.influxhttp}}"
+        influxdb_http_bind_address: ":{{ports.influxhttp.0}}"
         influxdb_tsb_enabled: "true"
-        influxdb_tsb_bind_address: ":{{ports.influxtsb}}"
+        influxdb_tsb_bind_address: ":{{ports.influxtsb.0}}"
         influxdb_tsb_database: "opentsdb"
         influxdb_tsb_retention_policy: ""
         influxdb_tsb_consistency_level: "one"
@@ -23,15 +23,15 @@
     - import_role:
         name: dr.chronograf
       vars:
-        chronograf_port: "{{ports.chronograf}}"
-        chronograf_influxdb_url: "http://{{docker_host_ip}}:{{ports.influxhttp}}"
+        chronograf_port: "{{ports.chronograf.0}}"
+        chronograf_influxdb_url: "http://{{docker_host_ip}}:{{ports.influxhttp.0}}"
       tags: ['chronograf']
 
     - import_role:
         name: dr.openvpn-server
       vars:
         openvpn_clients_net: "{{s2s_vpn_net}}"
-        openvpn_port: "{{ports.s2svpn}}"
+        openvpn_port: "{{ports.s2svpn.0}}"
         openvpn_client_prefix: node
         openvpn_clients: 20
       tags: ['s2s-ovpn-server']

@@ -18,6 +18,9 @@ home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 dirs:
   kernel_custom_config: "{{data_dir}}/kernel_custom_config"
+  kernel: "{{home_dir}}/kernel"
+  band_collection: "{{home_dir}}/images/band_collection"
+  band: "{{home_dir}}/images/band_base"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   clickhouse: "/srv/clickhouse"
@@ -26,26 +29,26 @@ dirs:
 
 ports:
   # services
-  band: 10000
-  kernel: 10001
-  kernel_ws: 10002
-  kernel_wss: 10003
-  heavyload: 10010
+  band: [10000, 8080]
+  kernel: [10001, 8080]
+  kernel_ws: [10002, 8082]
+  kernel_wss: [10003, 8083]
+  heavyload: [10010, 8080]
   # tools
-  grafana: 3000
-  jupyter: 8888
-  netdata: 19999
+  grafana: [3000, 8080]
+  jupyter: [8888, 8080]
+  netdata: [19999]
   # servers
-  http: 80
-  https: 443
-  openvpn: 8080
-  redis: 6379
-  s2svpn: 8079
-  clickhouse: 8123
-  chproxy: 9090
-  chronograf: 18888
-  influxhttp: 18086
-  influxtsb: 4242
+  http: [80]
+  https: [443]
+  openvpn: [8080, 1194]
+  redis: [6379, 6379]
+  s2svpn: [8079]
+  clickhouse: [8123]
+  chproxy: [9090, 9090]
+  chronograf: [18888]
+  influxhttp: [18086]
+  influxtsb: [4242]
 
 # ########## Docker ##########
 docker_net_name: custom
@@ -61,7 +64,9 @@ docker_network: "{{docker_net|ipaddr('network')}}"
 
 # ########## Common Envs ##########
 container_envs:
-  REDIS_DSN: "redis://redis:6379"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "{{ports.redis.1}}"
+  REDIS_DB: 2
   BAND_URL: "http://band:8080"
   KERNEL_URL: "http://kernel:8080"
   STATSD_HOST: "{{docker_host_ip}}"
@@ -84,9 +89,9 @@ netdata_conf_from: 'localhost'
 # ########## Firewall ##########
 firewall_rules:
   - { from_ip: '{{docker_net}}'}
-  - { to_port: '{{ports.http}}'}
-  - { to_port: '{{ports.https}}'}
-  - { to_port: '{{ports.openvpn}}'}
+  - { to_port: '{{ports.http.0}}'}
+  - { to_port: '{{ports.https.0}}'}
+  - { to_port: '{{ports.openvpn.0}}'}
 
 # ########## SSL ##########
 domains_ssl:
@@ -134,4 +139,4 @@ chproxy_users_default:
 chproxy_clusters_default:
   - name: "{{'default'}}"
     nodes:
-      - '{{docker_host_ip}}:{{ports.clickhouse}}'
+      - '{{docker_host_ip}}:{{ports.clickhouse.0}}'
