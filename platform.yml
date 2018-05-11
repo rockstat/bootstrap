@@ -7,7 +7,6 @@
   tasks:
 
     # - debug: msg={{ports.band.1}}
-
     - import_role:
         name: dr.server
       vars:
@@ -136,6 +135,7 @@
         with_items:
           - config.yml
           - Dockerfile
+
       - import_role:
           name: dr.docker-container
         vars:
@@ -203,7 +203,7 @@
           drdc_name: 'heavyload'
           drdc_network: '{{docker_net_name}}'
           drdc_env:
-            WEBHOOK: "{{container_env.KERNEL_URL}}/wh/upload/notify"
+            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
           drdc_repo: https://github.com/rockstat/heavyload
           drdc_dir: "{{heavyload_build.path}}"
           drdc_memory_limit: '200m'
@@ -231,7 +231,7 @@
           drdc_dir: '{{dirs.band}}'
           drdc_repo: "https://github.com/rockstat/band"
           drdc_network: '{{docker_net_name}}'
-          drdc_env: "{{env|combine(container_envs)}}"
+          drdc_env: "{{env|combine(containers_env)}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.band_collection}}:/images/band_collection:ro"
@@ -256,7 +256,7 @@
           drdc_dir: "{{dirs.kernel}}"
           drdc_repo: "https://github.com/rockstat/kernel"
           drdc_network: '{{docker_net_name}}'
-          drdc_env: "{{env|combine(container_envs)}}"
+          drdc_env: "{{env|combine(containers_env)}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.kernel_custom_config}}:/app/config/custom"

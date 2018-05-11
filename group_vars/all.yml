@@ -63,7 +63,8 @@ docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_network: "{{docker_net|ipaddr('network')}}"
 
 # ########## Common Envs ##########
-container_envs:
+containers_env:
+  NETWORK: "{{docker_net_name}}"
   REDIS_HOST: "redis"
   REDIS_PORT: "{{ports.redis.1}}"
   REDIS_DB: 2
