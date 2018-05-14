@@ -141,3 +141,8 @@ chproxy_clusters_default:
   - name: "{{'default'}}"
     nodes:
       - '{{docker_host_ip}}:{{ports.clickhouse.0}}'
+
+# Mailer config
+#mailgun_api_key: ключ
+#mailgun_sender: <Rockstat Setup <robot@mail.yourdomain.com>
+

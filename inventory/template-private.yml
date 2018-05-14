@@ -1,0 +1,10 @@
+# Template for yaml hosts configuration
+# all:
+#     hosts:
+#         somestat:
+#             tracker_domain: alco.yourdomain.com
+#     vars:
+#         contact_email: youemail@example.com
+#     children:
+#         rockstat:
+#             somestat: {}

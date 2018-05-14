@@ -6,3 +6,4 @@ ovpn_keys/*
 __pycache__
 /.vscode
 /temp_data
+/.mypy_cache
