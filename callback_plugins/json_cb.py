@@ -18,7 +18,7 @@ class CallbackModule(CallbackBase):
     def __init__(self):
         self.tasks = {}
 
-    def dump_result(self, result):
+    def dump_result(self, result, **kwargs):
         print(json.dumps(
             dict(name=self.tasks[result._task._uuid], result=result._result)))
 
