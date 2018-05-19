@@ -1,28 +1,31 @@
 Алоха! Для вашего проекта сгенерирован установочный код:
 
 <script type="text/javascript">
-  !function (win, doc, stag, shost, alco, el, head, args) {
-    if(win.alco) return;
-    alco = win.alco = function () {
-      args = Array.prototype.slice.call(arguments);
-      return alco.doCall ? alco.doCall.call(alco, args) : alco.queue.push(args);
-    };
-    alco.push = alco; alco.loaded = !0; alco.snippet = 2; alco.queue = []; alco.server = 'https://' + shost;
-    alco.load = function (src) {
-      el = doc.createElement(stag); el.async = !0; el.src = src;
-      head = doc.getElementsByTagName(stag)[0];
-      head.parentNode.insertBefore(el, head);
-    };
-    alco.load(alco.server + '/lib.js');
-  }(window, document, 'script', '{{ tracker_domain }}');
-
-  // Если у вас много сайтов, придумайте им номера и подставьте в projectId
-  alco('configure', {
-    projectId: 1
+  !function (w, d, st, rst, se, he) {
+    if(w.rstat) return; rst = w.rstat = function () {
+      var args = Array.prototype.slice.call(arguments);
+      return rst.doCall ? rst.doCall.call(rst, args) : rst._q.push(args); };
+    rst.push = rst; rst._l = !0; rst._sv = 3.0; rst._q = [];
+    rst._jsl = function (src) {
+      se = d.createElement(st); se.async = !0; se.src = src;
+      he = d.getElementsByTagName(st)[0]; he.parentNode.insertBefore(se, he); };
+    rst.attach = function(host){ rst._host = host; rst._jsl('https://'+rst._host+'/lib.js'); }
+  }(window, document, 'script');
+  // Configuration
+  rstat('configure', {
+    projectId: 1 // <<< придумайте номер сайта, если их несколько
   });
-
-  // Отправка просмотра страницы
-  alco('page');
+  rstat('page'); // <<< отправка просмотра страницы, убирается на SPA
+  rstat.attach('{{ tracker_domain }}') // <<< Подставьте домен, на котором расположен трекер
+  //rstat('onReady', function(){
+  //  console.log('rstat` ready callback! uid:', rstat('getUid'));
+  //});
+  //rstat('onEvent', function(name, data){
+  //  console.log('rstat event callback:', name, data);
+  //});
+  //rstat('onServerMessage', 'sm', function(name, data){
+  //  console.log('onServerMessage', name, data);
+  //});
 </script>
 
 Крайне рекомендуется установить его межу <head> и </head>, но можно и через GTM.

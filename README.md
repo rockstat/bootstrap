@@ -1,6 +1,4 @@
-# About
-
-Ansible playbook for deploy Rockstat platform
+# Ansible playbook for deploy Rockstat platform
 
 ## About Rockstat
 
