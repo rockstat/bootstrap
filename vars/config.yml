@@ -21,6 +21,12 @@ cfg_nginx_http_params:
   - keepalive_timeout 60
   - keepalive_requests 1000
   - access_log "/var/log/nginx/access.log"
+cfg_nginx_proxy_params:
+  - proxy_redirect   off;
+  - proxy_buffering  off;
+  - proxy_set_header Host            $host;
+  - proxy_set_header X-Real-IP       $remote_addr;
+  - proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 # ########## Grafana ##########
 grafana_plugins:

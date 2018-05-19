@@ -4,6 +4,7 @@
   serial: 1
   become: yes
   tasks:
+
     - name: Updating tree and install aptitude
       apt:
         name: aptitude
@@ -25,4 +26,3 @@
 
     - debug:
         msg: "We're back again. Running on {{ inventory_hostname }}"
-

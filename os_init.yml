@@ -2,15 +2,15 @@
 - name: Preparing system for Ansible
   hosts: all
   gather_facts: false
-  serial: 1
-  remote_user: "{{initial_user|default('root')}}"
   become: yes
-  vars:
-    auth_keys_f: ~/.ssh/authorized_keys
   pre_tasks:
+
     - name: Install python for Ansible
       register: output
       raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python)"
       changed_when: output.stdout != ""
+
     - name: Copy key
       raw: 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && grep -qF "{{support_key}}" {{auth_keys_f}} || echo "{{support_key}}" >> {{auth_keys_f}}'
+      vars:
+        auth_keys_f: ~/.ssh/authorized_keys

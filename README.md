@@ -39,6 +39,23 @@ ansible-playbook platform.yml --connection=local
 
 **Полная документация тут:** [rockstat.ru](https://rockstat.ru/server-setup)
 
+
+### Migrating from submodules to ansible-galaxy
+
+First install deps
+
+    ansible-galaxy install -r install_roles.yml
+
+To remove submodules
+
+    git submodule deinit --all --force
+    git rm --cached roles/*
+    rm -f .gitmodules
+    rm -rf .git/modules
+    rm -rf roles
+
+
+
 ## Полезное
 
 ### Генерация пароля httpasswd

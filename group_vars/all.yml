@@ -7,10 +7,14 @@ branch: HEAD
 contact_email: will@be.overriden
 domain: will-be-overriden.by.hostvars
 domains:
-  tools: 'tools.{{domain}}'
-  grafana: 'tools.{{domain}}'
+  internal: 'my.{{domain}}'
+  grafana: 'grafana.{{domain}}'
+  jupyter: 'jupyter.{{domain}}'
+  theia: 'theia.{{domain}}'
+  netdata: 'netdata.{{domain}}'
+
 #user
-support_user: '0x011'
+support_user: 'x011'
 support_key_file: './public_keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
 #dirs
@@ -37,6 +41,7 @@ ports:
   # tools
   grafana: [3000, 8080]
   jupyter: [8888, 8080]
+  theia: [8000, 8000]
   netdata: [19999]
   # servers
   http: [80]
@@ -100,22 +105,29 @@ domains_ssl:
     domains: "{{[domain] + domains.values()|list|unique}}"
   
 # ########## Nginx ##########
-htpasswd_files:
-  tools: []
+upstreams:
+  - 'upstream kernel { server {{docker_host_ip}}:{{ports.kernel.0}} weight=10; }'
+  - 'upstream heavyload { server {{docker_host_ip}}:{{ports.heavyload.0}} weight=10; }'
+  - 'upstream grafana { server {{docker_host_ip}}:{{ports.grafana.0}} weight=10; }'
+  - 'upstream jupyter { server {{docker_host_ip}}:{{ports.jupyter.0}} weight=10; }'
+  - 'upstream netdata { server {{docker_host_ip}}:{{ports.netdata.0}} weight=10; }'
+  - 'upstream theia { server {{docker_host_ip}}:{{ports.theia.0}} weight=10; }'
 
-nginx_vhost_80die:
-  - listen 80 default_server
-  - server_name _
-  - return 301 https://$host$request_uri
-
-nginx_common_params: 
+nginx_vhbase: 
   cert: "{{domain}}"
   root: "{{dirs.splash}}"
-  template: "nginx/site.conf.j2"
+  template: "nginx/upstream-site.conf.j2"
   domain: "{{domain}}"
 
-nginx_grafana_params: {domain: "{{domains.grafana}}", htpasswd: auth_basic/tools}
-nginx_kernel_params: {uploader: yes}
+sites:
+  default:
+    - listen 80 default_server
+    - server_name _
+    - return 301 https://$host$request_uri
+  kernel: "{{ nginx_vhbase|combine({'uploader': yes}) }}"
+  grafana: "{{ nginx_vhbase|combine({'domain': domains.grafana, 'htpasswd': 'auth_basic/internal'}) }}"
+  theia: "{{ nginx_vhbase|combine({'domain': domains.theia, 'htpasswd': 'auth_basic/internal'}) }}"
+
 
 # ########## ClickHouse ##########
 clickhouse_db: stats

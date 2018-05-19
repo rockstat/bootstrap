@@ -57,19 +57,12 @@
         nginx_official_repo: yes
         keep_only_specified: yes
         nginx_http_params: '{{cfg_nginx_http_params}}'
-        nginx_sites:
-          default: "{{ nginx_vhost_80die }}"
-          kernel: "{{ nginx_common_params|combine(nginx_kernel_params) }}"
-          grafana: "{{ nginx_common_params|combine(nginx_grafana_params) }}"
-        nginx_auth_basic_files: '{{htpasswd_files}}'
+        nginx_sites: '{{sites}}'
+        nginx_auth_basic_files: '{{htpasswd_files|default({})}}'
         nginx_configs:
           gzip: '{{cfg_nginx_gzip_params}}'
-          upstream:
-            - 'upstream kernel { server {{docker_host_ip}}:{{ports.kernel.0}} weight=10; }'
-            - 'upstream heavyload { server {{docker_host_ip}}:{{ports.heavyload.0}} weight=10; }'
-            - 'upstream grafana { server {{docker_host_ip}}:{{ports.grafana.0}} weight=10; }'
-            - 'upstream jupyter { server {{docker_host_ip}}:{{ports.jupyter.0}} weight=10; }'
-            - 'upstream netdata { server {{docker_host_ip}}:{{ports.netdata.0}} weight=10; }'
+          proxy: '{{cfg_nginx_proxy_params}}'
+          upstream: '{{upstreams}}'
           ssl: '{{cfg_nginx_ssl_params}}'
       tags: ['`nginx']
 
@@ -149,7 +142,7 @@
     - import_role:
         name: dr.docker-container
       vars:
-        tmp_cmd_parts: 
+        cmd_parts: 
           - "/opt/conda/bin/conda install jupyter -y --quiet && "
           - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
           - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''"
@@ -157,10 +150,23 @@
         drdc_image: "continuumio/anaconda3"
         drdc_network: '{{docker_net_name}}'
         drdc_memory_limit: '2g'
-        drdc_cmd: "/bin/bash -c \"{{tmp_cmd_parts|join(' ')}}\""
+        drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
         drdc_volumes: ['{{data_dir}}:/opt/notebooks']
         drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       tags: ['anaconda']
+
+    - import_role:
+        name: dr.docker-container
+      vars:
+        drdc_name: 'theia'
+        drdc_repo: "https://github.com/rockstat/theia-build.git"
+        drdc_network: '{{docker_net_name}}'
+        drdc_memory_limit: '2g'
+        drdc_volumes:
+          - "{{data_dir}}:/home/theia/project:cached"
+          - "{{dirs.band_collection}}:/home/theia/project/collection:ro"
+        drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
+      tags: ['theia']
 
     - name: Grafana setup
       block:
