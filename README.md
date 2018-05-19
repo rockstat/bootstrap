@@ -49,10 +49,12 @@ First install deps
 To remove submodules
 
     git submodule deinit --all --force
-    git rm --cached roles/*
+    git rm --cached roles/dr*
+    git rm --cached roles/jdauphant.nginx -r
     rm -f .gitmodules
     rm -rf .git/modules
-    rm -rf roles
+    rm -rf roles/dr*
+    rm -rf roles/jdauphant.nginx
 
 
 
