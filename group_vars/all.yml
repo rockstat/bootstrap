@@ -20,11 +20,13 @@ support_key: "{{ lookup('file', support_key_file) }}"
 #dirs
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
+build_dir: '{{home_dir}}/build'
 dirs:
   kernel_custom_config: "{{data_dir}}/kernel_custom_config"
   kernel: "{{home_dir}}/kernel"
   band_collection: "{{home_dir}}/images/band_collection"
   band: "{{home_dir}}/images/band_base"
+  userimg: "{{data_dir}}/images"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   clickhouse: "/srv/clickhouse"
@@ -39,8 +41,8 @@ ports:
   kernel_wss: [10003, 8083]
   heavyload: [10010, 8080]
   # tools
-  grafana: [3000, 8080]
-  jupyter: [8888, 8080]
+  grafana: [3000, 3000]
+  jupyter: [8888, 8888]
   theia: [8000, 8000]
   netdata: [19999]
   # servers
@@ -105,6 +107,22 @@ domains_ssl:
     domains: "{{[domain] + domains.values()|list|unique}}"
   
 # ########## Nginx ##########
+upgr:
+  - map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+ssl_tmpl: |
+  ssl_certificate_key /etc/letsencrypt/live/{cert}/privkey.pem;
+  ssl_certificate     /etc/letsencrypt/live/{cert}/fullchain.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/{cert}/chain.pem;
+
+nginx_vhupstr_tmpl: |
+  listen 443 ssl http2;
+  server_name {domain};
+  proxy_pass http://{upstr};
+
 upstreams:
   - 'upstream kernel { server {{docker_host_ip}}:{{ports.kernel.0}} weight=10; }'
   - 'upstream heavyload { server {{docker_host_ip}}:{{ports.heavyload.0}} weight=10; }'
@@ -115,7 +133,6 @@ upstreams:
 
 nginx_vhbase: 
   cert: "{{domain}}"
-  root: "{{dirs.splash}}"
   template: "nginx/upstream-site.conf.j2"
   domain: "{{domain}}"
 
@@ -124,9 +141,9 @@ sites:
     - listen 80 default_server
     - server_name _
     - return 301 https://$host$request_uri
-  kernel: "{{ nginx_vhbase|combine({'uploader': yes}) }}"
+  kernel: "{{ nginx_vhbase|combine({'uploader': True, 'root': dirs.splash}) }}"
   grafana: "{{ nginx_vhbase|combine({'domain': domains.grafana, 'htpasswd': 'auth_basic/internal'}) }}"
-  theia: "{{ nginx_vhbase|combine({'domain': domains.theia, 'htpasswd': 'auth_basic/internal'}) }}"
+  theia: "{{ nginx_vhbase|combine({'domain': domains.theia, 'htpasswd': 'auth_basic/internal', 'upgrade': True }) }}"
 
 
 # ########## ClickHouse ##########

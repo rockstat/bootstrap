@@ -32,6 +32,7 @@ sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
 sudo -H pip install pip -U
 sudo -H pip install setuptools
 sudo -H pip install ansible==2.4.4.0
+sudo -H pip install six
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private

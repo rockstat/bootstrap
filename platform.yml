@@ -60,6 +60,7 @@
         nginx_sites: '{{sites}}'
         nginx_auth_basic_files: '{{htpasswd_files|default({})}}'
         nginx_configs:
+          upgrade: '{{upgr}}'
           gzip: '{{cfg_nginx_gzip_params}}'
           proxy: '{{cfg_nginx_proxy_params}}'
           upstream: '{{upstreams}}'
@@ -155,22 +156,33 @@
         drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       tags: ['anaconda']
 
-    - import_role:
-        name: dr.docker-container
-      vars:
-        drdc_name: 'theia'
-        drdc_repo: "https://github.com/rockstat/theia-build.git"
-        drdc_network: '{{docker_net_name}}'
-        drdc_memory_limit: '2g'
-        drdc_volumes:
-          - "{{data_dir}}:/home/theia/project:cached"
-          - "{{dirs.band_collection}}:/home/theia/project/collection:ro"
-        drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
+
+    - block:
+
+      - name: Creating Theia datadir
+        file:
+          state: directory
+          path: "{{dirs.userimg}}"
+          owner: 473
+          group: 473
+
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'theia'
+          drdc_dir: "{{build_dir}}/theia"
+          drdc_repo: "https://github.com/rockstat/theia-build.git"
+          drdc_network: '{{docker_net_name}}'
+          drdc_memory_limit: '2g'
+          drdc_volumes:
+            - "{{dirs.userimg}}:/home/theia/project:cached"
+            - "{{dirs.band_collection}}:/home/theia/project/collection:ro"
+          drdc_ports: ["{{docker_host_ip}}:{{ports.theia.0}}:{{ports.theia.1}}"]
       tags: ['theia']
 
-    - name: Grafana setup
-      block:
-      - file:
+    - block:
+      - name: Creating Grafana datadir
+        file:
           state: directory
           path: "{{dirs.grafana_data}}"
           owner: 472 # grafana container ids
@@ -196,25 +208,18 @@
 
 
     - name: Heavyload setup
-      block:
-      - name: Creating Heavyload build directory
-        tempfile:
-          state: directory
-          suffix: build
-        register: heavyload_build
-
-      - import_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: 'heavyload'
-          drdc_network: '{{docker_net_name}}'
-          drdc_env:
-            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
-          drdc_repo: https://github.com/rockstat/heavyload
-          drdc_dir: "{{heavyload_build.path}}"
-          drdc_memory_limit: '200m'
-          drdc_ports:
-            - "{{docker_host_ip}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
+      import_role:
+        name: dr.docker-container
+      vars:
+        drdc_name: 'heavyload'
+        drdc_network: '{{docker_net_name}}'
+        drdc_env:
+          WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
+        drdc_repo: https://github.com/rockstat/heavyload
+        drdc_dir: "{{build_dir}}/heavyload"
+        drdc_memory_limit: '200m'
+        drdc_ports:
+          - "{{docker_host_ip}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
       tags: ['heavyload']
 
     - name: Band setup
@@ -259,7 +264,7 @@
             PORT_WSS: 8083
             LOG_LEVEL: debug
           drdc_name: 'kernel'
-          drdc_dir: "{{dirs.kernel}}"
+          drdc_dir: "{{build_dir}}/kernel"
           drdc_repo: "https://github.com/rockstat/kernel"
           drdc_network: '{{docker_net_name}}'
           drdc_env: "{{env|combine(containers_env)}}"

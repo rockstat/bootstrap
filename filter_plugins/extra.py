@@ -1,4 +1,15 @@
 from collections import MutableMapping, MutableSequence
+import six
+
+def repl_dict(s, d):
+    for k, v in six.iteritems(d):
+        s = str.replace(s, "{%s}" % k, v)
+
+
+def flatten_dict_values(dictionary):
+    result = []
+    result = reduce(list.__add__, dictionary, [])
+    return result
 
 
 def flatten(mylist, levels=None):
@@ -22,8 +33,6 @@ def flatten(mylist, levels=None):
     return ret
 
 
-class FilterModule (object):
+class FilterModule(object):
     def filters(self):
-        return {
-            "flat": flatten
-        }
+        return {"flat": flatten, "flatten_dict_values": flatten_dict_values}

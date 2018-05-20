@@ -1,4 +1,7 @@
 # install_roles.yml
+- src: https://github.com/madiedinro/ansible-server-role
+  version: master
+  name: dr.server
 
 - src: https://github.com/madiedinro/ansible-openvpn-client-role
   version: master
@@ -12,7 +15,40 @@
   version: master
   name: dr.netdata
 
-- src: https://github.com/madiedinro/ansible-server-role
+- src: https://github.com/madiedinro/ansible-docker-role
   version: master
-  name: dr.server
+  name: dr.docker
 
+- src: https://github.com/madiedinro/ansible-docker-container-role
+  version: master
+  name: dr.docker-container
+
+- src: https://github.com/madiedinro/ansible-postgres-container-role
+  version: master
+  name: dr.postgres-container
+
+# dsfsdf
+
+- src: https://github.com/madiedinro/ansible-chronograf-role
+  version: master
+  name: dr.chronograf
+
+- src: https://github.com/madiedinro/ansible-clickhouse-role
+  version: master
+  name: dr.clickhouse
+
+- src: https://github.com/madiedinro/ansible-influxdb-role
+  version: master
+  name: dr.influxdb
+
+- src: https://github.com/madiedinro/ansible-letsencrypt-role
+  version: master
+  name: dr.letsencrypt
+
+- src: https://github.com/madiedinro/ansible-openvpn-server-role
+  version: master
+  name: dr.openvpn-server
+
+- src: https://github.com/madiedinro/ansible-static-service-role
+  version: master
+  name: dr.static-service
