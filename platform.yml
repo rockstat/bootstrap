@@ -91,15 +91,15 @@
       tags: ['clickhouse']
 
 
-    # - import_role:
-    #     name: alco-openvpn-server
-    #   vars:
-    #     ovpn_keys_dir: '{{covpn_keys_dir}}'
-    #     ovpn_docker_net_name: '{{docker_net_name}}'
-    #     ovpn_docker_network: '{{docker_network}}'
-    #     ovpn_docker_netmask: '{{docker_netmask}}'
-    #     ovpn_port: '{{ports.openvpn.0}}'
-    #   tags: ['ovpn']
+    - import_role:
+        name: alco-openvpn-server
+      vars:
+        ovpn_keys_dir: '{{dirs.ovpnkeys}}'
+        ovpn_docker_net_name: '{{docker_net_name}}'
+        ovpn_docker_network: '{{docker_network}}'
+        ovpn_docker_netmask: '{{docker_netmask}}'
+        ovpn_port: '{{ports.openvpn.0}}'
+      tags: ['ovpn']
 
     - name: Redis setup
       block:

@@ -32,6 +32,7 @@ dirs:
   clickhouse: "/srv/clickhouse"
   clickhouse_tmp: "/srv/clickhouse_tmp"
   redis: "/srv/redis"
+  ovpnkeys: "{{home_dir}}/ovpn_keys"
 
 ports:
   # services
