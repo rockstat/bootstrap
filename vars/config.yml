@@ -43,6 +43,12 @@ grafana_plugins:
 # grafana_plugins_custom:
   # - plugin that i want
 
+# ########## Other things ##########
+
+hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
+
 # ########## Mailer config ##########
 mailer_subj_key: "Ваши ключи OpenVPN ({{ domain }}) v{{ playbook_version }}"
 mailer_subj_snip: "Сниппет для сайта ({{ domain }}) v{{ playbook_version }}"
+
+

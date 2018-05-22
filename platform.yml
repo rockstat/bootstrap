@@ -90,15 +90,22 @@
         chr_path_tmp: "{{dirs.clickhouse_tmp}}"
       tags: ['clickhouse']
 
-
-    - import_role:
-        name: alco-openvpn-server
-      vars:
-        ovpn_keys_dir: '{{dirs.ovpnkeys}}'
-        ovpn_docker_net_name: '{{docker_net_name}}'
-        ovpn_docker_network: '{{docker_network}}'
-        ovpn_docker_netmask: '{{docker_netmask}}'
-        ovpn_port: '{{ports.openvpn.0}}'
+    - block:
+      - debug:
+          msg: "docker_net_name:{{docker_net_name}}, docker_ipnetwork:{{docker_ipnetwork}} docker_netmask:{{docker_netmask}} "
+      - name: Creating vpn keys dir
+        file:
+          state: directory
+          path: "{{dirs.ovpnkeys}}"
+      - import_role:
+          name: alco-openvpn-server
+        vars:
+          ovpn_domain: "{{domain}}"
+          ovpn_keys_dir: '{{dirs.ovpnkeys}}'
+          ovpn_docker_net_name: '{{docker_net_name}}'
+          ovpn_docker_network: '{{docker_ipnetwork}}'
+          ovpn_docker_netmask: '{{docker_netmask}}'
+          ovpn_port: '{{ports.openvpn.0}}'
       tags: ['ovpn']
 
     - name: Redis setup
@@ -113,6 +120,24 @@
           drdc_volumes: ["{{dirs.redis}}:/data"]
           drdc_ports: ["{{docker_host_ip}}:{{ports.redis.0}}:{{ports.redis.1}}"]
       tags: ['redis']
+
+    - name: Logspout with Loggly streaming
+      block:
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: "logspout"
+          drdc_image: "gliderlabs/logspout"
+          drdc_network: '{{docker_net_name}}'
+          drdc_memory_limit: '200m'
+          drdc_cmd: syslog+tcp://logs-01.loggly.com:514
+          drdc_volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+          drdc_env:
+            SYSLOG_STRUCTURED_DATA: "{{loggly_api_key}}@41058 tag=\"Logspout\""
+            SYSLOG_HOSTNAME: "{{hostname}}"
+      when: 'loggly_api_key is defined'
+      tags: ['logspout']
 
     - name: CHProxy setup
       block:
@@ -157,28 +182,6 @@
       tags: ['anaconda']
 
 
-    - block:
-
-      - name: Creating Theia datadir
-        file:
-          state: directory
-          path: "{{dirs.userimg}}"
-          owner: 473
-          group: 473
-
-      - import_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: 'theia'
-          drdc_dir: "{{build_dir}}/theia"
-          drdc_repo: "https://github.com/rockstat/theia-build.git"
-          drdc_network: '{{docker_net_name}}'
-          drdc_memory_limit: '2g'
-          drdc_volumes:
-            - "{{dirs.userimg}}:/home/theia/project:cached"
-            - "{{dirs.band_collection}}:/home/theia/project/collection:ro"
-          drdc_ports: ["{{docker_host_ip}}:{{ports.theia.0}}:{{ports.theia.1}}"]
-      tags: ['theia']
 
     - block:
       - name: Creating Grafana datadir
@@ -203,8 +206,6 @@
           drdc_ports:
             - "{{docker_host_ip}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
       tags: ['grafana']
-
-
 
 
     - name: Heavyload setup
@@ -251,6 +252,26 @@
           drdc_ports:
             - "{{docker_host_ip}}:{{ports.band.0}}:{{ports.band.1}}"
       tags: ['band']
+
+    - block:
+      - name: Creating Theia datadir
+        file:
+          state: directory
+          path: "{{dirs.userimg}}"
+          owner: 473
+          group: 473
+      - import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'theia'
+          drdc_dir: "{{build_dir}}/theia"
+          drdc_repo: "https://github.com/rockstat/theia-build.git"
+          drdc_network: '{{docker_net_name}}'
+          drdc_memory_limit: '2g'
+          drdc_volumes:
+            - "{{dirs.userimg}}:/home/theia/project:cached"
+          drdc_ports: ["{{docker_host_ip}}:{{ports.theia.0}}:{{ports.theia.1}}"]
+      tags: ['theia']
 
 
     - name: Kernel setup

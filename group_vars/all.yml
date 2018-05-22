@@ -68,12 +68,13 @@ docker_users:
 docker_net: "{{docker_net_pattern|ip_p2n}}"
 docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
-docker_network: "{{docker_net|ipaddr('network')}}"
+docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
 
 # ########## Common Envs ##########
 containers_env:
   NETWORK: "{{docker_net_name}}"
   REDIS_HOST: "redis"
+  REDIS_HOST_ISOLATED: "redis"
   REDIS_PORT: "{{ports.redis.1}}"
   REDIS_DB: 2
   BAND_URL: "http://band:8080"

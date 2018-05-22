@@ -57,7 +57,7 @@
     cleanup: true
     image: kylemanna/openvpn
     volumes: "{{ ovpn_docker_volumes }}"
-    command: "ovpn_genconfig -D -N -d -p 'route {{ovpn_docker_network}} {{ovpn_docker_netmask}}' -u {{ovpn_proto}}://{{ tracker_domain }}:{{ovpn_port}}"
+    command: "ovpn_genconfig -D -N -d -p 'route {{ovpn_docker_network}} {{ovpn_docker_netmask}}' -u {{ovpn_proto}}://{{ ovpn_domain }}:{{ovpn_port}}"
 
 
 - name: Generating OpenVPN server cert
