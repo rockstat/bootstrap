@@ -2,16 +2,12 @@
 # Сделайте копию этого файла с именем private, он будет исключен из гита, в нем уже вводите свои данные.
 
 [private]
-#alcostat ansible_host=alco.yourdomain.com
+somestat ansible_host=alco.yourdomain.com
 
 [private:vars]
 #tracker_domain=alco.yourdomain.com
 #contact_email=youemail@example.com
 #mixpanel_token=
 
-# Ключ от mailgun
-# Обычным смертным это не нужно. Используется при поддержке нескольких серверов,
-# позволяет не ебать мозг с передачей vpn ключей и сниппетов
-#mailgun_api_key: ключ
-#mailgun_sender: <Alcolytics Setup <robot@mail.yourdomain.com>
-
+[rockstat]
+somestat

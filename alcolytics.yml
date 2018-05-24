@@ -29,7 +29,7 @@
     - import_role:
         name: dr.letsencrypt
       vars:
-        letsencrypt_domains_groups: '{{alco_ssl_certs}}'
+        letsencrypt_domains_groups: '{{domains_ssl}}'
         letsencrypt_pause_services: ['nginx']
       tags: ['ssl']
 
