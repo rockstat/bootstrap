@@ -1,0 +1,23 @@
+- name: Creating chproxy build directory
+  tempfile:
+    state: directory
+    suffix: build
+  register: build_dir
+
+- name: Rendering CHProxy configs
+  template:
+    src: '{{item}}.j2'
+    dest: '{{build_dir.path}}/{{item}}'
+  with_items:
+    - config.yml
+    - Dockerfile
+
+- import_role:
+    name: dr.docker-container
+  vars:
+    drdc_name: "{{chproxy_container}}"
+    drdc_network: '{{chproxy_docker_net}}'
+    drdc_dir: "{{build_dir.path}}"
+    drdc_purge_networks: yes
+    drdc_memory_limit: '200m'
+    drdc_ports: ["{{chproxy_docker_bind}}"]

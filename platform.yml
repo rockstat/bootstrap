@@ -140,30 +140,14 @@
       tags: ['logspout']
 
     - name: CHProxy setup
-      block:
-      - name: Creating chproxy build directory
-        tempfile:
-          state: directory
-          suffix: build
-        register: build_dir
-
-      - name: Rendering CHProxy configs
-        template:
-          src: 'chproxy/{{item}}.j2'
-          dest: '{{build_dir.path}}/{{item}}'
-        with_items:
-          - config.yml
-          - Dockerfile
-
-      - import_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: 'chproxy'
-          drdc_network: '{{docker_net_name}}'
-          drdc_dir: "{{build_dir.path}}"
-          drdc_memory_limit: '200m'
-          drdc_ports: ["{{docker_host_ip}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
+      import_role: 
+        name: chproxy
+      vars:
+        chproxy_docker_bind: "{{docker_host_ip}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
+        chproxy_docker_net: "{{docker_net_name}}"
+        chproxy_users: "{{hst_chproxy_users}}"
       tags: ['chproxy']
+
 
     - import_role:
         name: dr.docker-container
