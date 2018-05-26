@@ -33,7 +33,7 @@
   version: master
   name: dr.chronograf
 
-- src: AlexeySetevoi.ansible-clickhouse
+- src: AlexeySetevoi.clickhouse
 
 - src: https://github.com/madiedinro/ansible-influxdb-role
   version: master
