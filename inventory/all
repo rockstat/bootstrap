@@ -1,13 +1,15 @@
 ###
-# Сделайте копию этого файла с именем private, он будет исключен из гита, в нем уже вводите свои данные.
+# It's template for your personal inventory file
+# Make a copy with name private or any other starts with "priv"
+# host parameters:
+#   ansible_host: host.ru # required / domain or ip of server
+#   tracker_domain: host.ru # optional / set if it differs from ansible_host
+#   contact_remail: you@example.com # optional / email to receive notifoication about sertificate coming outdated
+#
+# Replace "youstat" with short name of your server. Will be used as internal hostname
 
-[private]
-somestat ansible_host=alco.yourdomain.com
+#[private]
+#youstat ansible_host=alco.yourdomain.com tracker_domain=
 
-[private:vars]
-#tracker_domain=alco.yourdomain.com
-#contact_email=youemail@example.com
-#mixpanel_token=
-
-[rockstat]
-somestat
+#[rockstat]
+#youstat

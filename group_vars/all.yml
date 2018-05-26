@@ -152,26 +152,7 @@ sites:
 clickhouse_db: stats
 
 # ########## CHProxy ##########
-# chproxy_allow_from: []
-chproxy_allow_from_default:
-  - 127.0.0.0/24
-  - 172.16.0.0/16
-chproxy_def_max_concurrent_queries: 5
-chproxy_def_max_queue_size: 100
-chproxy_def_max_queue_time: 30s
-chproxy_def_max_execution_time: 30s
-chproxy_def_allow_cors: true
-# chproxy_users: []
-chproxy_users_default:
-  - name: "{{chproxy_zero_user|default('default')}}"
-    password: "{{chproxy_zero_password|default('default')}}"
-    to_cluster: "{{'default'}}"
-    to_user: "{{'default'}}"
-# chproxy_clusters: []
-chproxy_clusters_default:
-  - name: "{{'default'}}"
-    nodes:
-      - '{{docker_host_ip}}:{{ports.clickhouse.0}}'
+chproxy_allow_from: []
 
 # Mailer config
 #mailgun_api_key: ключ
