@@ -32,8 +32,8 @@ sudo apt-get -q -y install python python-pip python-netaddr git locales
 #-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 #pip install pip -U
-pip install setuptools
-pip install ansible==2.4.4.0 six -U
+pip install setuptools 
+pip install ansible==2.4.4.0 six requests prompt_toolkit
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private
@@ -42,13 +42,13 @@ if [ ! -d $LOCALREPO_VC_DIR ]
 then
     git clone $REPOSRC $LOCALREPO
     cd $LOCALREPO
-    ansible-galaxy install -r install_roles.yml
+    ansible-galaxy install -r install_roles.yml --force
     # git submodule init
     # git submodule update --rebase --remote
 else
     cd $LOCALREPO
     git pull --rebase origin $BR && git checkout $BR
-    ansible-galaxy install -r install_roles.yml
+    ansible-galaxy install -r install_roles.yml --force
     # git submodule init
     # git submodule update --rebase --remote
 fi
