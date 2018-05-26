@@ -145,7 +145,8 @@
       vars:
         chproxy_docker_bind: "{{docker_host_ip}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
         chproxy_docker_net: "{{docker_net_name}}"
-        chproxy_users: "{{hst_chproxy_users}}"
+        chproxy_users: "{{hst_chproxy_users|default([])}}"
+        chproxy_allowed_networks: "{{chproxy_allow_from}}"
       tags: ['chproxy']
 
 
