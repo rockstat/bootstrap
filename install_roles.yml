@@ -34,6 +34,7 @@
   name: dr.chronograf
 
 - src: AlexeySetevoi.clickhouse
+- src: jdauphant.nginx
 
 - src: https://github.com/madiedinro/ansible-influxdb-role.git
   version: master
