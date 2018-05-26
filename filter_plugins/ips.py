@@ -3,12 +3,12 @@ import six
 import netaddr
 
 def ip_pattern_to_net(pattern):
-    bits = 32 - pattern.count('*') * 8
-    network = str.replace(pattern, '*', '0')
+    bits = 32 - str(pattern).count('*') * 8
+    network = str.replace(str(pattern), '*', '0')
     return "%s/%s" % (network, bits)
 
 def net_gateway(netstr):
-    net = netaddr.IPNetwork(netstr)
+    net = netaddr.IPNetwork(str(netstr))
     return "%s" % (net[1])
 
 
