@@ -81,7 +81,7 @@
       tags: ['netdata']
 
     - import_role:
-        name: AlexeySetevoi/clickhouse
+        name: AlexeySetevoi.clickhouse
       vars:
         clickhouse_users_custom: '{{clickhouse_users|default([])}}'
         clickhouse_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
