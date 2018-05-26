@@ -35,7 +35,7 @@
 
 - src: AlexeySetevoi.clickhouse
 
-- src: https://github.com/madiedinro/ansible-influxdb-role
+- src: https://github.com/madiedinro/ansible-influxdb-role.git
   version: master
   name: dr.influxdb
 
