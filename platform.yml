@@ -81,13 +81,13 @@
       tags: ['netdata']
 
     - import_role:
-        name: dr.clickhouse
+        name: AlexeySetevoi/ansible-clickhouse
       vars:
-        chr_users_custom: '{{clickhouse_users|default([])}}'
-        chr_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
-        chr_dbs_custom: [{name: '{{clickhouse_db}}'}]
-        chr_path_data: "{{dirs.clickhouse}}"
-        chr_path_tmp: "{{dirs.clickhouse_tmp}}"
+        clickhouse_users_custom: '{{clickhouse_users|default([])}}'
+        clickhouse_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
+        clickhouse_dbs_custom: [{name: '{{clickhouse_db}}'}]
+        clickhouse_path_data: "{{dirs.clickhouse}}"
+        clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
       tags: ['clickhouse']
 
     - block:

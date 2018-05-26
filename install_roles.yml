@@ -33,9 +33,7 @@
   version: master
   name: dr.chronograf
 
-- src: https://github.com/madiedinro/ansible-clickhouse-role
-  version: master
-  name: dr.clickhouse
+- src: AlexeySetevoi.ansible-clickhouse
 
 - src: https://github.com/madiedinro/ansible-influxdb-role
   version: master
