@@ -3,7 +3,7 @@ server:
   http:
     listen_addr: ":9090"
     allowed_networks:
-{% for net in chproxy_allow_from_default + chproxy_allow_from|default([]) %}
+{% for net in chproxy_allowed_networks_default + chproxy_allowed_networks|default([]) %}
       - "{{ net }}"
 {% endfor %}
 users:
