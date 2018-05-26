@@ -9,9 +9,10 @@ set -o pipefail
 IFS=$'\n\t'
 DEBIAN_FRONTEND=noninteractive
 
-ALCO_HOME=/srv/alco
-REPOSRC=https://github.com/alcolytics/alco-bootstrap
-LOCALREPO=$ALCO_HOME/alco-bootstrap
+REPO_NAME=bootstrap
+PLATFORM_HOME=/srv/platform
+REPOSRC=https://github.com/rockstat/$REPO_NAME
+LOCALREPO=$PLATFORM_HOME/$REPO_NAME
 
 printf "Setting language params...\n"
 
@@ -23,16 +24,13 @@ export LC_ALL=en_US.UTF-8
 printf "Updating system...\n"
 
 sudo apt-get -q -y update
-sudo apt-get -q -y install python-minimal python-pip python-netaddr git locales
+sudo apt-get -q -y install python python-pip python-netaddr git locales
 
 #may be later
 #sudo apt-get -q -y --force-yes upgrade
 #-o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
-sudo -H pip install pip -U
-sudo -H pip install setuptools
-sudo -H pip install ansible==2.4.4.0
-sudo -H pip install six
+pip install pip setuptools ansible==2.4.4.0 six -U
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private
@@ -41,14 +39,18 @@ if [ ! -d $LOCALREPO_VC_DIR ]
 then
     git clone $REPOSRC $LOCALREPO
     cd $LOCALREPO
-    git submodule init
-    git submodule update --rebase --remote
+    ansible-galaxy install -r install_roles.yml
+    # git submodule init
+    # git submodule update --rebase --remote
 else
     cd $LOCALREPO
     git pull --rebase
-    git submodule init
-    git submodule update --rebase --remote
+    ansible-galaxy install -r install_roles.yml
+    # git submodule init
+    # git submodule update --rebase --remote
 fi
+
+
 
 if [ ! -e $INVENTORY ]
 then
