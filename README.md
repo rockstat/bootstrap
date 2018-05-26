@@ -26,7 +26,7 @@ sudo apt -y update && sudo apt -y install curl
 
 Предконфигурация системы и получение свежей версии playbook-a. Это скрипт из `bin/runner`
 ```bash
-bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/v3/bin/runner)
+bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/runner)
 ```
 
 Запуск playbook Rockstat
