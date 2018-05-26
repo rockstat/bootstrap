@@ -4,8 +4,8 @@ playbook_version: 3.0.0
 #version
 branch: HEAD
 #base
-contact_email: will@be.overriden
-domain: will-be-overriden.by.hostvars
+contact_email: hello@example.com
+domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
   internal: 'my.{{domain}}'
   grafana: 'grafana.{{domain}}'
@@ -69,6 +69,8 @@ docker_net: "{{docker_net_pattern|ip_p2n}}"
 docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
+# def
+docker_initnet_pattern: 172.17.*.*
 
 # ########## Common Envs ##########
 containers_env:
@@ -92,9 +94,8 @@ s2s_vpn_net: "{{s2s_vpn_net_pattern|ip_p2n}}"
 s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 
 # ########## Netdata ##########
-netdata_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
-netdata_streaming_from: 'localhost {{docker_net_pattern}} {{s2s_vpn_net}}'
-netdata_conf_from: 'localhost'
+netdata_from: '{{docker_net_pattern}} {{docker_initnet_pattern}} {{s2s_vpn_net}}'
+netdata_streaming_from: '{{docker_net_pattern}} {{docker_initnet_pattern}} {{s2s_vpn_net}}'
 
 # ########## Firewall ##########
 firewall_rules:
@@ -146,6 +147,7 @@ sites:
   kernel: "{{ nginx_vhbase|combine({'uploader': True, 'root': dirs.splash}) }}"
   grafana: "{{ nginx_vhbase|combine({'domain': domains.grafana, 'htpasswd': 'auth_basic/internal'}) }}"
   theia: "{{ nginx_vhbase|combine({'domain': domains.theia, 'htpasswd': 'auth_basic/internal', 'upgrade': True }) }}"
+  netdata: "{{ nginx_vhbase|combine({'domain': domains.netdata, 'htpasswd': 'auth_basic/internal' }) }}"
 
 
 # ########## ClickHouse ##########

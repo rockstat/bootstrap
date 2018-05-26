@@ -71,11 +71,11 @@
         name: dr.netdata
       vars:
         drn_allow:
-          dashboard_from: '{{netdata_from}}'
-          badges_from: '{{netdata_from}}'
-          conf_from: '{{netdata_conf_from}}'
-          connections_from: '{{netdata_streaming_from}}'
-          streaming_from: '{{netdata_streaming_from}}'
+          dashboard_from: "{{netdata_from|default('')}}"
+          badges_from: "{{netdata_from|default('')}}"
+          conf_from: "{{netdata_conf_from|default('')}}"
+          connections_from: "{{netdata_streaming_from|default('')}}"
+          streaming_from: "{{netdata_streaming_from}}"
         drn_stream: '{{netdata_stream_config|default({})}}'
         drn_backend: '{{netdata_backend_config|default({})}}'
       tags: ['netdata']
