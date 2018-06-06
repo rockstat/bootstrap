@@ -162,6 +162,7 @@
         drdc_network: '{{docker_net_name}}'
         drdc_memory_limit: '2g'
         drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
+        drdc_labels: "{{docker_band_lbls}}"
         drdc_volumes: ['{{data_dir}}:/opt/notebooks']
         drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       tags: ['anaconda']
@@ -202,6 +203,7 @@
         drdc_env:
           WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
         drdc_repo: https://github.com/rockstat/heavyload
+        drdc_labels: "{{docker_band_lbls}}"
         drdc_dir: "{{build_dir}}/heavyload"
         drdc_memory_limit: '200m'
         drdc_ports:
@@ -210,56 +212,74 @@
 
     - name: Band setup
       block:
-      - import_role:
-          name: dr.static-service
-        vars:
-          dr_name: band_collection
-          dr_dir: '{{dirs.band_collection}}'
-          dr_repo: https://github.com/rockstat/band-services
-        tags: splash
 
-      - import_role:
+
+      - name: Building band-base-py image
+        import_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: band-base-py
+          drdc_image: 'rst/band-base-py'
+          drdc_dir: '{{dirs.band}}'
+          drdc_repo: "https://github.com/rockstat/band"
+          drdc_run_container: no
+
+
+      - name: Building direсtor service
+        import_role:
           name: dr.docker-container
         vars:
           env:
             PORT: "{{ports.band.1}}"
             IMAGES_PATH: /images
-          drdc_name: 'band'
-          drdc_dir: '{{dirs.band}}'
-          drdc_repo: "https://github.com/rockstat/band"
+          drdc_image: 'rst/band-director'
+          drdc_name: 'director'
+          drdc_dir: '{{dirs.band_collection}}'
+          drdc_rel_path: '/director'
+          drdc_repo: "https://github.com/rockstat/band-services"
           drdc_network: '{{docker_net_name}}'
+          drdc_labels: "{{docker_band_lbls}}"
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.band_collection}}:/images/band_collection:ro"
-            - "{{dirs.band}}:/images/band_base:ro"
+            - "{{dirs.band}}:/images/band_base_py:ro"
+            - "{{dirs.userimg}}:/images/user:cached"
             - "/var/run/docker.sock:/var/run/docker.sock"
           drdc_ports:
             - "{{docker_host_ip}}:{{ports.band.0}}:{{ports.band.1}}"
       tags: ['band']
 
     - block:
+
       - name: Creating Theia datadir
         file:
           state: directory
           path: "{{dirs.userimg}}"
           owner: 473
           group: 473
+
       - import_role:
           name: dr.docker-container
         vars:
           drdc_name: 'theia'
           drdc_dir: "{{build_dir}}/theia"
           drdc_repo: "https://github.com/rockstat/theia-build.git"
+          drdc_labels: "{{docker_band_lbls}}"
           drdc_network: '{{docker_net_name}}'
           drdc_memory_limit: '2g'
           drdc_volumes:
-            - "{{dirs.userimg}}:/home/theia/project:cached"
+            - "{{dirs.userimg}}:/home/theia/project/images:cached"
+            - "{{dirs.band_collection}}/.skeletons:/home/theia/project/skeletons:ro"
           drdc_ports: ["{{docker_host_ip}}:{{ports.theia.0}}:{{ports.theia.1}}"]
+
+      - name: Copying bootstrap files
+        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.userimg}}/'
+
       tags: ['theia']
 
 
-    - name: Kernel setup
+    - name: Frontier setup
       block:
       - import_role:
           name: dr.docker-container
@@ -269,15 +289,17 @@
             PORT_WS: 8082
             PORT_WSS: 8083
             LOG_LEVEL: debug
-          drdc_name: 'kernel'
+          drdc_name: 'frontier'
+          drdc_image: 'rst/frontier'
           drdc_dir: "{{build_dir}}/kernel"
-          drdc_repo: "https://github.com/rockstat/kernel"
+          drdc_repo: "https://github.com/rockstat/frontier"
           drdc_network: '{{docker_net_name}}'
           drdc_env: "{{env|combine(containers_env)}}"
+          drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.kernel_custom_config}}:/app/config/custom"
           drdc_ports:
             - "{{docker_host_ip}}:{{ports.kernel.0}}:{{ports.kernel.1}}"
-      tags: ['kernel']
+      tags: ['frontier']
 

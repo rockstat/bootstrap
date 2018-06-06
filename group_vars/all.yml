@@ -59,6 +59,7 @@ ports:
   influxtsb: [4242]
 
 # ########## Docker ##########
+# user defined docker network
 docker_net_name: custom
 docker_interface: docker1
 docker_net_pattern: 172.16.25.* # will be converted to 172.16.25.0/24
@@ -69,9 +70,10 @@ docker_net: "{{docker_net_pattern|ip_p2n}}"
 docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
-# def
+# default docker network
 docker_initnet_pattern: 172.17.*.*
-
+# other params
+docker_band_lbls: {inband: system}
 # ########## Common Envs ##########
 containers_env:
   NETWORK: "{{docker_net_name}}"
