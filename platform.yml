@@ -6,89 +6,40 @@
     - vars/config.yml
   tasks:
 
-    # - debug: msg={{ports.band.1}}
-    - import_role:
-        name: dr.server
-      vars:
-        drs_setup_user: yes
-        drs_user: '{{support_user}}'
-        drs_pub_key_file: '{{support_key_file}}'
-      tags: ['os']
+    - block:
+      - include_role:
+          name: dr.server
+        vars:
+          drs_setup_user: yes
+          drs_user: '{{support_user}}'
+          drs_home_dir: "{{home_dir}}"
+          drs_pub_key_file: '{{support_key_file}}'
+      tags: ['os', 'system']
 
-    - import_role:
-        name: dr.docker
-      vars:
-        drd_users:
-        - "{{support_user}}"
-        drd_create_network: yes
-        drd_net_name: '{{docker_net_name}}'
-        drd_bind_ip: "{{docker_host_ip}}"
-        drd_interface: '{{docker_interface}}'
-        drd_net: '{{docker_net}}'
-      tags: ['docker']
-      become: yes
 
-    - import_role:
-        name: dr.exposeur
-      vars:
-        expo_reset_ufw: true
-        expo_rules: '{{firewall_rules + priv_firewall_rules|default([]) + group_firewall_rules|default([])}}'
-        expo_expose_rules: '{{expose_rules|default([]) + priv_expose_rules|default([]) + group_expose_rules|default([])}}'
-      tags: ['firewall']
+    - block:
+      - include_role:
+          name: dr.docker
+        vars:
+          drd_users:
+          - "{{support_user}}"
+          drd_create_network: yes
+          drd_net_name: '{{docker_net_name}}'
+          drd_bind_ip: "{{docker_host_ip}}"
+          drd_interface: '{{docker_interface}}'
+          drd_net: '{{docker_net}}'
+        become: yes
+      tags: ['docker', 'system']
 
-    - import_role:
-        name: dr.letsencrypt
-      vars:
-        letsencrypt_domains_groups: '{{domains_ssl}}'
-        letsencrypt_pause_services: ['nginx']
-      tags: ssl
 
-    - import_role:
-        name: dr.static-service
-      vars:
-        dr_name: splash
-        dr_dir: '{{dirs.splash}}'
-        dr_repo: https://github.com/rockstat/splash
-      tags: splash
-
-    - import_role:
-        name: jdauphant.nginx
-      vars:
-        nginx_official_repo: yes
-        keep_only_specified: yes
-        nginx_http_params: '{{cfg_nginx_http_params}}'
-        nginx_sites: '{{sites}}'
-        nginx_auth_basic_files: '{{htpasswd_files|default({})}}'
-        nginx_configs:
-          upgrade: '{{upgr}}'
-          gzip: '{{cfg_nginx_gzip_params}}'
-          proxy: '{{cfg_nginx_proxy_params}}'
-          upstream: '{{upstreams}}'
-          ssl: '{{cfg_nginx_ssl_params}}'
-      tags: ['`nginx']
-
-    - import_role:
-        name: dr.netdata
-      vars:
-        drn_allow:
-          dashboard_from: "{{netdata_from|default('')}}"
-          badges_from: "{{netdata_from|default('')}}"
-          conf_from: "{{netdata_conf_from|default('')}}"
-          connections_from: "{{netdata_streaming_from|default('')}}"
-          streaming_from: "{{netdata_streaming_from}}"
-        drn_stream: '{{netdata_stream_config|default({})}}'
-        drn_backend: '{{netdata_backend_config|default({})}}'
-      tags: ['netdata']
-
-    - import_role:
-        name: AlexeySetevoi.clickhouse
-      vars:
-        clickhouse_users_custom: '{{clickhouse_users|default([])}}'
-        clickhouse_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
-        clickhouse_dbs_custom: [{name: '{{clickhouse_db}}'}]
-        clickhouse_path_data: "{{dirs.clickhouse}}"
-        clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
-      tags: ['clickhouse']
+    - block:
+      - include_role:
+          name: dr.exposeur
+        vars:
+          expo_reset_ufw: true
+          expo_rules: '{{firewall_rules + priv_firewall_rules|default([]) + group_firewall_rules|default([])}}'
+          expo_expose_rules: '{{expose_rules|default([]) + priv_expose_rules|default([]) + group_expose_rules|default([])}}'
+      tags: ['firewall', 'system']
 
     - block:
       - debug:
@@ -97,7 +48,7 @@
         file:
           state: directory
           path: "{{dirs.ovpnkeys}}"
-      - import_role:
+      - include_role:
           name: alco-openvpn-server
         vars:
           ovpn_domain: "{{domain}}"
@@ -106,11 +57,90 @@
           ovpn_docker_network: '{{docker_ipnetwork}}'
           ovpn_docker_netmask: '{{docker_netmask}}'
           ovpn_port: '{{ports.openvpn.0}}'
-      tags: ['ovpn']
+      tags: ['ovpn', 'system']
+
+    - block:
+      - include_role:
+          name: dr.letsencrypt
+        vars:
+          letsencrypt_domains_groups: '{{domains_ssl}}'
+          letsencrypt_pause_services: ['nginx']
+      tags: ['ssl', 'system']
+
+
+    - block:
+      - include_role:
+          name: jdauphant.nginx
+        vars:
+          nginx_official_repo: yes
+          keep_only_specified: yes
+          nginx_http_params: '{{cfg_nginx_http_params}}'
+          nginx_sites:
+            theia: "{{site_theia|flatten()}}"
+            def_https: "{{site_def_https|flatten()}}"
+            def_http: "{{site_def_http|flatten()}}"
+            frontier: "{{site_frontier}}"
+            grafana: "{{site_grafana|flatten()}}"
+            jupyter: "{{site_jupyter|flatten()}}"
+            netdata: "{{site_netdata|flatten()}}"
+          nginx_auth_basic_files: '{{htpasswd_files|default({})}}'
+          nginx_configs:
+            upgrade: '{{nginx_protoup}}'
+            gzip: '{{cfg_nginx_gzip_params}}'
+            proxy: '{{cfg_nginx_proxy_params}}'
+            upstream: '{{upstreams}}'
+            ssl: '{{cfg_nginx_ssl_params}}'
+      tags: ['nginx', 'system']
+
+
+    - block:
+      - include_role:
+          name: dr.netdata
+        vars:
+          drn_allow:
+            dashboard_from: "*"
+            badges_from: "*"
+            conf_from: "*"
+            connections_from: "*"
+            streaming_from: "*"
+          drn_stream: '{{netdata_stream_config|default({})}}'
+          drn_backend: '{{netdata_backend_config|default({})}}'
+          drn_bind_to: "{{if_inner}}"
+      tags: ['netdata', 'system']
+
+
+    - block: 
+      - include_role:
+          name: AlexeySetevoi.clickhouse
+        vars:
+          clickhouse_listen_host_custom: ["{{if_inner}}"]
+          clickhouse_users_custom: '{{ch_users|default([])}}'
+          clickhouse_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
+          clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
+          clickhouse_path_data: "{{dirs.clickhouse}}"
+          clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
+      tags: ['clickhouse', 'system']
+
+
+    - block:
+      - name: CHProxy setup
+        debug: msg="role begin"
+        tags: 'chproxy'
+      - include_role: 
+          name: chproxy
+        vars:
+          chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
+          chproxy_def_node: "{{if_inner}}:{{ports.clickhouse.0}}"
+          chproxy_docker_net: "{{docker_net_name}}"
+          chproxy_users: "{{hst_chproxy_users|default([])}}"
+          chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
+          chproxy_build_dir: "{{build_dir}}"
+      tags: ['chproxy', '3rdparty']
+
 
     - name: Redis setup
       block:
-      - import_role:
+      - include_role:
           name: dr.docker-container
         vars:
           drdc_name: "redis"
@@ -118,12 +148,13 @@
           drdc_network: '{{docker_net_name}}'
           drdc_memory_limit: '200m'
           drdc_volumes: ["{{dirs.redis}}:/data"]
-          drdc_ports: ["{{docker_host_ip}}:{{ports.redis.0}}:{{ports.redis.1}}"]
-      tags: ['redis']
+          drdc_ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
+      tags: ['redis', 'system']
+
 
     - name: Logspout with Loggly streaming
       block:
-      - import_role:
+      - include_role:
           name: dr.docker-container
         vars:
           drdc_name: "logspout"
@@ -137,36 +168,28 @@
             SYSLOG_STRUCTURED_DATA: "{{loggly_api_key}}@41058 tag=\"Logspout\""
             SYSLOG_HOSTNAME: "{{hostname}}"
       when: 'loggly_api_key is defined'
-      tags: ['logspout']
-
-    - name: CHProxy setup
-      import_role: 
-        name: chproxy
-      vars:
-        chproxy_docker_bind: "{{docker_host_ip}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
-        chproxy_docker_net: "{{docker_net_name}}"
-        chproxy_users: "{{hst_chproxy_users|default([])}}"
-        chproxy_allowed_networks: "{{chproxy_allow_from}}"
-      tags: ['chproxy']
+      tags: ['logspout', 'system']
 
 
-    - import_role:
-        name: dr.docker-container
-      vars:
-        cmd_parts: 
-          - "/opt/conda/bin/conda install jupyter -y --quiet && "
-          - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-          - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''"
-        drdc_name: 'anaconda'
-        drdc_image: "continuumio/anaconda3"
-        drdc_network: '{{docker_net_name}}'
-        drdc_memory_limit: '2g'
-        drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
-        drdc_labels: "{{docker_band_lbls}}"
-        drdc_volumes: ['{{data_dir}}:/opt/notebooks']
-        drdc_ports: ["{{docker_host_ip}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
-      tags: ['anaconda']
-
+    - block:
+      - name: Anaconda setup
+        debug: msg="bind to {{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"
+      - include_role:
+          name: dr.docker-container
+        vars:
+          cmd_parts: 
+            - "/opt/conda/bin/conda install jupyter -y --quiet && "
+            - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
+            - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''"
+          drdc_name: 'anaconda'
+          drdc_image: "continuumio/anaconda3"
+          drdc_network: '{{docker_net_name}}'
+          drdc_memory_limit: '2g'
+          drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
+          drdc_labels: "{{docker_band_lbls}}"
+          drdc_volumes: ['{{data_dir}}:/opt/notebooks']
+          drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
+      tags: ['anaconda', '3rdparty']
 
 
     - block:
@@ -176,7 +199,7 @@
           path: "{{dirs.grafana_data}}"
           owner: 472 # grafana container ids
           group: 472
-      - import_role:
+      - include_role:
           name: dr.docker-container
         vars:
           drdc_name: 'grafana'
@@ -190,32 +213,23 @@
           drdc_volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
           drdc_ports:
-            - "{{docker_host_ip}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
-      tags: ['grafana']
+            - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
+      tags: ['grafana', '3rdparty']
 
 
-    - name: Heavyload setup
-      import_role:
-        name: dr.docker-container
-      vars:
-        drdc_name: 'heavyload'
-        drdc_network: '{{docker_net_name}}'
-        drdc_env:
-          WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
-        drdc_repo: https://github.com/rockstat/heavyload
-        drdc_labels: "{{docker_band_lbls}}"
-        drdc_dir: "{{build_dir}}/heavyload"
-        drdc_memory_limit: '200m'
-        drdc_ports:
-          - "{{docker_host_ip}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
-      tags: ['heavyload']
-
-    - name: Band setup
-      block:
+    - block:
+      - include_role:
+          name: dr.static-service
+        vars:
+          dr_name: splash
+          dr_dir: '{{dirs.splash}}'
+          dr_repo: https://github.com/rockstat/splash
+      tags: ['splash', 'platform']
 
 
+    - block:
       - name: Building band-base-py image
-        import_role:
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: band-base-py
@@ -223,10 +237,8 @@
           drdc_dir: '{{dirs.band}}'
           drdc_repo: "https://github.com/rockstat/band"
           drdc_run_container: no
-
-
       - name: Building direсtor service
-        import_role:
+        include_role:
           name: dr.docker-container
         vars:
           env:
@@ -244,22 +256,21 @@
           drdc_volumes:
             - "{{dirs.band_collection}}:/images/band_collection:ro"
             - "{{dirs.band}}:/images/band_base_py:ro"
-            - "{{dirs.userimg}}:/images/user:cached"
+            - "{{dirs.user_images}}:/images/user:cached"
             - "/var/run/docker.sock:/var/run/docker.sock"
           drdc_ports:
-            - "{{docker_host_ip}}:{{ports.band.0}}:{{ports.band.1}}"
-      tags: ['band']
+            - "{{if_inner}}:{{ports.band.0}}:{{ports.band.1}}"
+      tags: ['band', 'platform']
+
 
     - block:
-
-      - name: Creating Theia datadir
-        file:
-          state: directory
-          path: "{{dirs.userimg}}"
-          owner: 473
-          group: 473
-
-      - import_role:
+      - name: Creating User Images Directory
+        file: state=directory path={{dirs.user_images}} owner=473 group=473
+      - name: Creating User Workspace Directory
+        file: state=directory path={{dirs.workspace}} owner=473 group=473
+      - name: Copying bootstrap files
+        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
+      - include_role:
           name: dr.docker-container
         vars:
           drdc_name: 'theia'
@@ -269,26 +280,20 @@
           drdc_network: '{{docker_net_name}}'
           drdc_memory_limit: '2g'
           drdc_volumes:
-            - "{{dirs.userimg}}:/home/theia/project/images:cached"
-            - "{{dirs.band_collection}}/.skeletons:/home/theia/project/skeletons:ro"
-          drdc_ports: ["{{docker_host_ip}}:{{ports.theia.0}}:{{ports.theia.1}}"]
-
-      - name: Copying bootstrap files
-        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.userimg}}/'
-
-      tags: ['theia']
+            - "{{dirs.workspace}}:/home/theia/project/:cached"
+            - "{{dirs.user_images}}:/home/theia/project/my_images:cached"
+            - "{{dirs.band_collection}}/.skeletons:/home/theia/project/sources/skeletons_ro:ro"
+            - "{{dirs.band_collection}}:/home/theia/project/sources/band_images_ro:ro"
+          drdc_ports: ["{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}"]
+      tags: ['theia', 'platform']
 
 
     - name: Frontier setup
       block:
-      - import_role:
+      - include_role:
           name: dr.docker-container
         vars:
-          env:
-            PORT: 8080
-            PORT_WS: 8082
-            PORT_WSS: 8083
-            LOG_LEVEL: debug
+          env: {}
           drdc_name: 'frontier'
           drdc_image: 'rst/frontier'
           drdc_dir: "{{build_dir}}/kernel"
@@ -300,6 +305,48 @@
           drdc_volumes:
             - "{{dirs.kernel_custom_config}}:/app/config/custom"
           drdc_ports:
-            - "{{docker_host_ip}}:{{ports.kernel.0}}:{{ports.kernel.1}}"
-      tags: ['frontier']
+            - "{{if_inner}}:{{ports.kernel.0}}:{{ports.kernel.1}}"
+      tags: ['frontier', 'platform', 'rockme']
 
+
+    - name: Clickhouse writer
+      block:
+      - include_role:
+          name: dr.docker-container
+        vars:
+          env: {}
+          drdc_name: 'chwriter'
+          drdc_image: 'rst/chwriter'
+          drdc_dir: "{{build_dir}}/chwriter"
+          drdc_repo: "https://github.com/rockstat/chwriter"
+          drdc_network: '{{docker_net_name}}'
+          drdc_env: "{{env|combine(containers_env)}}"
+          drdc_labels: "{{docker_band_lbls}}"
+          drdc_memory_limit: '300m'
+          drdc_volumes:
+            - "{{dirs.chwriter_custom_config}}:/app/config/custom"
+            - "{{dirs.chwriter_emergency}}:/app/emergency"
+      tags: ['chwriter', 'platform', 'rockme']
+
+
+    - block:
+      - include_role:
+          name: dr.docker-container
+        vars:
+          drdc_name: 'heavyload'
+          drdc_network: '{{docker_net_name}}'
+          drdc_pull: false
+          drdc_env:
+            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
+          drdc_repo: https://github.com/rockstat/heavyload
+          drdc_labels: "{{docker_band_lbls}}"
+          drdc_dir: "{{build_dir}}/heavyload"
+          drdc_memory_limit: '100m'
+          drdc_ports:
+            - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
+      tags: ['heavyload', 'platform']
+
+
+
+    # - import_tasks: extensions/metrics_server.yml
+      # when: 

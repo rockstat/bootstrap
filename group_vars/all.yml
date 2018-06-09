@@ -7,33 +7,45 @@ branch: HEAD
 contact_email: hello@example.com
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
-  internal: 'my.{{domain}}'
+  internal: 'app.{{domain}}'
   grafana: 'grafana.{{domain}}'
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
 
-#user
+#managing user
 support_user: 'x011'
+remote_user: 'x011'
+#key for update manager to access server
 support_key_file: './public_keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
+#initial services
+services_default:
+  director: true
+  mmgeo: true
+  sxgeo: true
+  send_mixpanel: false
+  tg_hellobot: false
 #dirs
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 build_dir: '{{home_dir}}/build'
 dirs:
   kernel_custom_config: "{{data_dir}}/kernel_custom_config"
+  chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
+  chwriter_emergency: "{{data_dir}}/chwriter_emergency"
   kernel: "{{home_dir}}/kernel"
   band_collection: "{{home_dir}}/images/band_collection"
   band: "{{home_dir}}/images/band_base"
-  userimg: "{{data_dir}}/images"
+  user_images: "{{data_dir}}/images"
+  workspace: "{{data_dir}}/workspace"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   clickhouse: "/srv/clickhouse"
   clickhouse_tmp: "/srv/clickhouse_tmp"
   redis: "/srv/redis"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
-
+#ports directory
 ports:
   # services
   band: [10000, 8080]
@@ -71,94 +83,114 @@ docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
 # default docker network
-docker_initnet_pattern: 172.17.*.*
+docker_initnet_pattern: 172.17.*
 # other params
 docker_band_lbls: {inband: system}
-# ########## Common Envs ##########
-containers_env:
-  NETWORK: "{{docker_net_name}}"
-  REDIS_HOST: "redis"
-  REDIS_HOST_ISOLATED: "redis"
-  REDIS_PORT: "{{ports.redis.1}}"
-  REDIS_DB: 2
-  BAND_URL: "http://band:8080"
-  KERNEL_URL: "http://kernel:8080"
-  STATSD_HOST: "{{docker_host_ip}}"
-
 # ########## Clients VPN ##########
 covpn_keys_dir: '{{home_dir}}/ovpn_keys'
-
 # ########## Server-server VPN ##########
 s2s_vpn_connect: false
 s2s_vpn_key: 'ovpn_keys/node{{vpn_id}}.ovpn'
 s2s_vpn_net_pattern: 192.168.222.*
 s2s_vpn_net: "{{s2s_vpn_net_pattern|ip_p2n}}"
 s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
-
-# ########## Netdata ##########
-netdata_from: '{{docker_net_pattern}} {{docker_initnet_pattern}} {{s2s_vpn_net}}'
-netdata_streaming_from: '{{docker_net_pattern}} {{docker_initnet_pattern}} {{s2s_vpn_net}}'
-
+# ########## Interfaces ##########
+if_outer: "{{ansible_default_ipv4.address}}"
+if_inner: "{{docker_host_ip}}"
 # ########## Firewall ##########
 firewall_rules:
   - { from_ip: '{{docker_net}}'}
   - { to_port: '{{ports.http.0}}'}
   - { to_port: '{{ports.https.0}}'}
   - { to_port: '{{ports.openvpn.0}}'}
-
 # ########## SSL ##########
 domains_ssl:
   - email: '{{contact_email}}'
     domains: "{{[domain] + domains.values()|list|unique}}"
-  
+# ########## Common Envs ##########
+containers_env:
+  LOG_LEVEL: debug
+  NETWORK: "{{docker_net_name}}"
+  REDIS_HOST: "redis"
+  REDIS_HOST_ISOLATED: "redis"
+  REDIS_PORT: "{{ports.redis.1}}"
+  REDIS_DB: 2
+  CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/stats"
+  BAND_URL: "http://band:{{ports.band.1}}"
+  KERNEL_URL: "http://kernel:{{ports.kernel.1}}"
+  STATSD_HOST: "{{if_inner}}"
+  RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
+# ########## ClickHouse ##########
+ch_db: stats
 # ########## Nginx ##########
-upgr:
-  - map $http_upgrade $connection_upgrade {
-        default upgrade;
-        ''      close;
-    }
-
-ssl_tmpl: |
-  ssl_certificate_key /etc/letsencrypt/live/{cert}/privkey.pem;
-  ssl_certificate     /etc/letsencrypt/live/{cert}/fullchain.pem;
-  ssl_trusted_certificate /etc/letsencrypt/live/{cert}/chain.pem;
-
-nginx_vhupstr_tmpl: |
-  listen 443 ssl http2;
-  server_name {domain};
-  proxy_pass http://{upstr};
 
 upstreams:
-  - 'upstream kernel { server {{docker_host_ip}}:{{ports.kernel.0}} weight=10; }'
-  - 'upstream heavyload { server {{docker_host_ip}}:{{ports.heavyload.0}} weight=10; }'
-  - 'upstream grafana { server {{docker_host_ip}}:{{ports.grafana.0}} weight=10; }'
-  - 'upstream jupyter { server {{docker_host_ip}}:{{ports.jupyter.0}} weight=10; }'
-  - 'upstream netdata { server {{docker_host_ip}}:{{ports.netdata.0}} weight=10; }'
-  - 'upstream theia { server {{docker_host_ip}}:{{ports.theia.0}} weight=10; }'
+  - 'upstream frontier { server {{if_inner}}:{{ports.kernel.0}} weight=10; }'
+  - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
+  - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
+  - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
+  - 'upstream netdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
+  - 'upstream theia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
+nx_uploader:
+  location /upload {
+    client_max_body_size 8m;
+    client_body_buffer_size 128K; 
+    limit_except POST { deny all; }
+    proxy_pass http://heavyload; }
+nx_ssl:
+  - ssl_certificate_key /etc/letsencrypt/live/{{domain}}/privkey.pem
+  - ssl_certificate     /etc/letsencrypt/live/{{domain}}/fullchain.pem
+  - ssl_trusted_certificate /etc/letsencrypt/live/{{domain}}/chain.pem
+nx_listen: 
+  - "listen 443 ssl http2"
+nx_nochache:
+  - add_header 'Cache-Control' 'no-store; must-revalidate'
+  - expires off
+nx_auth:
+  - 'auth_basic "Restricted"'
+  - "auth_basic_user_file auth_basic/internal"
+nx_upgrade:
+  - proxy_http_version 1.1
+  - proxy_set_header Upgrade $http_upgrade
+  - proxy_set_header Connection $connection_upgrade
+nx_inout:
+  server_name {u}.{{domain}};
+  location / { 
+    proxy_pass http://{u}; 
+  }
 
-nginx_vhbase: 
+# nx_try:
+#   index index.html;
+#   root {{item.value.root}};
+#   location / {
+#     try_files $uri $uri/index.html @upstream;
+#   }
+  
+### Obj config
+nxobj_base: 
   cert: "{{domain}}"
   template: "nginx/upstream-site.conf.j2"
   domain: "{{domain}}"
 
-sites:
-  default:
-    - listen 80 default_server
+nxobj_internal:
+  domain: "{{domains.internal}}"
+  htpasswd: auth_basic/internal
+
+nginx_vhapp: "{{ nginx_vhbase|combine(nginx_vhinternal) }}"
+
+site_def_http:
     - server_name _
+    - listen 80 default_server
+    - location /stub_status { stub_status; allow 127.0.0.1; deny all; }
     - return 301 https://$host$request_uri
-  kernel: "{{ nginx_vhbase|combine({'uploader': True, 'root': dirs.splash}) }}"
-  grafana: "{{ nginx_vhbase|combine({'domain': domains.grafana, 'htpasswd': 'auth_basic/internal'}) }}"
-  theia: "{{ nginx_vhbase|combine({'domain': domains.theia, 'htpasswd': 'auth_basic/internal', 'upgrade': True }) }}"
-  netdata: "{{ nginx_vhbase|combine({'domain': domains.netdata, 'htpasswd': 'auth_basic/internal' }) }}"
+site_def_https:
+  - "server_name _"
+  - "{{nx_listen.0}} default_server"
+  - "{{nx_ssl}}"
+  - "return 301 https://{{domain}}"
 
-
-# ########## ClickHouse ##########
-clickhouse_db: stats
-
-# ########## CHProxy ##########
-chproxy_allow_from: []
-
-# Mailer config
-#mailgun_api_key: ключ
-#mailgun_sender: <Rockstat Setup <robot@mail.yourdomain.com>
-
+site_frontier: "{{ nxobj_base|combine({'uploader': True, 'root': dirs.splash}) }}"
+site_theia:   "{{[nx_inout.replace('{u}', 'theia')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
+site_jupyter: "{{[nx_inout.replace('{u}', 'jupyter')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
+site_grafana: "{{[nx_inout.replace('{u}', 'grafana')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
+site_netdata: "{{[nx_inout.replace('{u}', 'netdata')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"

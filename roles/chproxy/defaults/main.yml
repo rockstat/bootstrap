@@ -2,6 +2,8 @@
 chproxy_container: chproxy
 chproxy_docker_bind: 127.0.0.1:9090:9090
 chproxy_docker_net: bridge
+# chproxy_build_dir: 
+# chproxy_build_path: "{{}}"
 
 
 # User can define own allowed networks

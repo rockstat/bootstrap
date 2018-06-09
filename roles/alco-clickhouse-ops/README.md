@@ -28,7 +28,7 @@ from playbook
 
 
 
-    # - import_role:
+    # - include_role:
     #     name: alco-clickhouse-ops
     #   vars:
     #     alco_ch_ops_list: '{{ch_operations|default([]) + ch_operations_custom|default([])}}'
