@@ -37,6 +37,7 @@ dirs:
   kernel: "{{home_dir}}/kernel"
   band_collection: "{{home_dir}}/images/band_collection"
   band: "{{home_dir}}/images/band_base"
+  director_data: "{{data_dir}}/director_data"
   user_images: "{{data_dir}}/images"
   workspace: "{{data_dir}}/workspace"
   grafana_data: "{{home_dir}}/grafana"

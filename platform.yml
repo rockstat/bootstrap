@@ -24,6 +24,7 @@
           drd_users:
           - "{{support_user}}"
           drd_create_network: yes
+          drd_version: edge
           drd_net_name: '{{docker_net_name}}'
           drd_bind_ip: "{{docker_host_ip}}"
           drd_interface: '{{docker_interface}}'
@@ -210,6 +211,7 @@
             GF_AUTH_BASIC: false
             # GF_SECURITY_ADMIN_PASSWORD: secret
           drdc_memory_limit: '200m'
+          drdc_labels: "{{docker_band_lbls}}"
           drdc_volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
           drdc_ports:
@@ -255,6 +257,7 @@
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.band_collection}}:/images/band_collection:ro"
+            - "{{dirs.director_data}}:/data" # containers configs
             - "{{dirs.band}}:/images/band_base_py:ro"
             - "{{dirs.user_images}}:/images/user:cached"
             - "/var/run/docker.sock:/var/run/docker.sock"
