@@ -33,7 +33,7 @@ sudo apt-get -q -y install python python-pip python-netaddr git locales
 
 #pip install pip -U
 pip install setuptools 
-pip install ansible==2.5.4 six requests prompt_toolkit validators
+pip install ansible==2.5.4 six requests prompt_toolkit==1.0.15 validators
 
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 INVENTORY=$LOCALREPO/inventory/private
