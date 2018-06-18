@@ -30,7 +30,7 @@ stats.yourdomain.ru    A  ВАШ СЕВЕРВЕР
 sudo apt -y update && sudo apt -y install curl
 ```
 
-Запуск загрузчика
+Запуск установщика
 
 ```bash
 bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/runner)
@@ -45,7 +45,9 @@ ansible-playbook platform.yml --connection=local
 ```
 
 
+### Новый устаношик
 
+python2 bin/installer.py
 
 
 
