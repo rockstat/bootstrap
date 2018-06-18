@@ -34,11 +34,16 @@ sudo apt -y update && sudo apt -y install curl
 
 ```bash
 bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/runner)
+
+cd /srv/platform/bootstrap/
+
 ```
 
 Запуск Rockstat playbook
 
 ```bash
+
+
 cd /srv/platform/bootstrap
 
 ansible-playbook platform.yml --connection=local

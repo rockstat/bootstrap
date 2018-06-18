@@ -62,7 +62,7 @@ Write some help here...
 class HardcodedData:
     INSTALL_DIR = '/srv/alco'
     REPO_SRC = 'https://github.com/rockstat/bootstrap'
-    FAIL_REPORT_URL = 'https://stage.nktch.com/upload'
+    FAIL_REPORT_URL = 'https://bolt.rstat.org/upload'
     STATIC_STATE_PATH = '/etc/openap/config.yml'
     ROOT_PLAYBOOK_NAME = 'platform.yml'
     RELATIVE_BOOTSTRAP_PATH = 'alco-bootstrap'
