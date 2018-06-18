@@ -14,22 +14,29 @@ a new server deployment system.
 
 Скрипт сделан для Ubuntu 16.04, на других работать не будет.
 Подразумевается, что у вас уже имеется сервер под управлением OC Ubuntu 16.04
-и поддомен stats.yourdomain.ru (или какой-либо другой) указывет на этот сервер
-Используется Ansible, но предварительно нужно подготовить систему. Есть несколько путей.
 
-### Установщик установщика 
+### Домен
 
-Установка минимальных curl, если нет
+Треуется настроить DNS следующим образом 
+
+stats.yourdomain.ru    A  ВАШ СЕВЕРВЕР
+*.stats.yourdomain.ru  A  ВАШ СЕВЕРВЕР
+
+### Установка
+
+Устанговка самых необходимых пакетов (если нет)
+
 ```bash
 sudo apt -y update && sudo apt -y install curl
 ```
 
-Предконфигурация системы и получение свежей версии playbook-a. Это скрипт из `bin/runner`
+Запуск загрузчика
+
 ```bash
 bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/runner)
 ```
 
-Запуск playbook Rockstat
+Запуск Rockstat playbook
 
 ```bash
 cd /srv/platform/bootstrap
@@ -37,7 +44,9 @@ cd /srv/platform/bootstrap
 ansible-playbook platform.yml --connection=local
 ```
 
-**Полная документация тут:** [rockstat.ru](https://rockstat.ru/server-setup)
+
+
+
 
 
 ### Migrating from submodules to ansible-galaxy
