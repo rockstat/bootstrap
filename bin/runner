@@ -65,7 +65,7 @@ then
     read email
 
     printf "\n"
-    printf "[private]\nalcostat ansible_host=$domain\n\n[private:vars]\ntracker_domain=$domain\ncontact_email=$email\n\n" | sudo tee $INVENTORY
+    printf "[private]\myrstat ansible_host=$domain\n\n[private:vars]\ntracker_domain=$domain\ncontact_email=$email\n\n[rockstat]\nmyrstat" | sudo tee $INVENTORY
 fi
 
 cd $LOCALREPO
