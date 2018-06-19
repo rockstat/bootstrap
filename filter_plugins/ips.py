@@ -5,7 +5,7 @@ import netaddr
 def ip_pattern_to_net(pattern):
     bits = 32 - str(pattern).count('*') * 8
     lostbits = 24 - str(pattern).count('.') * 8
-    network = str.replace(str(pattern), '*', '0') + ('.0' * round(lostbits/8))
+    network = str.replace(str(pattern), '*', '0') + ('.0' * int(round(lostbits/8)))
     return "%s/%s" % (network, bits - lostbits)
 
 def net_gateway(netstr):
