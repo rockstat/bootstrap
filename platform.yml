@@ -38,8 +38,8 @@
           name: dr.exposeur
         vars:
           expo_reset_ufw: true
-          expo_rules: '{{firewall_rules + priv_firewall_rules|default([]) + group_firewall_rules|default([])}}'
-          expo_expose_rules: '{{expose_rules|default([]) + priv_expose_rules|default([]) + group_expose_rules|default([])}}'
+          expo_rules: '{{firewall_rules + host_firewall_rules|default([]) + group_firewall_rules|default([])}}'
+          expo_expose_rules: '{{expose_rules|default([]) + host_expose_rules|default([]) + group_expose_rules|default([])}}'
       tags: ['firewall', 'system']
 
     - block:
@@ -340,7 +340,7 @@
           drdc_network: '{{docker_net_name}}'
           drdc_pull: false
           drdc_env:
-            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/upload/notify"
+            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/0/upload/notify"
           drdc_repo: https://github.com/rockstat/heavyload
           drdc_labels: "{{docker_band_lbls}}"
           drdc_dir: "{{build_dir}}/heavyload"

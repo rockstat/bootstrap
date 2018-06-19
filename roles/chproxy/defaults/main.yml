@@ -12,6 +12,12 @@ chproxy_allowed_networks_default:
   - 127.0.0.0/24
   - 172.16.0.0/16
 
+chproxy_def_allow_cors: yes
+chproxy_def_max_queue_time: 30s
+chproxy_def_max_execution_time: 30s
+chproxy_def_max_queue_size: 100
+chproxy_def_max_concurrent_queries: 3
+
 chproxy_def_user: default
 chproxy_def_password: default
 chproxy_def_dest_user: default
