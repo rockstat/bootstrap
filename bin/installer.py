@@ -459,7 +459,7 @@ class Ansible:
             'domain': safe_get(conf, 'private:vars', 'tracker_domain'),
             'email': safe_get(conf, 'private:vars', 'contact_email'),
         }
-
+    
     @staticmethod
     def generate_default_inventory(args):
         if not args:
@@ -512,6 +512,10 @@ class Ansible:
         cmd = 'ANSIBLE_STDOUT_CALLBACK=json_cb ' \
               'ansible-playbook {} --connection=local'.format(HardcodedData.ROOT_PLAYBOOK_NAME)
         Helpers.run_process(cmd=cmd, workdir=self.bootstrap_dir, output_line_handler=on_line)
+
+    def install_roles(self):
+        print '> Installing ansible roles...\n'
+        Helpers.run_process('ansible-galaxy install -r install_roles.yml --force', workdir=self.bootstrap_dir)
 
 
 class Configurator:
@@ -802,15 +806,10 @@ class Git:
         if not os.path.isdir(self.git_path):
             self.log.info('cloning git repo from scratch')
             Helpers.run_process('git clone "{}" "{}"'.format(self.reposrc, self.bootstrap_path))
-            # Helpers.run_process('git submodule init', workdir=self.bootstrap_path)
-            # Helpers.run_process('git submodule update', workdir=self.bootstrap_path)
         else:
             self.log.info('updating existing git repo')
             Helpers.run_process('git pull --rebase', workdir=self.bootstrap_path)
-            # Helpers.run_process('git submodule init', workdir=self.bootstrap_path)
-            # Helpers.run_process('git submodule update --rebase --remote', workdir=self.bootstrap_path)
         
-        Helpers.run_process('ansible-galaxy install -r install_roles.yml --force', workdir=self.bootstrap_path)
         rev = Helpers.run_process('git rev-parse --short HEAD',
                                   workdir=self.bootstrap_path,
                                   store_output=True).output.strip()
@@ -913,7 +912,7 @@ class Installer:
         self.log.info('run')
 
         print Styles.Separator
-        print 'Welcome to Rockstat platform v.3 configurator'
+        print 'Welcome to Rockstat platform v3 configurator'
         print Styles.Separator
 
         Helpers.mkdir_if_not_exists(HardcodedData.INSTALL_DIR)
@@ -941,6 +940,7 @@ class Installer:
 
     def handler_install(self):
         self.handler_save_configuration()
+        self.ansible.install_roles()
         self.ansible.run()
         self.static_state.set_installed()
         print 'Installation completed.\n'
