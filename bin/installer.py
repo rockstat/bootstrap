@@ -514,7 +514,7 @@ class Ansible:
         Helpers.run_process(cmd=cmd, workdir=self.bootstrap_dir, output_line_handler=on_line)
 
     def install_roles(self):
-        print '> Installing ansible roles...\n'
+        print '>>> Installing ansible roles...\n'
         Helpers.run_process('ansible-galaxy install -r install_roles.yml --force', workdir=self.bootstrap_dir)
 
 

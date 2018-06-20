@@ -125,6 +125,6 @@
     content: "{{ item.stdout }}"
     dest: "{{ovpn_keys_dir}}/alco_{{item.item.item}}.ovpn"
     force: no
-  when: not item|skipped
+  when: not item.skipped
   with_items: "{{ users_cfg.results }}"
   no_log: True
