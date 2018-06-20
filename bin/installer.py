@@ -7,7 +7,7 @@
 
 ==================================================================
 Что умеет делать:
-* Выкачиывать или обновлять git репозиторий alco-bootstrap
+* Выкачиывать или обновлять git репозиторий Rockstat bootstrap
 * Готовить inventory файл для anbisble (диалог с пользователем, чтобы получить параметры)
 * Готовить файл htpasswd с логинами и паролями для nginx (тоже диалог с пользователем)
 * Собственно главная задача - запускать ansible
@@ -60,12 +60,12 @@ Write some help here...
 
 
 class HardcodedData:
-    INSTALL_DIR = '/srv/alco'
+    INSTALL_DIR = '/srv/platform'
     REPO_SRC = 'https://github.com/rockstat/bootstrap'
     FAIL_REPORT_URL = 'https://bolt.rstat.org/upload'
     STATIC_STATE_PATH = '/etc/openap/config.yml'
     ROOT_PLAYBOOK_NAME = 'platform.yml'
-    RELATIVE_BOOTSTRAP_PATH = 'alco-bootstrap'
+    RELATIVE_BOOTSTRAP_PATH = 'bootstrap'
     RELATIVE_DEFAULT_INVENTORY_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, 'inventory', 'private')
     RELATIVE_GIT_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, '.git')
     RELATIVE_HTPASSWD_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, 'files', '.htpasswd.tools')
