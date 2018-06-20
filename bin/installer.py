@@ -640,7 +640,7 @@ class Configurator:
 class UserAccounts:
     class User:
         def __init__(self, name, descr, encrypted_password):
-            self.name = name
+            self.name = name.strip()
             self.descr = descr
             self.encrypted_password = encrypted_password
 
