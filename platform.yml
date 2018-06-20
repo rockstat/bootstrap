@@ -188,7 +188,7 @@
           cmd_parts: 
             - "/opt/conda/bin/conda install jupyter -y --quiet && "
             - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-            - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token=''"
+            - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
           drdc_name: 'anaconda'
           drdc_image: "continuumio/anaconda3"
           drdc_network: '{{docker_net_name}}'
