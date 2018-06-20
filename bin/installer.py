@@ -642,7 +642,7 @@ class UserAccounts:
         def __init__(self, name, descr, encrypted_password):
             self.name = name.strip()
             self.descr = descr
-            self.encrypted_password = encrypted_password
+            self.encrypted_password = encrypted_password.strip()
 
         def __repr__(self):
             return '{name}{descr}'.format(
@@ -686,7 +686,7 @@ class UserAccounts:
 
             name = Prompter().ask_string('Enter new user name. Example: myuser', validate_func=validate_user_name)
             descr = Prompter().ask_string('Enter new user description or leave empty', validate_func=validate_descr)
-            encrypted_password = cls.encrypt_password(Prompter().ask_password('Enter new user password'))
+            encrypted_password = cls.encrypt_password(Prompter().ask_password('Enter new user password').strip())
             return cls(name=name, descr=descr, encrypted_password=encrypted_password)
 
     def __init__(self, static_state):
