@@ -681,8 +681,6 @@ class UserAccounts:
         self.log = logging.getLogger('users')
         self.static_state = static_state
         self.htpasswd_path = os.path.join(static_state.install_dir(), HardcodedData.RELATIVE_HTPASSWD_PATH)
-        # TODO: clean this shit!
-        Helpers.run_process('touch %s' % self.htpasswd_path)
         self.data = OrderedDict()
         self.load()
         self.menu = Menu('Users management', [

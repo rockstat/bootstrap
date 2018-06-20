@@ -131,6 +131,7 @@
         vars:
           chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
           chproxy_def_node: "{{if_inner}}:{{ports.clickhouse.0}}"
+          chproxy_clusters: "{{hst_chproxy_clusters}}"
           chproxy_docker_net: "{{docker_net_name}}"
           chproxy_users: "{{hst_chproxy_users|default([])}}"
           chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
