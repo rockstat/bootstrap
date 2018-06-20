@@ -126,7 +126,6 @@
     - block:
       - name: CHProxy setup
         debug: msg="role begin"
-        tags: 'chproxy'
       - include_role: 
           name: chproxy
         vars:
@@ -271,8 +270,6 @@
         file: state=directory path={{dirs.user_images}} owner=473 group=473
       - name: Creating User Workspace Directory
         file: state=directory path={{dirs.workspace}} owner=473 group=473
-      - name: Copying bootstrap files
-        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
       - include_role:
           name: dr.docker-container
         vars:
@@ -288,6 +285,8 @@
             - "{{dirs.band_collection}}/.skeletons:/home/theia/project/sources/skeletons_ro:ro"
             - "{{dirs.band_collection}}:/home/theia/project/sources/band_images_ro:ro"
           drdc_ports: ["{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}"]
+      - name: Copying bootstrap files
+        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
       tags: ['theia', 'platform']
 
 
