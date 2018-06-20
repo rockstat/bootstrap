@@ -791,7 +791,7 @@ class UserAccounts:
         with open(self.htpasswd_path, 'w') as f:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
         
-        with open(self.usersyaml_path, 'w', encoding='utf8') as f:
+        with open(self.usersyaml_path, mode='w', encoding='utf8') as f:
             pairs = dict()
             for user in self.data.values():
                 pairs[user.name] = user.encrypted_password
