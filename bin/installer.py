@@ -437,10 +437,10 @@ class Ansible:
                 return False
             if len(invconf.items('private')[0][0].split(' ')) < 2:
                 return False
-            # if not safe_get(invconf, 'private:vars', 'tracker_domain'):
-            #     return False
-            # if not safe_get(invconf, 'private:vars', 'contact_email'):
-            #     return False
+            if not safe_get(invconf, 'private:vars', 'tracker_domain'):
+                return False
+            if not safe_get(invconf, 'private:vars', 'contact_email'):
+                return False
             return True
 
         if not os.path.exists(self.default_inventory_path):
@@ -456,8 +456,8 @@ class Ansible:
 
         return {
             'hostname': conf.items('private')[0][0].split(' ')[0],
-            # 'domain': safe_get(conf, 'private:vars', 'tracker_domain'),
-            # 'email': safe_get(conf, 'private:vars', 'contact_email'),
+            'domain': safe_get(conf, 'private:vars', 'tracker_domain'),
+            'email': safe_get(conf, 'private:vars', 'contact_email'),
         }
     
     @staticmethod
@@ -468,6 +468,10 @@ class Ansible:
         inventory_template = Helpers.strip_lines(
             """[private]
                {hostname} ansible_host={domain} contact_email={email}
+               
+               [private:vars]
+               #tracker_domain={domain}
+               contact_email={email}
 
                [rockstat]
                {hostname}
