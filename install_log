@@ -1,0 +1,32 @@
+- extracting dr.server to /root/.ansible/roles/dr.server
+- dr.server (master) was installed successfully
+- extracting dr.openvpn-client to /root/.ansible/roles/dr.openvpn-client
+- dr.openvpn-client (master) was installed successfully
+- extracting dr.exposeur to /root/.ansible/roles/dr.exposeur
+- dr.exposeur (master) was installed successfully
+- extracting dr.netdata to /root/.ansible/roles/dr.netdata
+- dr.netdata (master) was installed successfully
+- extracting dr.docker to /root/.ansible/roles/dr.docker
+- dr.docker (master) was installed successfully
+- extracting dr.docker-container to /root/.ansible/roles/dr.docker-container
+- dr.docker-container (master) was installed successfully
+- extracting dr.postgres-container to /root/.ansible/roles/dr.postgres-container
+- dr.postgres-container (master) was installed successfully
+- extracting dr.chronograf to /root/.ansible/roles/dr.chronograf
+- dr.chronograf (master) was installed successfully
+- downloading role 'clickhouse', owned by AlexeySetevoi
+- downloading role from https://github.com/AlexeySetevoi/ansible-clickhouse/archive/1.0.12.tar.gz
+- extracting AlexeySetevoi.clickhouse to /root/.ansible/roles/AlexeySetevoi.clickhouse
+- AlexeySetevoi.clickhouse (1.0.12) was installed successfully
+- downloading role 'nginx', owned by jdauphant
+- downloading role from https://github.com/jdauphant/ansible-role-nginx/archive/v2.18.1.tar.gz
+- extracting jdauphant.nginx to /root/.ansible/roles/jdauphant.nginx
+- jdauphant.nginx (v2.18.1) was installed successfully
+- extracting dr.influxdb to /root/.ansible/roles/dr.influxdb
+- dr.influxdb (master) was installed successfully
+- extracting dr.letsencrypt to /root/.ansible/roles/dr.letsencrypt
+- dr.letsencrypt (master) was installed successfully
+- extracting dr.openvpn-server to /root/.ansible/roles/dr.openvpn-server
+- dr.openvpn-server (master) was installed successfully
+- extracting dr.static-service to /root/.ansible/roles/dr.static-service
+- dr.static-service (master) was installed successfully

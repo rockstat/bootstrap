@@ -1,0 +1,71 @@
+#! /usr/bin/env bash
+[ "$UID" -eq 0 ] || exec sudo bash "$0" "$@"
+
+
+(
+  set -Ee
+  function _catch {
+    # block B
+    echo "catch"
+    exit 0  # optional; use if you don't want to propagate (rethrow) error to outer shell
+  }
+  function _finally {
+    # block C
+    echo "final"
+  }
+  trap _catch ERR
+  trap _finally EXIT
+  #   block A
+  set -o nounset
+  set -o errexit
+  set -o pipefail
+  IFS=$'\n\t'
+  DEBIAN_FRONTEND=noninteractive
+
+  BR=dev
+  REPO_NAME=bootstrap
+  PLATFORM_HOME=/srv/platform
+  REPOSRC=https://github.com/rockstat/$REPO_NAME
+  LOCALREPO=$PLATFORM_HOME/$REPO_NAME
+
+  printf "> Applying language settings...\n"
+
+  {
+    echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | sudo tee /etc/default/locale
+    sudo locale-gen en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+  } > ./install_log  2>&1
+
+  printf "> Installing/updating system requirement...\n"
+  {
+    sudo apt-get -q -y update
+    sudo apt-get -q -y install python python-pip python-netaddr git locales
+  } > ./install_log 2>&1
+
+  printf "> Installing/updating python requirements...\n"
+  {
+    pip install setuptools 
+    pip install ansible six requests prompt_toolkit==1.0.15 validators
+  } > ./install_log 2>&1
+
+  printf "> Installing/updating ansible roles...\n"
+  {
+    ansible-galaxy install -r install_roles.yml --force
+  } > ./install_log 2>&1
+
+  printf "> Downloading and running installer...\n"
+  # curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py | python -
+  python <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
+
+  echo "complete"
+)
+
+
+# bash -e <<TRY
+
+# TRY
+# if [ $? -ne 0 ]; then
+#   echo caught exception
+# fi
+

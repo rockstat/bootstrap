@@ -55,36 +55,11 @@ ansible-playbook platform.yml --connection=local
 python2 bin/installer.py
 
 
-
-### Migrating from submodules to ansible-galaxy
-
-First install deps
-
-    ansible-galaxy install -r install_roles.yml
-
-To remove submodules
-
-    git submodule deinit --all --force
-    git rm --cached roles/dr*
-    git rm --cached roles/jdauphant.nginx -r
-    rm -f .gitmodules
-    rm -rf .git/modules
-    rm -rf roles/dr*
-    rm -rf roles/jdauphant.nginx
-
-
-
 ## Полезное
 
-### Генерация пароля httpasswd
-
-```
-NEW_USER=dr
-printf "$NEW_USER:`openssl passwd -apr1`\n"
-```
 ### Os params
 
-for redis
+redis requirements
 
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
