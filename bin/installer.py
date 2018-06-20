@@ -534,8 +534,9 @@ class Configurator:
         self.params = OrderedDict()
         self.init_params()
         self.changed = False
-        if static_state.is_installed():
-            self.try_restore_params()
+        # were check install is complete
+        # if static_state.is_installed():
+        self.try_restore_params()
 
     def init_params(self):
         self.params['domain'] = self.Param('dns name which will be used as tracker domain. Example: stat.yoursite.com',
