@@ -10,3 +10,4 @@ __pycache__
 *.pyc
 /install_log
 /files/.htpasswd.tools
+/files/users.yml

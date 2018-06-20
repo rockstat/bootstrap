@@ -70,6 +70,13 @@
 
 
     - block:
+      - name: Loading users
+        include_vars:
+          file: "{{ item }}"
+          name: web_users
+        with_first_found:
+          - "files/users.yml"
+          - "files/empty.yml"
       - include_role:
           name: jdauphant.nginx
         vars:
@@ -84,7 +91,8 @@
             grafana: "{{site_grafana|flatten()}}"
             jupyter: "{{site_jupyter|flatten()}}"
             netdata: "{{site_netdata|flatten()}}"
-          nginx_auth_basic_files: '{{htpasswds_content|default({})}}'
+          nginx_auth_basic_files:
+            internal: "{{web_users}}"
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'

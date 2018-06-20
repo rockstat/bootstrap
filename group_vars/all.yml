@@ -169,14 +169,10 @@ nxobj_internal:
   domain: "{{domains.internal}}"
   htpasswd: auth_basic/internal
 # nginx htpasswd configuration
-htpasswd_file: files/.htpasswd.tools
-htpasswds_content:
-  internal: "{{ lookup('file', htpasswd_file) }}"
-
-
-
+# htpasswd_file: files/.htpasswd.tools
+# htpasswds_content:
+  # internal: "{{ lookup('file', htpasswd_file) }}"
 nginx_vhapp: "{{ nginx_vhbase|combine(nginx_vhinternal) }}"
-
 site_def_http:
     - server_name _
     - listen 80 default_server

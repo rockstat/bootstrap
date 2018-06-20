@@ -795,7 +795,7 @@ class UserAccounts:
             pairs = dict()
             for user in self.data.values():
                 pairs[user.name] = user.encrypted_password
-            f.write(yaml.dump(pairs, default_flow_style=False))
+            f.write(yaml.dump(pairs, default_flow_style=False, encoding='utf-8'))
             
 
 class Git:
