@@ -33,7 +33,7 @@ sudo apt -y update && sudo apt -y install curl
 Запуск установщика
 
 ```bash
-bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/runner)
+bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer)
 
 cd /srv/platform/bootstrap/
 

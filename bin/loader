@@ -27,7 +27,7 @@
   PLATFORM_HOME=/srv/platform
   REPOSRC=https://github.com/rockstat/$REPO_NAME
   LOCALREPO=$PLATFORM_HOME/$REPO_NAME
-
+  printf "Loader v0.1\n"
   printf "> Applying language settings...\n"
 
   {
