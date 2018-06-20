@@ -657,6 +657,12 @@ class UserAccounts:
                 password=self.encrypted_password,
             )
 
+        def make_namepass_record(self):
+            return '{name}:{password}'.format(
+                name=self.name,
+                password=self.encrypted_password,
+            )
+
         @staticmethod
         def encrypt_password(password):
             return Helpers.run_process(
@@ -792,10 +798,12 @@ class UserAccounts:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
         
         with open(self.usersyaml_path, 'w') as f:
-            pairs = list()
-            for user in self.data.values():
-                pairs.append("{user}:{password}".format(user=user.name, password=user.encrypted_password))
-            f.write(yaml.dump({'iternal_users':pairs}, default_flow_style=False, encoding='utf-8'))
+            f.write(yaml.dump({
+                    'iternal_users':[user.make_namepass_record() for user in self.data.values()]
+                }, 
+                default_flow_style=False, 
+                encoding='utf-8'
+            ))
             
 
 class Git:
