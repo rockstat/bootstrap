@@ -792,9 +792,9 @@ class UserAccounts:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
         
         with open(self.usersyaml_path, 'w') as f:
-            pairs = dict()
+            pairs = list()
             for user in self.data.values():
-                pairs[user.name] = user.encrypted_password
+                pairs.append("{user}:{password}".format(user=user.name, password=user.encrypted_password))
             f.write(yaml.dump(pairs, default_flow_style=False, encoding='utf-8'))
             
 

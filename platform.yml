@@ -70,13 +70,14 @@
 
 
     - block:
-      - name: Loading users
+      - name: Loading nginx users
         include_vars:
           file: "{{ item }}"
           name: web_users
         with_first_found:
           - "files/users.yml"
           - "files/empty.yml"
+      - debug: var=web_users
       - include_role:
           name: jdauphant.nginx
         vars:
