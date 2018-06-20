@@ -27,27 +27,15 @@ stats.yourdomain.ru    A  ВАШ СЕВЕРВЕР
 Устанговка самых необходимых пакетов (если нет)
 
 ```bash
-sudo apt -y update && sudo apt -y install curl
 ```
 
 Запуск установщика
 
 ```bash
-bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer)
-
-cd /srv/platform/bootstrap/
-
+sudo apt -qqy update && sudo apt -qqy install curl && bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)
 ```
 
-Запуск Rockstat playbook
-
-```bash
-
-
-cd /srv/platform/bootstrap
-
-ansible-playbook platform.yml --connection=local
-```
+Установка будет произведена в `/srv/platform`
 
 
 ### Новый устаношик

@@ -70,7 +70,7 @@
     env:
       EASYRSA_BATCH: 1
     command: "ovpn_initpki nopass"
-  when: ovpn_cert_installed|failed
+  when: ovpn_cert_installed is failed
 
 
 - name: Creating OpenVPN server container
@@ -125,6 +125,6 @@
     content: "{{ item.stdout }}"
     dest: "{{ovpn_keys_dir}}/alco_{{item.item.item}}.ovpn"
     force: no
-  when: not item.skipped
+  when: item is not skipped
   with_items: "{{ users_cfg.results }}"
   no_log: True
