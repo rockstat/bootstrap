@@ -11,6 +11,7 @@
   }
   function _finally {
     # block C
+    rm -f install_log
     echo "final"
   }
   trap _catch ERR
@@ -48,7 +49,7 @@
     pip install setuptools 
     pip install ansible six requests prompt_toolkit==1.0.15 validators
   } >> ./install_log 2>&1
-  
+
   printf "> Downloading and running installer...\n"
   python <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
 
