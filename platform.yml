@@ -84,7 +84,7 @@
             grafana: "{{site_grafana|flatten()}}"
             jupyter: "{{site_jupyter|flatten()}}"
             netdata: "{{site_netdata|flatten()}}"
-          nginx_auth_basic_files: '{{htpasswd_files|default({})}}'
+          nginx_auth_basic_files: '{{htpasswds_content|default({})}}'
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'

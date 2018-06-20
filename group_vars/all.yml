@@ -159,23 +159,21 @@ nx_inout:
   location / { 
     proxy_pass http://{u}; 
   }
-
-# nx_try:
-#   index index.html;
-#   root {{item.value.root}};
-#   location / {
-#     try_files $uri $uri/index.html @upstream;
-#   }
-  
 ### Obj config
 nxobj_base: 
   cert: "{{domain}}"
   template: "nginx/upstream-site.conf.j2"
   domain: "{{domain}}"
-
+# nginx htpasswd mixin
 nxobj_internal:
   domain: "{{domains.internal}}"
   htpasswd: auth_basic/internal
+# nginx htpasswd configuration
+htpasswd_file: files/.htpasswd.tools
+htpasswds_content:
+  internal: "{{ lookup('file', htpasswd_file) }}"
+
+
 
 nginx_vhapp: "{{ nginx_vhbase|combine(nginx_vhinternal) }}"
 
