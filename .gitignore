@@ -8,3 +8,4 @@ __pycache__
 /temp_data
 /.mypy_cache
 *.pyc
+/install_log
