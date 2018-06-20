@@ -41,13 +41,13 @@
   {
     sudo apt-get -q -y update
     sudo apt-get -q -y install python python-pip python-netaddr git locales
-  } > ./install_log 2>&1
+  } >> ./install_log 2>&1
 
   printf "> Installing/updating python requirements...\n"
   {
     pip install setuptools 
     pip install ansible six requests prompt_toolkit==1.0.15 validators
-  } > ./install_log 2>&1
+  } >> ./install_log 2>&1
 
   printf "> Installing/updating ansible roles...\n"
   {
@@ -55,7 +55,6 @@
   } > ./install_log 2>&1
 
   printf "> Downloading and running installer...\n"
-  # curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py | python -
   python <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
 
   echo "complete"
