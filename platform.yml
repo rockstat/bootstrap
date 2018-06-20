@@ -71,9 +71,7 @@
 
     - block:
       - name: Loading nginx users
-        include_vars:
-          file: "{{ item }}"
-          name: web_users
+        include_vars: "{{ item }}"
         with_first_found:
           - "files/users.yml"
           - "files/empty.yml"
@@ -93,7 +91,7 @@
             jupyter: "{{site_jupyter|flatten()}}"
             netdata: "{{site_netdata|flatten()}}"
           nginx_auth_basic_files:
-            internal: "{{web_users}}"
+            internal: "{{iternal_users|default({})}}"
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'

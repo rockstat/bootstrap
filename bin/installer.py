@@ -795,7 +795,7 @@ class UserAccounts:
             pairs = list()
             for user in self.data.values():
                 pairs.append("{user}:{password}".format(user=user.name, password=user.encrypted_password))
-            f.write(yaml.dump(pairs, default_flow_style=False, encoding='utf-8'))
+            f.write(yaml.dump({'iternal_users':pairs}, default_flow_style=False, encoding='utf-8'))
             
 
 class Git:
