@@ -299,16 +299,16 @@
           env: {}
           drdc_name: 'frontier'
           drdc_image: 'rst/frontier'
-          drdc_dir: "{{build_dir}}/kernel"
+          drdc_dir: "{{build_dir}}/frontier"
           drdc_repo: "https://github.com/rockstat/frontier"
           drdc_network: '{{docker_net_name}}'
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
-            - "{{dirs.kernel_custom_config}}:/app/config/custom"
+            - "{{dirs.frontier_custom_config}}:/app/config/custom"
           drdc_ports:
-            - "{{if_inner}}:{{ports.kernel.0}}:{{ports.kernel.1}}"
+            - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
       tags: ['frontier', 'platform', 'rockme']
 
 
@@ -340,7 +340,7 @@
           drdc_network: '{{docker_net_name}}'
           drdc_pull: false
           drdc_env:
-            WEBHOOK: "{{containers_env.KERNEL_URL}}/wh/0/upload/notify"
+            WEBHOOK: "{{containers_env.FRONTIER_URL}}/wh/0/upload/notify"
           drdc_repo: https://github.com/rockstat/heavyload
           drdc_labels: "{{docker_band_lbls}}"
           drdc_dir: "{{build_dir}}/heavyload"

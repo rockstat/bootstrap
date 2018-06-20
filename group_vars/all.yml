@@ -31,10 +31,10 @@ home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 build_dir: '{{home_dir}}/build'
 dirs:
-  kernel_custom_config: "{{data_dir}}/kernel_custom_config"
+  frontier_custom_config: "{{data_dir}}/frontier_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
-  kernel: "{{home_dir}}/kernel"
+  frontier: "{{home_dir}}/frontier"
   band_collection: "{{home_dir}}/images/band_collection"
   band: "{{home_dir}}/images/band_base"
   director_data: "{{data_dir}}/director_data"
@@ -50,9 +50,9 @@ dirs:
 ports:
   # services
   band: [10000, 8080]
-  kernel: [10001, 8080]
-  kernel_ws: [10002, 8082]
-  kernel_wss: [10003, 8083]
+  frontier: [10001, 8080]
+  frontier_ws: [10002, 8082]
+  frontier_wss: [10003, 8083]
   heavyload: [10010, 8080]
   # tools
   grafana: [3000, 3000]
@@ -118,7 +118,7 @@ containers_env:
   REDIS_DB: 2
   CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/stats"
   BAND_URL: "http://band:{{ports.band.1}}"
-  KERNEL_URL: "http://kernel:{{ports.kernel.1}}"
+  FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
 # ########## ClickHouse ##########
@@ -126,7 +126,7 @@ ch_db: stats
 # ########## Nginx ##########
 
 upstreams:
-  - 'upstream frontier { server {{if_inner}}:{{ports.kernel.0}} weight=10; }'
+  - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
   - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
   - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
   - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
