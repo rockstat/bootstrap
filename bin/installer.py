@@ -69,6 +69,7 @@ class HardcodedData:
     RELATIVE_DEFAULT_INVENTORY_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, 'inventory', 'private')
     RELATIVE_GIT_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, '.git')
     RELATIVE_HTPASSWD_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, 'files', '.htpasswd.tools')
+    RELATIVE_USERSYAML_PATH = os.path.join(RELATIVE_BOOTSTRAP_PATH, 'files', 'users.yml')
 
     def __init__(self):
         pass
@@ -514,7 +515,7 @@ class Ansible:
         Helpers.run_process(cmd=cmd, workdir=self.bootstrap_dir, output_line_handler=on_line)
 
     def install_roles(self):
-        print '>>> Installing ansible roles...\n'
+        print '>>> Updating ansible roles...\n'
         Helpers.run_process('ansible-galaxy install -r install_roles.yml --force', workdir=self.bootstrap_dir)
 
 
@@ -686,6 +687,7 @@ class UserAccounts:
         self.log = logging.getLogger('users')
         self.static_state = static_state
         self.htpasswd_path = os.path.join(static_state.install_dir(), HardcodedData.RELATIVE_HTPASSWD_PATH)
+        self.usersyaml_path = os.path.join(static_state.install_dir(), HardcodedData.RELATIVE_USERSYAML_PATH)
         self.data = OrderedDict()
         self.load()
         self.menu = Menu('Users management', [
@@ -788,7 +790,12 @@ class UserAccounts:
         Helpers.mkdir_if_not_exists(os.path.dirname(self.htpasswd_path))
         with open(self.htpasswd_path, 'w') as f:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
-
+        with open(self.usersyaml_path, 'w') as f:
+            pairs = dict()
+            for user in self.data.values():
+                pairs[user.name] = user.encrypted_password
+            f.write(yaml.dump(pairs))
+            
 
 class Git:
     def __init__(self, static_state):
