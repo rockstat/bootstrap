@@ -3,13 +3,12 @@
 # Make a copy with name private or any other starts with "priv"
 # host parameters:
 #   ansible_host: host.ru # required / domain or ip of server
-#   tracker_domain: host.ru # optional / set if it differs from ansible_host
-#   contact_remail: you@example.com # optional / email to receive notifoication about sertificate coming outdated
+#   contact_email: you@example.com # optional / email to receive notifoication about sertificate coming outdated
 #
 # Replace "youstat" with short name of your server. Will be used as internal hostname
 
 #[private]
-#youstat ansible_host=alco.yourdomain.com tracker_domain=
+#youstat ansible_host=alco.yourdomain.com contact_email=
 
 #[rockstat]
 #youstat
