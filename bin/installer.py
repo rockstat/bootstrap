@@ -471,7 +471,7 @@ class Ansible:
                {hostname} ansible_host={domain} contact_email={email}
                
                [private:vars]
-               #tracker_domain={domain}
+               tracker_domain={domain}
                contact_email={email}
 
                [rockstat]
