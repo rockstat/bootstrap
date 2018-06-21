@@ -40,6 +40,7 @@ dirs:
   director_data: "{{data_dir}}/director_data"
   user_images: "{{data_dir}}/images"
   workspace: "{{data_dir}}/workspace"
+  uploads: "{{data_dir}}/uploads"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   clickhouse: "/srv/clickhouse"

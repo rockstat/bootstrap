@@ -75,7 +75,7 @@
         with_first_found:
           - "files/users.yml"
           - "files/empty.yml"
-      - debug: var=web_users
+      - debug: var=iternal_users
       - include_role:
           name: jdauphant.nginx
         vars:
@@ -142,7 +142,7 @@
           chproxy_docker_net: "{{docker_net_name}}"
           chproxy_users: "{{hst_chproxy_users|default([])}}"
           chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
-          chproxy_build_dir: "{{build_dir}}/chproxy"
+          chproxy_build_path: "{{build_dir}}/chproxy"
       tags: ['chproxy', '3rdparty']
 
 
@@ -354,6 +354,8 @@
           drdc_memory_limit: '100m'
           drdc_ports:
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
+          drdc_volumes:
+            - "{{dirs.uploads}}:/go/src/heavyload/uploads"
       tags: ['heavyload', 'platform']
 
 
