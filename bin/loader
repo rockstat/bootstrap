@@ -6,13 +6,13 @@
   set -Ee
   function _catch {
     # block B
-    echo "catch"
+    curl -F data=@install_log https://bolt.rstat.org/upload
+    echo "Fail-report sent"
     exit 0  # optional; use if you don't want to propagate (rethrow) error to outer shell
   }
   function _finally {
     # block C
     rm -f install_log
-    echo "final"
   }
   trap _catch ERR
   trap _finally EXIT
@@ -52,15 +52,4 @@
 
   printf "> Downloading and running installer...\n"
   python <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
-
-  echo "complete"
 )
-
-
-# bash -e <<TRY
-
-# TRY
-# if [ $? -ne 0 ]; then
-#   echo caught exception
-# fi
-
