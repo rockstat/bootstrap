@@ -29,6 +29,7 @@
           drd_bind_ip: "{{docker_host_ip}}"
           drd_interface: '{{docker_interface}}'
           drd_net: '{{docker_net}}'
+          drd_mtu: '1400'
         become: yes
       tags: ['docker', 'system']
 
