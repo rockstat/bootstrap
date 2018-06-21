@@ -40,6 +40,7 @@ dirs:
   director_data: "{{data_dir}}/director_data"
   user_images: "{{data_dir}}/images"
   workspace: "{{data_dir}}/workspace"
+  notebooks: "{{data_dir}}/notebooks"
   uploads: "{{data_dir}}/uploads"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
@@ -71,7 +72,8 @@ ports:
   chronograf: [18888]
   influxhttp: [18086]
   influxtsb: [4242]
-
+# Mem limits
+anaconda_mem_limit: 2g
 # ########## Docker ##########
 # user defined docker network
 docker_net_name: custom

@@ -193,10 +193,12 @@
           drdc_name: 'anaconda'
           drdc_image: "continuumio/anaconda3"
           drdc_network: '{{docker_net_name}}'
-          drdc_memory_limit: '2g'
+          drdc_memory_limit: '{{anaconda_mem_limit}}'
           drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
           drdc_labels: "{{docker_band_lbls}}"
-          drdc_volumes: ['{{data_dir}}:/opt/notebooks']
+          drdc_volumes: 
+            - '{{dirs.notebooks}}:/opt/notebooks'
+
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       tags: ['anaconda', '3rdparty']
 
@@ -289,13 +291,15 @@
           drdc_network: '{{docker_net_name}}'
           drdc_memory_limit: '2g'
           drdc_volumes:
-            - "{{dirs.workspace}}:/home/theia/project/:cached"
-            - "{{dirs.user_images}}:/home/theia/project/my_images:cached"
-            - "{{dirs.band_collection}}/.skeletons:/home/theia/project/sources/skeletons_ro:ro"
-            - "{{dirs.band_collection}}:/home/theia/project/sources/band_images_ro:ro"
+            - "{{dirs.workspace}}:{{workspace}}/:cached"
+            - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
+            - "{{dirs.band_collection}}/.skeletons:{{workspace}}/sources/skeletons_ro:ro"
+            - "{{dirs.band_collection}}:{{workspace}}/sources/band_images_ro:ro"
           drdc_ports: ["{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}"]
       - name: Copying bootstrap files
         command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
+      vars:
+        workspace: "/home/theia/project"
       tags: ['theia', 'platform']
 
 
