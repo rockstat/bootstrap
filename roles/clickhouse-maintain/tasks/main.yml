@@ -1,0 +1,25 @@
+---
+
+- name: Ensure migrations table exists
+  command: "clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}"
+  args:
+    stdin: "CREATE TABLE IF NOT EXISTS migrations (name String) ENGINE = Log"
+
+
+- name: Running ClickHouse tasks
+  include_tasks: 'run_ch_{{op.type}}.yml'
+  loop_control:
+    loop_var: op
+  with_items: '{{role_ops_list}}'
+  when: 'role_ops_list|length > 0'
+  notify:
+    - restart chwriter
+
+- name: Apply migrations folder
+  include_tasks: 'run_ch_migration.yml'
+  vars:
+    op:
+      name: "{{(item.split('/')|last).split('.')|first}}"
+      file: "{{item}}"
+  with_fileglob:
+    - "{{role_migrations_path}}/*"

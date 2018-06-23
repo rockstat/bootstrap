@@ -2,6 +2,6 @@
   register: query_result
 
 - name: "Running {{op.file}}"
-  command: "clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}"
+  command: "clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}"
   args:
     stdin: "{{ query_result.stdout }}"

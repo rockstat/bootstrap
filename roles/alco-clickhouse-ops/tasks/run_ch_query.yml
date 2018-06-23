@@ -1,4 +1,0 @@
-- name: "Running {{op.query}}"
-  command: "clickhouse-client -h {{alco_ch_ops_host}} -d {{ alco_ch_ops_db }}"
-  args:
-    stdin: "{{ op.query }}"

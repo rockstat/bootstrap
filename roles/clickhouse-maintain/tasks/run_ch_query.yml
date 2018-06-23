@@ -1,0 +1,4 @@
+- name: "Running {{op.query}}"
+  command: "clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}"
+  args:
+    stdin: "{{ op.query }}"

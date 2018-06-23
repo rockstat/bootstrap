@@ -323,9 +323,15 @@
             - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
       tags: ['frontier', 'platform', 'rockme']
 
-
     - name: Clickhouse writer
       block:
+
+      - include_role:
+          name: clickhouse-maintain
+        vars:
+          role_migrations_path: clickhouse_migrations
+        tags: ['chmigrate']
+
       - include_role:
           name: dr.docker-container
         vars:
@@ -341,7 +347,7 @@
           drdc_volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
-      tags: ['chwriter', 'platform', 'rockme']
+      tags: ['chwriter', 'chmigrate', 'platform', 'rockme']
 
 
     - block:

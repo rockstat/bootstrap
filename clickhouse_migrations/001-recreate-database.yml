@@ -1,0 +1,2 @@
+- DROP DATABASE stats
+- CREATE DATABASE stats
