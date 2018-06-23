@@ -113,7 +113,7 @@ domains_ssl:
     domains: "{{[domain] + domains.values()|list|unique}}"
 # ########## Common Envs ##########
 containers_env:
-  LOG_LEVEL: debug
+  LOG_LEVEL: info
   NETWORK: "{{docker_net_name}}"
   REDIS_HOST: "redis"
   REDIS_HOST_ISOLATED: "redis"
