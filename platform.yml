@@ -186,7 +186,11 @@
       - include_role:
           name: dr.docker-container
         vars:
-          cmd_parts: 
+          conda_list: "{{jup_with_conda_def + jup_with_conda}}"
+          pip_list: "{{jup_with_pip_def + jup_with_pip}}"
+          cmd_parts:
+            - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
+            - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
             - "/opt/conda/bin/conda install jupyter -y --quiet && "
             - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
             - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
@@ -329,6 +333,7 @@
       - include_role:
           name: clickhouse-maintain
         vars:
+          role_ops_db: "{{ch_db}}"
           role_migrations_path: clickhouse_migrations
         tags: ['chmigrate']
 

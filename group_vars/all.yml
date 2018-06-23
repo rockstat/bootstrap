@@ -111,6 +111,13 @@ firewall_rules:
 domains_ssl:
   - email: '{{contact_email}}'
     domains: "{{[domain] + domains.values()|list|unique}}"
+# ########## Jupyter/anaconda packages ##########
+jup_with_conda_def: ["ujson"]
+jup_with_pip_def: ["prodict"]
+jup_with_conda: [""]
+jup_with_pip: [""]
+# ########## ClickHouse ##########
+ch_db: stats
 # ########## Common Envs ##########
 containers_env:
   LOG_LEVEL: info
@@ -119,15 +126,12 @@ containers_env:
   REDIS_HOST_ISOLATED: "redis"
   REDIS_PORT: "{{ports.redis.1}}"
   REDIS_DB: 2
-  CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/stats"
+  CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/{{ch_db}}"
   BAND_URL: "http://band:{{ports.band.1}}"
   FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
-# ########## ClickHouse ##########
-ch_db: stats
 # ########## Nginx ##########
-
 upstreams:
   - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
   - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'

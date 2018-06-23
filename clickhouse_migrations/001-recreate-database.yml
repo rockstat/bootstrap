@@ -1,2 +1,3 @@
-- DROP DATABASE stats
-- CREATE DATABASE stats
+- DROP DATABASE IF EXISTS stats  
+- CREATE DATABASE IF NOT EXISTS stats
+- CREATE TABLE IF NOT EXISTS stats.migrations (name String) ENGINE = Log

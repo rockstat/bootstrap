@@ -1,7 +1,0 @@
-- command: 'cat {{op.file}}'
-  register: query_result
-
-- name: "Running {{op.file}}"
-  command: "clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}"
-  args:
-    stdin: "{{ query_result.stdout }}"

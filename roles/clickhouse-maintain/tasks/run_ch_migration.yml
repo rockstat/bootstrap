@@ -5,14 +5,14 @@
   changed_when: False
 
 - name: Checking migration
-  command: "clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}"
+  command: "clickhouse-client -h {{role_ops_host}} -d default"
   args:
-    stdin: "SELECT name FROM migrations WHERE name = '{{use_name}}'"
+    stdin: "SELECT name FROM {{db}}.migrations WHERE name = '{{use_name}}'"
   register: check
   changed_when: False
 
 - name: Running migration
-  command: 'clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}'
+  command: 'clickhouse-client -h {{role_ops_host}} -d default'
   args:
     stdin: "{{query}}"
   with_items: "{{lookup('file', op.file) | from_yaml}}"
@@ -21,7 +21,7 @@
   when: check.stdout == ''
 
 - name: Saving migration info
-  command: 'clickhouse-client -h {{role_ops_host}} -d {{ role_ops_db }}'
+  command: 'clickhouse-client -h {{role_ops_host}} -d default'
   args:
-    stdin: "INSERT INTO migrations (name) VALUES('{{use_name}}')"
+    stdin: "INSERT INTO {{db}}.migrations (name) VALUES('{{use_name}}')"
   when: check.stdout == ''

@@ -38,12 +38,17 @@ sudo apt -qqy update && sudo apt -qqy install curl && bash <(curl -Ss https://ra
 Установка будет произведена в `/srv/platform`
 
 
-### Новый устаношик
-
-python2 bin/installer.py
-
-
 ## Полезное
+
+### Установка дополнительных пакетов Jupyter/Anaconda
+
+в `groupvars/private.yml` укажите какие пакеты поставить и каким менеджером
+
+```yaml
+# Пакеты ниже указываьть не нужно, они установятся по-умолчанию
+jup_with_conda: ["ujson"]
+jup_with_pip: ["prodict"]
+```
 
 ### Os params
 

@@ -1,0 +1,1 @@
+query_migrations_table: "CREATE TABLE IF NOT EXISTS {{role_ops_db}}.migrations (name String) ENGINE = Log"
