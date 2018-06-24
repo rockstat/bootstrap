@@ -67,6 +67,7 @@
         vars:
           letsencrypt_domains_groups: '{{domains_ssl}}'
           letsencrypt_pause_services: ['nginx']
+      when: "setup_ssl == True"
       tags: ['ssl', 'system']
 
 
@@ -99,6 +100,7 @@
             proxy: '{{cfg_nginx_proxy_params}}'
             upstream: '{{upstreams}}'
             ssl: '{{cfg_nginx_ssl_params}}'
+      when: "setup_nginx == True"
       tags: ['nginx', 'system']
 
 
@@ -202,7 +204,6 @@
           drdc_labels: "{{docker_band_lbls}}"
           drdc_volumes: 
             - '{{dirs.notebooks}}:/opt/notebooks'
-
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       tags: ['anaconda', '3rdparty']
 
@@ -335,7 +336,7 @@
         vars:
           role_ops_db: "{{ch_db}}"
           role_migrations_path: clickhouse_migrations
-        tags: ['chmigrate']
+        tags: ['never', 'chmigrate']
 
       - include_role:
           name: dr.docker-container

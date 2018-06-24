@@ -45,6 +45,7 @@ sudo apt -qqy update && sudo apt -qqy install curl && bash <(curl -Ss https://ra
 в `groupvars/private.yml` укажите какие пакеты поставить и каким менеджером
 
 ```yaml
+---
 # Пакеты ниже указываьть не нужно, они установятся по-умолчанию
 jup_with_conda: ["ujson"]
 jup_with_pip: ["prodict"]
@@ -53,6 +54,13 @@ jup_with_pip: ["prodict"]
 ### Os params
 
 redis requirements
+
+    net.core.netdev_budget = 300 
+    net.core.netdev_max_backlog = 3000
+    sysctl -w net.ipv4.tcp_sack=0
+    sysctl -w net.ipv4.tcp_fin_timeout=20
+    sysctl -w net.ipv4.ip_local_port_range='20000 60000'
+
 
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
 

@@ -3,6 +3,11 @@ playbook_version: 3.0.0
 # ########## Main params ##########
 #version
 branch: HEAD
+#process
+setup_nginx: yes
+setup_ssl: yes
+setup_jupyter: yes
+setup_theia: yes
 #base
 contact_email: hello@example.com
 domain: "{{tracker_domain|default(ansible_host)}}"
@@ -12,7 +17,6 @@ domains:
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
-
 #managing user
 support_user: 'x011'
 remote_user: 'x011'
@@ -190,7 +194,6 @@ site_def_https:
   - "{{nx_listen.0}} default_server"
   - "{{nx_ssl}}"
   - "return 301 https://{{domain}}"
-
 site_frontier: "{{ nxobj_base|combine({'uploader': True, 'root': dirs.splash}) }}"
 site_theia:   "{{[nx_inout.replace('{u}', 'theia')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
 site_jupyter: "{{[nx_inout.replace('{u}', 'jupyter')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
