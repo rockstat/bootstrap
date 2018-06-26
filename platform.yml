@@ -7,6 +7,10 @@
   tasks:
 
     - block:
+        - debug: var={{ansible_host}}
+      tags: ['never', 'test']
+
+    - block:
       - include_role:
           name: dr.server
         vars:
@@ -372,7 +376,7 @@
           drdc_ports:
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
           drdc_volumes:
-            - "{{dirs.uploads}}:/go/src/heavyload/uploads"
+            - "{{dirs.uploads}}:/go/src/heavyload/upload"
       tags: ['heavyload', 'platform']
 
 
