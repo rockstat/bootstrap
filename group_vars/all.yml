@@ -3,11 +3,12 @@ playbook_version: 3.0.0
 # ########## Main params ##########
 #version
 branch: HEAD
-#process
+#features
 setup_nginx: yes
 setup_ssl: yes
 setup_jupyter: yes
 setup_theia: yes
+metrics_server: no
 #base
 contact_email: hello@example.com
 domain: "{{tracker_domain|default(ansible_host)}}"

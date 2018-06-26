@@ -1,39 +1,35 @@
-- name: Rockstat metrics server setup
-  hosts: rockstat-mon-server
-  become: yes
-  tasks:
-    - import_role:
-        name: dr.influxdb
-      vars:
-        influxdb_http_bind_address: ":{{ports.influxhttp.0}}"
-        influxdb_tsb_enabled: "true"
-        influxdb_tsb_bind_address: ":{{ports.influxtsb.0}}"
-        influxdb_tsb_database: "opentsdb"
-        influxdb_tsb_retention_policy: ""
-        influxdb_tsb_consistency_level: "one"
-        influxdb_tsb_tls_enabled: "false"
-        influxdb_tsb_certificate: "/etc/ssl/influxdb.pem"
-        influxdb_tsb_log_point_errors: "true"
-        influxdb_tsb_batch_size: 1000
-        influxdb_tsb_batch_pending: 5
-        influxdb_tsb_batch_timeout: "1s"
-        influxdb_subscriber_enabled: "false"
-      tags: ['influxdb']
+- import_role:
+    name: dr.influxdb
+  vars:
+    influxdb_http_bind_address: ":{{ports.influxhttp.0}}"
+    influxdb_tsb_enabled: "true"
+    influxdb_tsb_bind_address: ":{{ports.influxtsb.0}}"
+    influxdb_tsb_database: "opentsdb"
+    influxdb_tsb_retention_policy: ""
+    influxdb_tsb_consistency_level: "one"
+    influxdb_tsb_tls_enabled: "false"
+    influxdb_tsb_certificate: "/etc/ssl/influxdb.pem"
+    influxdb_tsb_log_point_errors: "true"
+    influxdb_tsb_batch_size: 1000
+    influxdb_tsb_batch_pending: 5
+    influxdb_tsb_batch_timeout: "1s"
+    influxdb_subscriber_enabled: "false"
+  tags: ['influxdb', 'tick']
 
-    - import_role:
-        name: dr.chronograf
-      vars:
-        chronograf_port: "{{ports.chronograf.0}}"
-        chronograf_influxdb_url: "http://{{docker_host_ip}}:{{ports.influxhttp.0}}"
-      tags: ['chronograf']
+- import_role:
+    name: dr.chronograf
+  vars:
+    chronograf_port: "{{ports.chronograf.0}}"
+    chronograf_influxdb_url: "http://{{if_inner}}:{{ports.influxhttp.0}}"
+  tags: ['chronograf', 'tick']
 
-    - import_role:
-        name: dr.openvpn-server
-      vars:
-        openvpn_clients_net: "{{s2s_vpn_net}}"
-        openvpn_port: "{{ports.s2svpn.0}}"
-        openvpn_client_prefix: node
-        openvpn_clients: 20
-      tags: ['s2s-ovpn-server']
+- import_role:
+    name: dr.openvpn-server
+  vars:
+    openvpn_clients_net: "{{s2s_vpn_net}}"
+    openvpn_port: "{{ports.s2svpn.0}}"
+    openvpn_client_prefix: node
+    openvpn_clients: 20
+  tags: ['s2s-ovpn-server', 's2s-ovpn']
 
 

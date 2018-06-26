@@ -209,6 +209,7 @@
           drdc_volumes: 
             - '{{dirs.notebooks}}:/opt/notebooks'
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
+      when: 'setup_jupyter == True'
       tags: ['anaconda', '3rdparty']
 
 
@@ -309,6 +310,7 @@
         command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
       vars:
         workspace: "/home/theia/project"
+      when: 'setup_theia == True'
       tags: ['theia', 'platform']
 
 
@@ -379,7 +381,13 @@
             - "{{dirs.uploads}}:/go/src/heavyload/upload"
       tags: ['heavyload', 'platform']
 
+    - import_tasks: extensions/metrics_server.yml
+      when: 'metrics_server == True'
 
+    - import_role:
+        name: dr.openvpn-client
+      vars:
+        openvpnc_key: '{{s2s_vpn_key}}'
+      when: s2s_vpn_connect is defined and s2s_vpn_connect == True and vpn_id is defined
+      tags: ['s2s-ovpn-client', 's2s-ovpn']
 
-    # - import_tasks: extensions/metrics_server.yml
-      # when: 
