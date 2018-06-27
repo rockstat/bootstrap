@@ -32,7 +32,7 @@ stats.yourdomain.ru    A  ВАШ СЕВЕРВЕР
 Запуск установщика
 
 ```bash
-sudo apt -qqy update && sudo apt -qqy install curl && bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)
+sudo bash -c 'apt -qqy update && apt -qqy install curl && bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
 ```
 
 Установка будет произведена в `/srv/platform`

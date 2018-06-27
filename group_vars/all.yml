@@ -115,7 +115,8 @@ firewall_rules:
 # ########## SSL ##########
 domains_ssl:
   - email: '{{contact_email}}'
-    domains: "{{[domain] + domains.values()|list|unique}}"
+    # domains: "{{[domain] + domains.values()|list|unique}}"
+    domains: "{{[domain, 'jupyter.'+domain, 'theia.'+domain]}}"
 # ########## Jupyter/anaconda packages ##########
 jup_with_conda_def: ["ujson"]
 jup_with_pip_def: ["prodict"]
