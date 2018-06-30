@@ -10,48 +10,70 @@ a new server deployment system.
 
 ![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png?3)
 
-## Установка
+## Caution!
 
-Скрипт сделан для Ubuntu 16.04, на других работать не будет.
-Подразумевается, что у вас уже имеется сервер под управлением OC Ubuntu 16.04
+Don't install rockstat on existing server with other software! 
+Setup process do significant system reconfiguration and can kill others.
 
-### Домен
 
-Треуется настроить DNS следующим образом 
+## Requirements
 
-stats.yourdomain.ru    A  ВАШ СЕВЕРВЕР
-*.stats.yourdomain.ru  A  ВАШ СЕВЕРВЕР
+Cloud or dedicated server with at least:
 
-### Установка
+- 2 cores
+- 8 gb mem
+- 60 gb ssd (depends on your data amount)
 
-Устанговка самых необходимых пакетов (если нет)
+OS must be Ubutnu 16.04, moreover you should prepare domain name for platform
 
-```bash
+### Domain records
+
+Typically DNS zone looks like this:
+
+```
+stats.yourdomain.ru    A  SERVER.IP
+*.stats.yourdomain.ru  A  SERVER.IP
 ```
 
-Запуск установщика
+for second level domains:
 
-```bash
-sudo bash -c 'apt -qqy update && apt -qqy install curl && bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
+```
+@                      A  SERVER.IP
+*.yourdomain.ru        A  SERVER.IP
 ```
 
-Установка будет произведена в `/srv/platform`
+### Setup / upgrade / reconfigure
+
+Once you should setup curl for get install script from repository.
+
+```bash
+sudo apt -qqy update && sudo apt -qqy install curl
+```
+
+Next times you can just execute setup manager using:
+
+```bash
+sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
+```
+
+Then follow instructions. Platform will be installed to `/srv/platform`
 
 
-## Полезное
+## Extending configuration
 
-### Установка дополнительных пакетов Jupyter/Anaconda
+### Anaconda/Jupyter additional packages
 
-в `groupvars/private.yml` укажите какие пакеты поставить и каким менеджером
+Create configuration for your hosts group `groupvars/private.yml` and describe which packages you want to install when images rebuilds during upgrade process.
 
 ```yaml
 ---
-# Пакеты ниже указываьть не нужно, они установятся по-умолчанию
-jup_with_conda: ["ujson"]
-jup_with_pip: ["prodict"]
+jup_with_conda:
+  - ujson
+jup_with_pip:
+  - prodict
 ```
 
-### Os params
+### Os params (dirty drarft)
 
 redis requirements
 
@@ -64,15 +86,18 @@ redis requirements
 
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
-## Вопросы и общение
+## Community
+
+Join to discuss with other users
 
 * Telegram https://t.me/rockstats
 * Facebook https://fb.com/rockstatX
 
-## License and Authors
+## Rockstat Bootstrap License and Authors
 
 * Author:: Dmitry Rodin <madiedinro@gmail.com>
 * Author:: Ivan Golubenko <fedorsymkin52@gmail.com>
+* Maintainer:: Alexander Shvets <ashwets@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
