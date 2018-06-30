@@ -1,14 +1,10 @@
 # Ansible playbook for deploy Rockstat platform
 
-## About Rockstat
-
-Is an open source platform for a web and product analytics. 
-It consists of a set of components: JavaScript tracking client for web applications; 
-server-side data collector; services for geo-coding and detecting client device type; 
-a new server deployment system.
-[Read more](https://rockstat.ru/about)
+## Rockstat architecture
 
 ![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png?3)
+
+[Read more](https://rockstat.ru/about)
 
 ## Caution!
 
@@ -59,7 +55,7 @@ sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstr
 Then follow instructions. Platform will be installed to `/srv/platform`
 
 
-## Extending configuration
+## Extending bootstrap configuration
 
 ### Anaconda/Jupyter additional packages
 

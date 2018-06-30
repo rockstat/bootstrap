@@ -118,8 +118,6 @@ domains_ssl:
     domains: "{{[domain] + domains.values()|list|unique}}"
     # domains: "{{[domain, 'jupyter.'+domain, 'theia.'+domain]}}"
 # ########## Jupyter/anaconda packages ##########
-jup_with_conda_def: ["ujson"]
-jup_with_pip_def: ["prodict"]
 jup_with_conda: [""]
 jup_with_pip: [""]
 # ########## ClickHouse ##########

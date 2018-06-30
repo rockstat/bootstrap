@@ -192,6 +192,8 @@
       - include_role:
           name: dr.docker-container
         vars:
+          jup_with_conda_def: ["ujson"]
+          jup_with_pip_def: ["prodict", "arrow"]
           conda_list: "{{jup_with_conda_def + jup_with_conda}}"
           pip_list: "{{jup_with_pip_def + jup_with_pip}}"
           cmd_parts:
