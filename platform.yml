@@ -7,10 +7,6 @@
   tasks:
 
     - block:
-        - debug: var={{ansible_host}}
-      tags: ['never', 'test']
-
-    - block:
       - include_role:
           name: dr.server
         vars:
@@ -18,6 +14,7 @@
           drs_user: '{{support_user}}'
           drs_home_dir: "{{home_dir}}"
           drs_pub_key_file: '{{support_key_file}}'
+      when: 'setup_server == True'
       tags: ['os', 'system']
 
 

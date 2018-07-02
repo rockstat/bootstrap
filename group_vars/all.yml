@@ -4,6 +4,7 @@ playbook_version: 3.0.0
 #version
 branch: HEAD
 #features
+setup_server: yes
 setup_nginx: yes
 setup_ssl: yes
 setup_jupyter: yes
