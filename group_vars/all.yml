@@ -43,7 +43,6 @@ dirs:
   frontier_custom_config: "{{data_dir}}/frontier_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
-  frontier: "{{home_dir}}/frontier"
   band_collection: "{{home_dir}}/images/band_collection"
   band: "{{home_dir}}/images/band_base"
   director_data: "{{data_dir}}/director_data"
