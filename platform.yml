@@ -6,6 +6,7 @@
     - vars/config.yml
   tasks:
 
+
     - block:
       - include_role:
           name: dr.server
@@ -76,13 +77,14 @@
       - name: Loading nginx users
         include_vars: "{{ item }}"
         with_first_found:
+          - "files/{{inventory_hostname }}/users.yml"
           - "files/users.yml"
           - "files/empty.yml"
       - debug: var=iternal_users
       - include_role:
           name: jdauphant.nginx
         vars:
-          nginx_official_repo: yes
+          nginx_official_repo: no
           keep_only_specified: yes
           nginx_http_params: '{{cfg_nginx_http_params}}'
           nginx_sites:
@@ -94,7 +96,7 @@
             jupyter: "{{site_jupyter|flatten()}}"
             netdata: "{{site_netdata|flatten()}}"
           nginx_auth_basic_files:
-            internal: "{{iternal_users|default({})}}"
+            common: "{{common_users|default({})}}"
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'
@@ -158,10 +160,11 @@
           drdc_name: "redis"
           drdc_image: "redis:4-alpine"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '200m'
           drdc_volumes: ["{{dirs.redis}}:/data"]
           drdc_ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
-      tags: ['redis', 'system']
+      tags: ['redis', 'system', 'docker', 'docker-container']
 
 
     - name: Logspout with Loggly streaming
@@ -172,6 +175,7 @@
           drdc_name: "logspout"
           drdc_image: "gliderlabs/logspout"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '200m'
           drdc_cmd: syslog+tcp://logs-01.loggly.com:514
           drdc_volumes:
@@ -180,7 +184,7 @@
             SYSLOG_STRUCTURED_DATA: "{{loggly_api_key}}@41058 tag=\"Logspout\""
             SYSLOG_HOSTNAME: "{{hostname}}"
       when: 'loggly_api_key is defined'
-      tags: ['logspout', 'system']
+      tags: ['logspout', 'system', 'docker', 'docker-container']
 
 
     - block:
@@ -189,8 +193,6 @@
       - include_role:
           name: dr.docker-container
         vars:
-          jup_with_conda_def: ["ujson"]
-          jup_with_pip_def: ["prodict", "arrow"]
           conda_list: "{{jup_with_conda_def + jup_with_conda}}"
           pip_list: "{{jup_with_pip_def + jup_with_pip}}"
           cmd_parts:
@@ -202,6 +204,7 @@
           drdc_name: 'anaconda'
           drdc_image: "continuumio/anaconda3"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '{{anaconda_mem_limit}}'
           drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
           drdc_labels: "{{docker_band_lbls}}"
@@ -209,7 +212,7 @@
             - '{{dirs.notebooks}}:/opt/notebooks'
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       when: 'setup_jupyter == True'
-      tags: ['anaconda', '3rdparty']
+      tags: ['anaconda', '3rdparty', 'docker', 'docker-container']
 
 
     - block:
@@ -225,6 +228,7 @@
           drdc_name: 'grafana'
           drdc_image: "grafana/grafana"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
             GF_AUTH_BASIC: false
@@ -235,7 +239,7 @@
             - '{{dirs.grafana_data}}:/var/lib/grafana'
           drdc_ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
-      tags: ['grafana', '3rdparty']
+      tags: ['grafana', '3rdparty', 'docker', 'docker-container']
 
 
     - block:
@@ -271,6 +275,7 @@
           drdc_rel_path: '/director'
           drdc_repo: "https://github.com/rockstat/band-services"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_memory_limit: '300m'
@@ -282,7 +287,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
           drdc_ports:
             - "{{if_inner}}:{{ports.band.0}}:{{ports.band.1}}"
-      tags: ['band', 'platform']
+      tags: ['band', 'platform', 'docker', 'docker-container']
 
 
     - block:
@@ -298,6 +303,7 @@
           drdc_repo: "https://github.com/rockstat/theia-build.git"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '2g'
           drdc_volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
@@ -310,7 +316,7 @@
       vars:
         workspace: "/home/theia/project"
       when: 'setup_theia == True'
-      tags: ['theia', 'platform']
+      tags: ['theia', 'platform', 'band', 'docker', 'docker-container']
 
 
     - name: Frontier setup
@@ -324,6 +330,7 @@
           drdc_dir: "{{build_dir}}/frontier"
           drdc_repo: "https://github.com/rockstat/frontier"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
@@ -331,18 +338,16 @@
             - "{{dirs.frontier_custom_config}}:/app/config/custom"
           drdc_ports:
             - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
-      tags: ['frontier', 'platform', 'rockme']
+      tags: ['frontier', 'platform', 'rockme', 'docker', 'docker-container']
 
     - name: Clickhouse writer
       block:
-
       - include_role:
           name: clickhouse-maintain
         vars:
           role_ops_db: "{{ch_db}}"
           role_migrations_path: clickhouse_migrations
         tags: ['never', 'chmigrate']
-
       - include_role:
           name: dr.docker-container
         vars:
@@ -352,14 +357,14 @@
           drdc_dir: "{{build_dir}}/chwriter"
           drdc_repo: "https://github.com/rockstat/chwriter"
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
-      tags: ['chwriter', 'chmigrate', 'platform', 'rockme']
-
+      tags: ['chwriter', 'chmigrate', 'platform', 'rockme', 'docker', 'docker-container']
 
     - block:
       - include_role:
@@ -367,6 +372,7 @@
         vars:
           drdc_name: 'heavyload'
           drdc_network: '{{docker_net_name}}'
+          drdc_hosts: "{{docker_etc_hosts}}"
           drdc_pull: false
           drdc_env:
             WEBHOOK: "{{containers_env.FRONTIER_URL}}/wh/0/upload/notify"
@@ -378,7 +384,7 @@
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
           drdc_volumes:
             - "{{dirs.uploads}}:/go/src/heavyload/upload"
-      tags: ['heavyload', 'platform']
+      tags: ['heavyload', 'platform', 'docker', 'docker-container']
 
     # - import_tasks: extensions/metrics_server.yml
     #   when: 'metrics_server == True'

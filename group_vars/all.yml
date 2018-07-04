@@ -3,6 +3,8 @@ playbook_version: 3.0.0
 # ########## Main params ##########
 #version
 branch: HEAD
+#params
+log_level: info
 #features
 setup_server: yes
 setup_nginx: yes
@@ -14,7 +16,8 @@ metrics_server: no
 contact_email: hello@example.com
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
-  internal: 'app.{{domain}}'
+  dashboard: 'app.{{domain}}'
+  web: 'web.{{domain}}'
   grafana: 'grafana.{{domain}}'
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
@@ -94,6 +97,9 @@ docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
 # default docker network
 docker_initnet_pattern: 172.17.*
+# short name to access host and possible others
+docker_etc_hosts:
+  host: "{{if_inner}}"
 # other params
 docker_band_lbls: {inband: system}
 # ########## Clients VPN ##########
@@ -117,15 +123,19 @@ firewall_rules:
 domains_ssl:
   - email: '{{contact_email}}'
     domains: "{{[domain] + domains.values()|list|unique}}"
-    # domains: "{{[domain, 'jupyter.'+domain, 'theia.'+domain]}}"
 # ########## Jupyter/anaconda packages ##########
+# default
+jup_with_conda_def: ["ujson"]
+jup_with_pip_def: ["prodict", "arrow"]
+# additional
 jup_with_conda: [""]
 jup_with_pip: [""]
+# todo: ability to specify additional packages for theia and others
 # ########## ClickHouse ##########
 ch_db: stats
 # ########## Common Envs ##########
 containers_env:
-  LOG_LEVEL: info
+  LOG_LEVEL: "{{log_level}}"
   NETWORK: "{{docker_net_name}}"
   REDIS_HOST: "redis"
   REDIS_HOST_ISOLATED: "redis"
@@ -134,6 +144,7 @@ containers_env:
   CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/{{ch_db}}"
   BAND_URL: "http://band:{{ports.band.1}}"
   FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
+  HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
 # ########## Nginx ##########
@@ -161,7 +172,7 @@ nx_nochache:
   - expires off
 nx_auth:
   - 'auth_basic "Restricted"'
-  - "auth_basic_user_file auth_basic/internal"
+  - "auth_basic_user_file auth_basic/common"
 nx_upgrade:
   - proxy_http_version 1.1
   - proxy_set_header Upgrade $http_upgrade
@@ -176,15 +187,6 @@ nxobj_base:
   cert: "{{domain}}"
   template: "nginx/upstream-site.conf.j2"
   domain: "{{domain}}"
-# nginx htpasswd mixin
-nxobj_internal:
-  domain: "{{domains.internal}}"
-  htpasswd: auth_basic/internal
-# nginx htpasswd configuration
-# htpasswd_file: files/.htpasswd.tools
-# htpasswds_content:
-  # internal: "{{ lookup('file', htpasswd_file) }}"
-nginx_vhapp: "{{ nginx_vhbase|combine(nginx_vhinternal) }}"
 site_def_http:
     - server_name _
     - listen 80 default_server

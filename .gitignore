@@ -11,3 +11,4 @@ __pycache__
 /install_log
 /files/.htpasswd.tools
 /files/users.yml
+/files/*
