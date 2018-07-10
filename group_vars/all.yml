@@ -13,7 +13,7 @@ setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
 #base
-contact_email: hello@example.com
+contact_email: alex@ebalrefuckanal.de
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
   dashboard: 'app.{{domain}}'

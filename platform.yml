@@ -305,6 +305,7 @@
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '2g'
+          drdc_nocache: "{{nocache is defined}}"
           drdc_volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
