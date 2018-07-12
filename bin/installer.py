@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 
@@ -28,6 +28,9 @@
 * sudo -H pip install requests
 """
 
+
+
+
 import os
 import sys
 import yaml
@@ -50,14 +53,13 @@ from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
 from prompt_toolkit.shortcuts import print_tokens
 
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 
 
 #  TODO: написать хелп
 HelpString = """
 Write some help here...
 """
-
 
 class HardcodedData:
     INSTALL_DIR = '/srv/platform'
@@ -133,7 +135,7 @@ class Helpers:
                                 stdin=subprocess.PIPE if stdin else None)
 
         def write_stdin():
-            proc.stdin.write(stdin)
+            proc.stdin.write(stdin.encode())
             proc.stdin.close()
 
         write_thread = threading.Thread(target=write_stdin) if stdin else None
@@ -148,9 +150,9 @@ class Helpers:
             if log_output:
                 log.info(line.strip())
             if store_output:
-                output_lines.append(line)
+                output_lines.append(line.decode())
             if output_line_handler:
-                output_line_handler(line.strip())
+                output_line_handler(line.decode().strip())
 
         if write_thread:
             write_thread.join()
@@ -219,7 +221,7 @@ class Helpers:
     @staticmethod
     def print_success():
         Helpers.print_with_mark(Styles.SuccessMark, Styles.SuccessMessage)
-        print
+        print()
 
     @staticmethod
     def colored_print(text, color):
@@ -242,22 +244,22 @@ class Prompter:
     def ask_string(msg, default=None, validate_func=None, short_mode=False, force_lower=False):
         while True:
             if short_mode:
-                print
+                print()
                 sys.stdout.write(msg + ' ')
                 res = prompt_toolkit.prompt(
-                    message=unicode(Styles.AskShortStringPrompt.text),
+                    message=Styles.AskShortStringPrompt.text,
                     style=style_from_dict({Token: Styles.AskShortStringPrompt.color}),
-                    default=unicode(default) if default else u'',
+                    default=default if default else '',
                 )
-                print
+                print()
             else:
-                print '\n' + msg + '\n'
+                print('\n' + msg + '\n')
                 res = prompt_toolkit.prompt(
-                    message=unicode(Styles.AskLongStringPrompt.text),
+                    message=Styles.AskLongStringPrompt.text,
                     style=style_from_dict({Token: Styles.AskLongStringPrompt.color}),
-                    default=unicode(default) if default else u'',
+                    default=default if default else '',
                 )
-                print
+                print()
 
             if force_lower:
                 res = res.lower()
@@ -266,7 +268,7 @@ class Prompter:
                 validate_res = validate_func(res)
                 if not isinstance(validate_res, bool) or not validate_res:
                     Helpers.print_with_mark(Styles.WarningMark, str(validate_res))
-                    print
+                    print()
                     continue
 
             break
@@ -277,13 +279,13 @@ class Prompter:
     def ask_yes_no(msg, default=True):
         yn = 'Y/n' if default else 'y/N'
         while True:
-            print
+            print()
             sys.stdout.write('{msg} ({yn}) '.format(msg=msg, yn=yn))
             res = prompt_toolkit.prompt(
-                message=unicode(Styles.AskYesNoPrompt.text),
+                message=Styles.AskYesNoPrompt.text,
                 style=style_from_dict({Token: Styles.AskYesNoPrompt.color}),
             ).lower()
-            print
+            print()
 
             if not res:
                 return bool(default)
@@ -300,30 +302,30 @@ class Prompter:
     @staticmethod
     def ask_password(msg):
         while True:
-            print '\n' + msg + '\n'
+            print('\n' + msg + '\n')
             res1 = prompt_toolkit.prompt(
-                message=unicode(Styles.AskPasswordPrompt.text), is_password=True,
+                message=Styles.AskPasswordPrompt.text, is_password=True,
                 style=style_from_dict({Token: Styles.AskPasswordPrompt.color}),
             )
 
             if not res1 or not Helpers.check_ascii(res1):
-                print
+                print()
                 Helpers.print_with_mark(Styles.WarningMark, 'invalid password: it should be non-empty '
                                                             'with only ascii symbols')
                 continue
 
-            print '\n' + 'Confirm it' + '\n'
+            print('\n' + 'Confirm it' + '\n')
             res2 = prompt_toolkit.prompt(
-                message=unicode(Styles.AskPasswordPrompt.text), is_password=True,
+                message=Styles.AskPasswordPrompt.text, is_password=True,
                 style=style_from_dict({Token: Styles.AskPasswordPrompt.color}),
             )
 
             if res1 != res2:
-                print
+                print()
                 Helpers.print_with_mark(Styles.WarningMark, 'passwords dont match')
                 continue
 
-            print
+            print()
             return res1
 
 
@@ -363,14 +365,14 @@ class Menu:
         self.columns = self.make_columns()
 
     def make_columns(self):
-        columns = [self.Column(self.indent) for _ in xrange(self.ncolumns)]
+        columns = [self.Column(self.indent) for _ in range(self.ncolumns)]
         for n, item in enumerate(self.items):
             columns[n % self.ncolumns].add(item)
         return columns
 
     def print_menu(self):
-        print self.name
-        print Styles.Separator
+        print(self.name)
+        print(Styles.Separator)
 
         for n, item in enumerate(self.items):
             ncol = n % self.ncolumns
@@ -389,7 +391,7 @@ class Menu:
             )
 
         if len(self.items) % self.ncolumns != 0:
-            print
+            print()
 
         sys.stdout.flush()
 
@@ -412,7 +414,7 @@ class Menu:
     def adjust_menus_columns(cls, menus):
         merged_columns = [
             max(columns)
-            for columns in itertools.izip_longest(*[m.columns for m in menus], fillvalue=cls.Column(indent=0))
+            for columns in itertools.zip_longest(*[m.columns for m in menus], fillvalue=cls.Column(indent=0))
         ]
         for m in menus:
             m.columns = copy.deepcopy(merged_columns[0:len(m.columns)])
@@ -460,7 +462,7 @@ class Ansible:
             'domain': safe_get(conf, 'private:vars', 'tracker_domain'),
             'email': safe_get(conf, 'private:vars', 'contact_email'),
         }
-    
+
     @staticmethod
     def generate_default_inventory(args):
         if not args:
@@ -489,7 +491,7 @@ class Ansible:
             f.write(data)
 
     def run(self):
-        print 'Starting ansible...\n'
+        print('Starting ansible...\n')
         self.log.info('starting ansible')
 
         def on_line(line):
@@ -498,24 +500,24 @@ class Ansible:
                 name = data['name']
                 if name:
                     Helpers.print_with_mark(Styles.InfoMark, name)
-                    print
+                    print()
 
                 failed = data['result'].get('failed')
                 if failed:
-                    print
+                    print()
                     msg = data['result'].get('msg')
                     Helpers.colored_print('{} failed: {}'.format(name, msg), Styles.ErrorColor)
-                    print
+                    print()
 
             except (Exception, OSError):
-                print line.strip()
+                print(line.strip())
 
         cmd = 'ANSIBLE_STDOUT_CALLBACK=json_cb ' \
               'ansible-playbook {} --connection=local'.format(HardcodedData.ROOT_PLAYBOOK_NAME)
         Helpers.run_process(cmd=cmd, workdir=self.bootstrap_dir, output_line_handler=on_line)
 
     def install_roles(self):
-        print '>>> Updating ansible roles...\n'
+        print ('>>> Updating ansible roles...\n')
         Helpers.run_process('ansible-galaxy install -r install_roles.yml --force', workdir=self.bootstrap_dir)
 
 
@@ -553,22 +555,22 @@ class Configurator:
                                           validate_func=self.validate_email)
 
     def print_params(self):
-        print
-        for name, p in self.params.iteritems():
-            print '{}: {}'.format(name, p.value)
-        print
+        print()
+        for name, p in self.params.items():
+            print ('{}: {}'.format(name, p.value))
+        print()
 
     def ask(self):
         self.log.info('ask user for params')
 
-        print 'Domain configuration'
-        print Styles.Separator
+        print ('Domain configuration')
+        print (Styles.Separator)
         self.changed = True
         while True:
             for p in self.params.values():
                 p.ask()
 
-            print 'Your input:'
+            print ('Your input:')
             self.print_params()
 
             if Prompter().is_it_correct():
@@ -581,7 +583,7 @@ class Configurator:
             return
 
         self.log.info('saving configuration')
-        print 'Saving configuration...\n'
+        print ('Saving configuration...\n')
 
         self.ansible.write_default_inventory({
             'hostname': self.hostname,
@@ -710,16 +712,16 @@ class UserAccounts:
         self.menu.run()
 
     def handler_list_users(self):
-        print
+        print()
 
         if not self.data:
             Helpers.print_with_mark(Styles.WarningMark, 'No users')
-            print
+            print()
             return True
 
         for n, user in enumerate(self.data.values()):
-            print '{}. {}'.format(n, user)
-        print
+            print ('{}. {}'.format(n, user))
+        print()
         return True
 
     def handler_create_user(self):
@@ -748,7 +750,7 @@ class UserAccounts:
         self.handler_list_users()
         choosen_id = int(Prompter().ask_string('Which one?', validate_func=validate_user_id, short_mode=True))
 
-        name = self.data.items()[choosen_id][0]
+        name = list(self.data.items())[choosen_id][0]
         del self.data[name]
 
         Helpers.print_success()
@@ -791,20 +793,20 @@ class UserAccounts:
             return
 
         self.log.info('Saving user accounts to {}'.format(self.htpasswd_path))
-        print 'Saving user accounts...\n'
+        print ('Saving user accounts...\n')
 
         Helpers.mkdir_if_not_exists(os.path.dirname(self.htpasswd_path))
         with open(self.htpasswd_path, 'w') as f:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
-        
+
+
+        yaml_opts = dict(default_flow_style=False)
         with open(self.usersyaml_path, 'w') as f:
-            f.write(yaml.dump({
-                    'iternal_users':[user.make_namepass_record() for user in self.data.values()]
-                }, 
-                default_flow_style=False, 
-                encoding='utf-8'
-            ))
-            
+            yaml_data = {
+                'users':[user.make_namepass_record() for user in self.data.values()]
+            },
+            f.write(yaml.dump(yaml_data, **yaml_opts))
+
 
 class Git:
     def __init__(self, static_state):
@@ -817,8 +819,8 @@ class Git:
     def install_repo(self):
         self.log.info('updating repo from {}'.format(self.reposrc))
 
-        print 'Updating git repository...'
-        print
+        print ('Updating git repository...')
+        print()
 
         if not os.path.isdir(self.git_path):
             self.log.info('cloning git repo from scratch')
@@ -826,13 +828,13 @@ class Git:
         else:
             self.log.info('updating existing git repo')
             Helpers.run_process('git pull --rebase', workdir=self.bootstrap_path)
-        
+
         rev = Helpers.run_process('git rev-parse --short HEAD',
                                   workdir=self.bootstrap_path,
                                   store_output=True).output.strip()
         Helpers.print_with_mark(Styles.InfoMark, 'updated to {}'.format(rev))
         self.log.info('at revision {}'.format(rev))
-        print
+        print()
 
 
 class StaticState:
@@ -928,9 +930,9 @@ class Installer:
     def run(self):
         self.log.info('run')
 
-        print Styles.Separator
-        print 'Welcome to Rockstat platform v3 configurator'
-        print Styles.Separator
+        print( Styles.Separator)
+        print( 'Welcome to Rockstat platform v3 configurator')
+        print(Styles.Separator)
 
         Helpers.mkdir_if_not_exists(HardcodedData.INSTALL_DIR)
         self.git.install_repo()
@@ -960,24 +962,24 @@ class Installer:
         self.ansible.install_roles()
         self.ansible.run()
         self.static_state.set_installed()
-        print 'Installation completed.\n'
+        print ('Installation completed.\n')
         self.log.info('Installation completed.')
         return False
 
     @staticmethod
     def handler_help():
-        print HelpString
+        print (HelpString)
         return True
 
     @staticmethod
     def handler_quit():
-        print 'good bye'
+        print ('good bye')
         return False
 
 
 def main():
     if not Helpers.assert_root():
-        print 'installation may be launched only by root'
+        print ('installation may be launched only by root')
         sys.exit(1)
 
     temp_files = TempFiles()
@@ -989,12 +991,12 @@ def main():
             return 0
 
         except (KeyboardInterrupt, EOFError):
-            print 'Installation cancelled'
+            print ('Installation cancelled')
             return 1
 
         except (Exception, OSError) as e:
             temp_files.dont_clean()
-            print "\n\n\n\n"
+            print ("\n\n\n\n")
 
             msg = '*********Install error!*********\n' \
                   'What: {what}\n' \

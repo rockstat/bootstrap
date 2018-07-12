@@ -113,6 +113,7 @@ s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 if_outer: "{{ansible_default_ipv4.address}}"
 if_inner: "{{docker_host_ip}}"
 # ########## Firewall ##########
+go_away_ipv6: true 
 firewall_rules:
   - { from_ip: '{{docker_net}}'}
   - { to_port: '{{ports.http.0}}'}
@@ -146,41 +147,37 @@ containers_env:
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
-# ########## Nginx ##########
-upstreams:
-  - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
-  - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
-  - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
-  - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
-  - 'upstream netdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
-  - 'upstream theia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
-nx_uploader:
+# ########## NGINX COMMONS ##########
+ngx_uploader:
   location /upload {
     client_max_body_size 8m;
     client_body_buffer_size 128K; 
     limit_except POST { deny all; }
     proxy_pass http://heavyload; }
-nx_ssl:
+ngx_ssl:
   - ssl_certificate_key /etc/letsencrypt/live/{{domain}}/privkey.pem
   - ssl_certificate     /etc/letsencrypt/live/{{domain}}/fullchain.pem
   - ssl_trusted_certificate /etc/letsencrypt/live/{{domain}}/chain.pem
-nx_listen: 
+ngx_listen: 
   - "listen 443 ssl http2"
-nx_nochache:
+ngx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
-nx_auth:
+ngx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-nx_upgrade:
+ngx_upgr_hdrs:
   - proxy_http_version 1.1
   - proxy_set_header Upgrade $http_upgrade
   - proxy_set_header Connection $connection_upgrade
-nx_inout:
+ngx_forward:
   server_name {u}.{{domain}};
   location / { 
     proxy_pass http://{u}; 
   }
+# ##########NGINX CUSTOMS ##########
+nxg_grafana:
+  - proxy_set_header X-WEBAUTH-USER $remote_user
 ### Obj config
 nxobj_base: 
   cert: "{{domain}}"
@@ -193,11 +190,23 @@ site_def_http:
     - return 301 https://$host$request_uri
 site_def_https:
   - "server_name _"
-  - "{{nx_listen.0}} default_server"
-  - "{{nx_ssl}}"
+  - "{{ngx_listen.0}} default_server"
+  - "{{ngx_ssl}}"
   - "return 301 https://{{domain}}"
-site_frontier: "{{ nxobj_base|combine({'uploader': True, 'root': dirs.splash}) }}"
-site_theia:   "{{[nx_inout.replace('{u}', 'theia')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
-site_jupyter: "{{[nx_inout.replace('{u}', 'jupyter')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
-site_grafana: "{{[nx_inout.replace('{u}', 'grafana')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
-site_netdata: "{{[nx_inout.replace('{u}', 'netdata')] + nx_listen + nx_ssl + nx_auth + nx_upgrade}}"
+ngx_sites:
+  def_https: "{{site_def_https|flatten()}}"
+  def_http: "{{site_def_http|flatten()}}"
+  frontier: "{{nxobj_base|combine({'uploader': True, 'root': dirs.splash}) }}"
+  theia: "{{[ngx_forward.replace('{u}', 'theia')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
+  grafana: "{{[ngx_forward.replace('{u}', 'grafana')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs + nxg_grafana}}"
+  jupyter: "{{[ngx_forward.replace('{u}', 'jupyter')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
+  netdata: "{{[ngx_forward.replace('{u}', 'netdata')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
+
+ngx_upstreams:
+  - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
+  - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
+  - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
+  - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
+  - 'upstream netdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
+  - 'upstream theia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
+

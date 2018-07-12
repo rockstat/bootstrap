@@ -1,7 +1,6 @@
 #! /usr/bin/env bash
 [ "$UID" -eq 0 ] || exec sudo su -c "bash '$0' '$@'"
 
-
 (
   set -Ee
   function _catch {
@@ -29,27 +28,25 @@
   REPOSRC=https://github.com/rockstat/$REPO_NAME
   LOCALREPO=$PLATFORM_HOME/$REPO_NAME
   printf "Loader v0.1\n"
-  printf "> Applying language settings...\n"
-
-  {
-    echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | sudo tee /etc/default/locale
-    sudo locale-gen en_US.UTF-8
-    export LANG=en_US.UTF-8
-    export LC_ALL=en_US.UTF-8
-  } > ./install_log  2>&1
-
   printf "> Updating system requirement...\n"
   {
-    sudo apt-get -q -y update
-    sudo apt-get -q -y install python python-pip python-netaddr git locales
+    apt-get -q -y update
+    apt-get -q -y install \
+      curl git locales \
+      python3 python3-pip python3-netaddr python3-setuptool python3-requests \
+      zlib1g-dev libssl-dev openssl
   } >> ./install_log 2>&1
-
+  printf "> Applying language settings...\n"
+  {
+    echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' | tee /etc/default/locale
+    locale-gen en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+  } >> ./install_log  2>&1
   printf "> Updating python requirements...\n"
   {
-    pip install setuptools 
-    pip install ansible six requests prompt_toolkit==1.0.15 validators
+    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators
   } >> ./install_log 2>&1
-
   printf "> Downloading and running installer...\n"
-  python <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
+  /usr/bin/env python3 <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
 )

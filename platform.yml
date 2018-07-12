@@ -6,7 +6,6 @@
     - vars/config.yml
   tasks:
 
-
     - block:
       - include_role:
           name: dr.server
@@ -15,6 +14,7 @@
           drs_user: '{{support_user}}'
           drs_home_dir: "{{home_dir}}"
           drs_pub_key_file: '{{support_key_file}}'
+          drs_disable_ipv6: "{{go_away_ipv6}}"
       when: 'setup_server == True'
       tags: ['os', 'system']
 
@@ -32,7 +32,6 @@
           drd_interface: '{{docker_interface}}'
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
-        become: yes
       tags: ['docker', 'system']
 
 
@@ -75,33 +74,27 @@
 
     - block:
       - name: Loading nginx users
-        include_vars: "{{ item }}"
+        include_vars:
+          file: "{{ item }}"
+          name: users_data
         with_first_found:
           - "files/{{inventory_hostname }}/users.yml"
           - "files/users.yml"
           - "files/empty.yml"
-      - debug: var=iternal_users
       - include_role:
           name: jdauphant.nginx
         vars:
           nginx_official_repo: no
           keep_only_specified: yes
           nginx_http_params: '{{cfg_nginx_http_params}}'
-          nginx_sites:
-            theia: "{{site_theia|flatten()}}"
-            def_https: "{{site_def_https|flatten()}}"
-            def_http: "{{site_def_http|flatten()}}"
-            frontier: "{{site_frontier}}"
-            grafana: "{{site_grafana|flatten()}}"
-            jupyter: "{{site_jupyter|flatten()}}"
-            netdata: "{{site_netdata|flatten()}}"
+          nginx_sites: "{{ngx_sites}}"
           nginx_auth_basic_files:
-            common: "{{common_users|default({})}}"
+            common: "{{users_data.users|default([])}}"
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'
             proxy: '{{cfg_nginx_proxy_params}}'
-            upstream: '{{upstreams}}'
+            upstream: '{{ngx_upstreams}}'
             ssl: '{{cfg_nginx_ssl_params}}'
       when: "setup_nginx == True"
       tags: ['nginx', 'system']
@@ -231,7 +224,11 @@
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-            GF_AUTH_BASIC: false
+            GF_AUTH_BASIC_ENABLED: yes
+            GF_AUTH_PROXY_ENABLED: yes
+            GF_AUTH_PROXY_HEADER_NAME: yes
+            GF_AUTH_PROXY_AUTO_SIGN_UP: yes
+
             # GF_SECURITY_ADMIN_PASSWORD: secret
           drdc_memory_limit: '200m'
           drdc_labels: "{{docker_band_lbls}}"

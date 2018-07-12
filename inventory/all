@@ -7,6 +7,9 @@
 #
 # Replace "youstat" with short name of your server. Will be used as internal hostname
 
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+
 #[private]
 #youstat ansible_host=alco.yourdomain.com contact_email=
 
