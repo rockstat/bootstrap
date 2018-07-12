@@ -33,7 +33,7 @@
     apt-get -q -y update
     apt-get -q -y install \
       curl git locales \
-      python3 python3-pip python3-netaddr python3-setuptool python3-requests \
+      python3 python3-pip python3-netaddr python3-setuptools python3-requests \
       zlib1g-dev libssl-dev openssl
   } >> ./install_log 2>&1
   printf "> Applying language settings...\n"
