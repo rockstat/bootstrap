@@ -54,6 +54,13 @@ sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstr
 
 Then follow instructions. Platform will be installed to `/srv/platform`
 
+## Configuration details
+
+
+### IPv6
+
+By default disabled. To enable set `disable_ipv6` to `no` at you custom config
+
 
 ## Extending bootstrap configuration
 

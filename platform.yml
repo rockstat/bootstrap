@@ -14,7 +14,7 @@
           drs_user: '{{support_user}}'
           drs_home_dir: "{{home_dir}}"
           drs_pub_key_file: '{{support_key_file}}'
-          drs_disable_ipv6: "{{ipv6_too_early}}"
+          drs_disable_ipv6: "{{disable_ipv6}}"
       when: 'setup_server == True'
       tags: ['os', 'system']
 
@@ -120,7 +120,7 @@
       - include_role:
           name: AlexeySetevoi.clickhouse
         vars:
-          ifaces: "{{ ['127.0.0.1', '{{ docker_net }}'] + ipv6_too_early|ternary([],['::1']) }}"
+          ifaces: "{{ ['127.0.0.1', docker_net] + disable_ipv6|ternary([],['::1']) }}"
           clickhouse_listen_host_custom: ["{{if_inner}}"]
           clickhouse_users_custom: '{{ch_users|default([])}}'
           clickhouse_listen_host_default: "{{ ifaces }}"
