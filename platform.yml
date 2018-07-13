@@ -60,7 +60,7 @@
           ovpn_docker_network: '{{docker_ipnetwork}}'
           ovpn_docker_netmask: '{{docker_netmask}}'
           ovpn_port: '{{ports.openvpn.0}}'
-      tags: ['ovpn', 'system']
+      tags: ['never', 'ovpn', 'system']
 
     - block:
       - include_role:
