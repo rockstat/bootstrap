@@ -30,7 +30,7 @@
   REPOSRC=https://github.com/rockstat/$REPO_NAME
   LOCALREPO=$PLATFORM_HOME/$REPO_NAME
   printf "Loader v0.2.3\n"
-  printf "> Updating system requirement...\n"
+  printf "> Installing/Updating system requirement...\n"
   {
     apt-get -q -y update  >> ./install_log 2>&1
     apt-get -q -y install \
@@ -46,12 +46,10 @@
     export LANG=en_US.UTF-8
     export LC_ALL=en_US.UTF-8
   } 
-  printf "> Updating python requirements...\n"
+  printf "> Installing/Updating python requirements...\n"
   {
-    pip3 install wheel
-    ##  >> ./install_log  2>&1
-    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators
-    ## >> ./install_log  2>&1
+    pip3 install wheel >> ./install_log  2>&1
+    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators >> ./install_log  2>&1
   } 
   printf "> Downloading and running installer...\n"
   /usr/bin/env python3 <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)

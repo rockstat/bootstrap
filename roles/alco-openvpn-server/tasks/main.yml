@@ -6,7 +6,7 @@
 # Docker volume hack
 - name: Check the existing docker volumes
   become: True
-  shell: "python -c 'import docker; client=docker.from_env(); volumes=[_.name for _ in client.volumes.list()]; import json; print(json.dumps(volumes))'"
+  shell: "{{ansible_python_interpreter}} -c 'import docker; client=docker.from_env(); volumes=[_.name for _ in client.volumes.list()]; import json; print(json.dumps(volumes))'"
   changed_when: false
   register: dockervolumes
 
