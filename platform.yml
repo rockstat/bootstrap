@@ -227,7 +227,7 @@
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-            GF_AUTH_BASIC_ENABLED: no
+            GF_AUTH_BASIC_ENABLED: yes
             GF_ALLOW_SIGN_UP: no
             GF_AUTO_ASSIGN_ORG: yes
             GF_AUTO_ASSING_ORG_ROLE: Editor
