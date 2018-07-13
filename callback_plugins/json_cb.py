@@ -22,6 +22,9 @@ class CallbackModule(CallbackBase):
         print(json.dumps(
             dict(name=self.tasks[result._task._uuid], result=result._result)))
 
+    # def v2_runner_on_ok(self, result):
+    #     pass
+
     def v2_playbook_on_task_start(self, task, is_conditional):
         self.tasks[task._uuid] = task.name
 
