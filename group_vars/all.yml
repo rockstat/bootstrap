@@ -178,6 +178,7 @@ ngx_forward:
 # ##########NGINX CUSTOMS ##########
 nxg_grafana:
   - proxy_set_header X-WEBAUTH-USER $remote_user
+  - proxy_set_header Authorization  ""
 ### Obj config
 nxobj_base: 
   cert: "{{domain}}"
