@@ -123,9 +123,8 @@
           nets: 
           ifaces: 
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_listen_host_default: "{{ ['127.0.0.1'] + disable_ipv6|ternary([],['::1']) }}"
-          clickhouse_listen_host_custom: "{{ [ if_inner ] }}"
-          clickhouse_networks_default: "{{ ['127.0.0.1', docker_net] + disable_ipv6|ternary([],['::1']) }}"
+          clickhouse_listen_host_default: ['::1', '127.0.0.1', if_inner]
+          clickhouse_networks_default: "{{ ['::1', '127.0.0.1', docker_net] }}"
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
@@ -348,6 +347,7 @@
             - "{{dirs.frontier_custom_config}}:/app/config/custom"
           drdc_ports:
             - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
+            - "{{if_inner}}:{{ports.frontier_ws.0}}:{{ports.frontier_ws.1}}"
       tags: ['frontier', 'platform', 'rockme', 'docker', 'docker-container']
 
     - name: Clickhouse writer

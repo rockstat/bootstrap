@@ -62,7 +62,6 @@ ports:
   band: [10000, 8080]
   frontier: [10001, 8080]
   frontier_ws: [10002, 8082]
-  frontier_wss: [10003, 8083]
   heavyload: [10010, 8080]
   # tools
   grafana: [3000, 3000]
@@ -172,23 +171,24 @@ ngx_upgr_hdrs:
   - proxy_set_header Connection $connection_upgrade
 ngx_forward:
   server_name {u}.{{domain}};
-  location / { 
-    proxy_pass http://{u}; 
-  }
+  location / { proxy_pass http://{u}; }
 # ##########NGINX CUSTOMS ##########
+nxg_frontrier:
+  - server_name {{domain}}
+  - "root {{dirs.splash}}"
+  - location / { try_files $uri $uri/index.html @upstream; }
+  - location /wss { proxy_pass http://frontier_ws; }
+  - location @upstream { proxy_pass http://frontier; }
+  - "{{ngx_uploader}}"
 nxg_grafana:
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_set_header Authorization  ""
 ### Obj config
-nxobj_base: 
-  cert: "{{domain}}"
-  template: "nginx/upstream-site.conf.j2"
-  domain: "{{domain}}"
 site_def_http:
-    - server_name _
-    - listen 80 default_server
-    - location /stub_status { stub_status; allow 127.0.0.1; deny all; }
-    - return 301 https://$host$request_uri
+  - server_name _
+  - listen 80 default_server
+  - location /stub_status { stub_status; allow 127.0.0.1; deny all; }
+  - return 301 https://$host$request_uri
 site_def_https:
   - "server_name _"
   - "{{ngx_listen.0}} default_server"
@@ -197,7 +197,7 @@ site_def_https:
 ngx_sites:
   def_https: "{{site_def_https|flatten()}}"
   def_http: "{{site_def_http|flatten()}}"
-  frontier: "{{nxobj_base|combine({'uploader': True, 'root': dirs.splash}) }}"
+  frontier: "{{ngx_listen + nxg_frontrier + ngx_ssl + ngx_upgr_hdrs}}"
   theia: "{{[ngx_forward.replace('{u}', 'theia')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
   grafana: "{{[ngx_forward.replace('{u}', 'grafana')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs + nxg_grafana}}"
   jupyter: "{{[ngx_forward.replace('{u}', 'jupyter')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
@@ -205,6 +205,7 @@ ngx_sites:
 
 ngx_upstreams:
   - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
+  - 'upstream frontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; }'
   - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
   - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
   - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
