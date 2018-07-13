@@ -29,7 +29,7 @@
   PLATFORM_HOME=/srv/platform
   REPOSRC=https://github.com/rockstat/$REPO_NAME
   LOCALREPO=$PLATFORM_HOME/$REPO_NAME
-  printf "Loader v0.2.2\n"
+  printf "Loader v0.2.3\n"
   printf "> Updating system requirement...\n"
   {
     apt-get -q -y update  >> ./install_log 2>&1
