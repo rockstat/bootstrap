@@ -231,7 +231,6 @@
             GF_USERS_AUTO_ASSIGN_ORG: yes
             GF_USERS_AUTO_ASSING_ORG_ROLE: Editor
             GF_AUTH_PROXY_ENABLED: yes
-            GF_AUTH_PROXY_HEADER_NAME: yes
             GF_AUTH_PROXY_AUTO_SIGN_UP: yes
             GF_AUTH_PROXY_HEADER_NAME: X-WEBAUTH-USER
             GF_AUTH_BASIC_ENABLED: yes
