@@ -120,11 +120,12 @@
       - include_role:
           name: AlexeySetevoi.clickhouse
         vars:
-          ifaces: "{{ ['127.0.0.1', docker_net] + disable_ipv6|ternary([],['::1']) }}"
-          clickhouse_listen_host_custom: ["{{if_inner}}"]
+          nets: 
+          ifaces: 
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_listen_host_default: "{{ ifaces }}"
-          clickhouse_networks_default: "{{ ifaces }}"
+          clickhouse_listen_host_default: "{{ ['127.0.0.1'] + disable_ipv6|ternary([],['::1']) }}"
+          clickhouse_listen_host_custom: "{{ [ if_inner ] }}"
+          clickhouse_networks_default: "{{ ['127.0.0.1', docker_net] + disable_ipv6|ternary([],['::1']) }}"
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"

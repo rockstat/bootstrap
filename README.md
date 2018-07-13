@@ -56,17 +56,20 @@ Then follow instructions. Platform will be installed to `/srv/platform`
 
 ## Configuration details
 
+Create configuration for your hosts group `groupvars/private.yml`
+You can override configuration by specifing alternative values.
 
 ### IPv6
 
-By default disabled. To enable set `disable_ipv6` to `no` at you custom config
-
+By default setup tool disabling IPv6 support.
+To prevent set `disable_ipv6` to `no` at you custom config.
 
 ## Extending bootstrap configuration
 
+
+
 ### Anaconda/Jupyter additional packages
 
-Create configuration for your hosts group `groupvars/private.yml` and describe which packages you want to install when images rebuilds during upgrade process.
 
 ```yaml
 ---
