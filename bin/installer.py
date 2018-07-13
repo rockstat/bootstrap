@@ -62,6 +62,7 @@ Write some help here...
 """
 
 class HardcodedData:
+    INSTALLER_VER = 'v0.2.2'
     INSTALL_DIR = '/srv/platform'
     REPO_SRC = 'https://github.com/rockstat/bootstrap'
     FAIL_REPORT_URL = 'https://bolt.rstat.org/upload'
@@ -929,7 +930,7 @@ class Installer:
         self.log.info('run')
 
         print( Styles.Separator)
-        print( 'Welcome to Rockstat platform v3 configurator')
+        print( 'Welcome to Rockstat platform v3 configurator v%s' % HardcodedData.INSTALLER_VER )
         print(Styles.Separator)
 
         Helpers.mkdir_if_not_exists(HardcodedData.INSTALL_DIR)
