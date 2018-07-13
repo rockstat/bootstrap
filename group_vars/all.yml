@@ -187,8 +187,8 @@ nxg_grafana:
 site_def_http:
   - server_name _
   - listen 80 default_server
-  - location /stub_status { stub_status; allow 127.0.0.1; deny all; }
-  - return 301 https://$host$request_uri
+  - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
+  - location / { return 301 https://$host$request_uri; }
 site_def_https:
   - "server_name _"
   - "{{ngx_listen.0}} default_server"

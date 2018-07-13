@@ -54,6 +54,13 @@ sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstr
 
 Then follow instructions. Platform will be installed to `/srv/platform`
 
+
+## Take a power implicit using Ansible 
+
+
+### Setup internal OpenVPN server
+
+
 ## Configuration details
 
 Create configuration for your hosts group `groupvars/private.yml`

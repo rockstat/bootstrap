@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 [ "$UID" -eq 0 ] || exec sudo su -c "bash '$0' '$@'"
 
+VERSION=0.2.4
+
 (
   set -Ee
   function _catch {
@@ -29,8 +31,8 @@
   PLATFORM_HOME=/srv/platform
   REPOSRC=https://github.com/rockstat/$REPO_NAME
   LOCALREPO=$PLATFORM_HOME/$REPO_NAME
-  printf "Loader v0.2.3\n"
-  printf "> Installing/Updating system requirement...\n"
+  printf "Rockstat bootstrap loader v$VERSION\n"
+  printf "> installing/updating OS dependencies...\n"
   {
     apt-get -q -y update  >> ./install_log 2>&1
     apt-get -q -y install \
@@ -39,7 +41,7 @@
       build-essential libffi-dev ca-certificates \
       zlib1g-dev libssl-dev openssl  >> ./install_log 2>&1
   }
-  printf "> Applying language settings...\n"
+  printf "> applying en_US.UTF-8 locale...\n"
   {
     echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' > /etc/default/locale
     locale-gen en_US.UTF-8 >> ./install_log  2>&1
