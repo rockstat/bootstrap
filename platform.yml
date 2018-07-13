@@ -122,7 +122,7 @@
         vars:
           clickhouse_listen_host_custom: ["{{if_inner}}"]
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_networks_default: ["::1", "127.0.0.1", "{{ docker_net }}"]
+          clickhouse_networks_default: ["127.0.0.1", "{{ docker_net }}"]
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
