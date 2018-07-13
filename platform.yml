@@ -279,7 +279,7 @@
             IMAGES_PATH: /images
           drdc_image: 'rst/band-director'
           drdc_name: 'director'
-          drdc_dir: '{{dirs.band_collection}}'
+          drdc_dir: '{{dirs.band_set}}'
           drdc_rel_path: '/director'
           drdc_repo: "https://github.com/rockstat/band-services"
           drdc_network: '{{docker_net_name}}'
@@ -288,7 +288,7 @@
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_memory_limit: '300m'
           drdc_volumes:
-            - "{{dirs.band_collection}}:/images/band_collection:ro"
+            - "{{dirs.band_set}}:/images/band_set:ro"
             - "{{dirs.director_data}}:/data" # containers configs
             - "{{dirs.band}}:/images/band_base_py:ro"
             - "{{dirs.user_images}}:/images/user:cached"
@@ -317,8 +317,10 @@
           drdc_volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
-            - "{{dirs.band_collection}}/.skeletons:{{workspace}}/sources/skeletons_ro:ro"
-            - "{{dirs.band_collection}}:{{workspace}}/sources/band_images_ro:ro"
+            - "{{dirs.band}}:{{workspace}}/sources_ro/band:ro"
+            - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
+            - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
+            - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
           drdc_ports: ["{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}"]
       - name: Copying bootstrap files
         command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
@@ -336,7 +338,7 @@
           env: {}
           drdc_name: 'frontier'
           drdc_image: 'rst/frontier'
-          drdc_dir: "{{build_dir}}/frontier"
+          drdc_dir: "{{dirs.rockme_set}}/frontier"
           drdc_repo: "https://github.com/rockstat/frontier"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
@@ -364,7 +366,7 @@
           env: {}
           drdc_name: 'chwriter'
           drdc_image: 'rst/chwriter'
-          drdc_dir: "{{build_dir}}/chwriter"
+          drdc_dir: "{{dirs.rockme_set}}/chwriter"
           drdc_repo: "https://github.com/rockstat/chwriter"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
