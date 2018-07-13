@@ -62,7 +62,7 @@ Write some help here...
 """
 
 class HardcodedData:
-    INSTALLER_VER = 'v0.2.2'
+    INSTALLER_VER = '0.2.2'
     INSTALL_DIR = '/srv/platform'
     REPO_SRC = 'https://github.com/rockstat/bootstrap'
     FAIL_REPORT_URL = 'https://bolt.rstat.org/upload'
