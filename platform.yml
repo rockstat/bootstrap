@@ -220,10 +220,10 @@
           group: 472
       - name: Rendering Grafana Config
         template:
-          src: '{{item}}.j2'
+          src: 'grafana/{{item}}.j2'
           dest: '{{dirs.grafana_data}}/{{item}}'
         with_items:
-          - grafana/grafana.ini
+          - grafana.ini
       - include_role:
           name: dr.docker-container
         vars:
