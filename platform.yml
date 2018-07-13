@@ -123,8 +123,8 @@
           nets: 
           ifaces: 
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_listen_host_default: ['::1', '127.0.0.1', if_inner]
-          clickhouse_networks_default: "{{ ['::1', '127.0.0.1', docker_net] }}"
+          clickhouse_listen_host_default: ['::1', '127.0.0.1', "{{if_inner}}"]
+          clickhouse_networks_default: ['::1', '127.0.0.1', "{{docker_net}}"]
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
