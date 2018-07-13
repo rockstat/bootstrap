@@ -218,6 +218,12 @@
           path: "{{dirs.grafana_data}}"
           owner: 472 # grafana container ids
           group: 472
+      - name: Rendering Grafana Config
+        template:
+          src: '{{item}}.j2'
+          dest: '{{dirs.grafana_data}}/{{item}}'
+        with_items:
+          - grafana/grafana.ini
       - include_role:
           name: dr.docker-container
         vars:
@@ -227,19 +233,19 @@
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-            GF_USERS_ALLOW_SIGN_UP: 'false'
-            GF_USERS_AUTO_ASSIGN_ORG: yes
-            GF_USERS_AUTO_ASSING_ORG_ROLE: Editor
-            GF_AUTH_PROXY_ENABLED: yes
-            GF_AUTH_PROXY_AUTO_SIGN_UP: yes
-            GF_AUTH_PROXY_HEADER_NAME: X-WEBAUTH-USER
-            GF_AUTH_BASIC_ENABLED: yes
-            
+            # GF_USERS_ALLOW_SIGN_UP: 'false'
+            # GF_USERS_AUTO_ASSIGN_ORG: yes
+            # GF_USERS_AUTO_ASSIGN_ORG_ROLE: Editor
+            # GF_AUTH_PROXY_ENABLED: yes
+            # GF_AUTH_PROXY_AUTO_SIGN_UP: yes
+            # GF_AUTH_PROXY_HEADER_NAME: X-WEBAUTH-USER
+            # GF_AUTH_BASIC_ENABLED: yes
             # GF_SECURITY_ADMIN_PASSWORD: secret
           drdc_memory_limit: '200m'
           drdc_labels: "{{docker_band_lbls}}"
           drdc_volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
+            - "{{dirs.grafana_data}}/grafana.ini:/etc/grafana/grafana.ini"
           drdc_ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
       tags: ['grafana', '3rdparty', 'docker', 'docker-container']
