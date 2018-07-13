@@ -113,7 +113,7 @@ s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 if_outer: "{{ansible_default_ipv4.address}}"
 if_inner: "{{docker_host_ip}}"
 # ########## Firewall ##########
-go_away_ipv6: true 
+ipv6_too_early: true
 firewall_rules:
   - { from_ip: '{{docker_net}}'}
   - { to_port: '{{ports.http.0}}'}
