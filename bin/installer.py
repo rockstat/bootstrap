@@ -798,14 +798,12 @@ class UserAccounts:
         Helpers.mkdir_if_not_exists(os.path.dirname(self.htpasswd_path))
         with open(self.htpasswd_path, 'w') as f:
             f.write('\n'.join((user.make_htpasswd_record() for user in self.data.values())))
-
-
-        yaml_opts = dict(default_flow_style=False)
+        
         with open(self.usersyaml_path, 'w') as f:
             yaml_data = {
-                'users':[user.make_namepass_record() for user in self.data.values()]
-            },
-            f.write(yaml.dump(yaml_data, **yaml_opts))
+                'users': list(user.make_namepass_record() for user in self.data.values())
+            }
+            yaml.dump(yaml_data, f, default_flow_style=False)
 
 
 class Git:
