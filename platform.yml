@@ -87,14 +87,14 @@
           nginx_official_repo: no
           keep_only_specified: yes
           nginx_http_params: '{{cfg_nginx_http_params}}'
-          nginx_sites: "{{ngx_sites}}"
+          nginx_sites: "{{_nginx_sites}}"
           nginx_auth_basic_files:
             common: "{{users_data.users|default([])}}"
           nginx_configs:
             upgrade: '{{nginx_protoup}}'
             gzip: '{{cfg_nginx_gzip_params}}'
             proxy: '{{cfg_nginx_proxy_params}}'
-            upstream: '{{ngx_upstreams}}'
+            upstream: '{{_nginx_upstreams}}'
             ssl: '{{cfg_nginx_ssl_params}}'
       when: "setup_nginx == True"
       tags: ['nginx', 'system']
@@ -139,10 +139,10 @@
         vars:
           chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
           chproxy_def_node: "{{if_inner}}:{{ports.clickhouse.0}}"
-          chproxy_clusters: "{{hst_chproxy_clusters|default([])}}"
+          chproxy_clusters: "{{hst_chproxy_clusters|default(omit)}}"
           chproxy_docker_net: "{{docker_net_name}}"
-          chproxy_users: "{{hst_chproxy_users|default([])}}"
-          chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
+          chproxy_users: "{{_chproxy_users|default(omit)}}"
+          chproxy_allowed_networks: "{{chproxy_allow_from|default(omit)}}"
           chproxy_build_path: "{{build_dir}}/chproxy"
       tags: ['chproxy', '3rdparty']
 

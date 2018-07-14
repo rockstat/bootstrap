@@ -86,6 +86,11 @@ jup_with_pip:
   - prodict
 ```
 
+### PWD gen
+
+    # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+
+
 ### Os params (dirty drarft)
 
 redis requirements

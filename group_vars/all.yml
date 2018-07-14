@@ -13,7 +13,9 @@ setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
 #base
+person_name: Aldous Huxley
 contact_email: alex@ebalrefuckanal.de
+#domains
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
   dashboard: 'app.{{domain}}'
@@ -22,7 +24,10 @@ domains:
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
-#managing user
+#main user
+main_user: god
+main_user_password: godmode8359
+#system users
 support_user: 'x011'
 remote_user: 'x011'
 #key for update manager to access server
@@ -141,70 +146,73 @@ containers_env:
   REDIS_HOST_ISOLATED: "redis"
   REDIS_PORT: "{{ports.redis.1}}"
   REDIS_DB: 2
-  CH_DSN: "http://{{if_inner}}:{{ports.clickhouse.0}}/{{ch_db}}"
+  CH_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
   BAND_URL: "http://band:{{ports.band.1}}"
   FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
 # ########## NGINX COMMONS ##########
-ngx_uploader:
+_nginx_uploader:
   location /upload {
     client_max_body_size 8m;
     client_body_buffer_size 128K; 
     limit_except POST { deny all; }
     proxy_pass http://heavyload; }
-ngx_ssl:
+_nginx_listen: 
+  - "listen 443 ssl http2"
+_nginx_ssl:
   - ssl_certificate_key /etc/letsencrypt/live/{{domain}}/privkey.pem
   - ssl_certificate     /etc/letsencrypt/live/{{domain}}/fullchain.pem
   - ssl_trusted_certificate /etc/letsencrypt/live/{{domain}}/chain.pem
-ngx_listen: 
-  - "listen 443 ssl http2"
-ngx_nocache:
+_nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
-ngx_auth:
+_nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-ngx_upgr_hdrs:
+_nginx_upgrade_handler:
   - proxy_http_version 1.1
   - proxy_set_header Upgrade $http_upgrade
   - proxy_set_header Connection $connection_upgrade
-ngx_forward:
-  server_name {u}.{{domain}};
-  location / { proxy_pass http://{u}; }
+_nginx_forward:
+  - server_name {sd}.{{domain}}
+  - location / { proxy_pass http://{sd}; }
 # ##########NGINX CUSTOMS ##########
-nxg_frontrier:
-  - server_name {{domain}}
-  - "root {{dirs.splash}}"
-  - location / { try_files $uri $uri/index.html @upstream; }
-  - location /wss { proxy_pass http://frontier_ws; }
-  - location @upstream { proxy_pass http://frontier; }
-  - "{{ngx_uploader}}"
-nxg_grafana:
-  - proxy_set_header X-WEBAUTH-USER $remote_user
-  - proxy_set_header Authorization  ""
-### Obj config
-site_def_http:
+_nginx_defvh_http:
   - server_name _
   - listen 80 default_server
   - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
   - location / { return 301 https://$host$request_uri; }
-site_def_https:
+_nginx_defvh_https:
   - "server_name _"
-  - "{{ngx_listen.0}} default_server"
-  - "{{ngx_ssl}}"
+  - "{{_nginx_listen.0}} default_server"
+  - "{{_nginx_ssl}}"
   - "return 301 https://{{domain}}"
-ngx_sites:
-  def_https: "{{site_def_https|flatten()}}"
-  def_http: "{{site_def_http|flatten()}}"
-  frontier: "{{ngx_listen + nxg_frontrier + ngx_ssl + ngx_upgr_hdrs}}"
-  theia: "{{[ngx_forward.replace('{u}', 'theia')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
-  grafana: "{{[ngx_forward.replace('{u}', 'grafana')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs + nxg_grafana}}"
-  jupyter: "{{[ngx_forward.replace('{u}', 'jupyter')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
-  netdata: "{{[ngx_forward.replace('{u}', 'netdata')] + ngx_listen + ngx_ssl + ngx_auth + ngx_upgr_hdrs}}"
-
-ngx_upstreams:
+_nginx_frontrier:
+  - server_name {{domain}}
+  - "{{_nginx_listen}}"
+  - "{{_nginx_ssl}}"
+  - "root {{dirs.splash}}"
+  - location / { try_files $uri $uri/index.html @upstream; }
+  - location /wss { proxy_pass http://frontier_ws; }
+  - location @upstream { proxy_pass http://frontier; }
+  - "{{_nginx_uploader}}"
+  - "{{_nginx_upgrade_handler}}"
+_nginx_grafana:
+  - proxy_set_header X-WEBAUTH-USER $remote_user
+  - proxy_set_header Authorization  ""
+_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl + _nginx_upgrade_handler }}"
+_nginx_forward_vh: "{{ _nginx_base_vh + _nginx_forward + _nginx_auth }}"
+_nginx_sites:
+  def_https: "{{_nginx_defvh_https|flatten }}"
+  def_http: "{{_nginx_defvh_http|flatten }}"
+  frontier: "{{_nginx_frontrier|flatten }}"
+  theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
+  grafana: "{{_nginx_forward_vh|flatten|map('replace','{sd}','grafana')|list + _nginx_grafana}}"
+  jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
+  netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
+_nginx_upstreams:
   - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
   - 'upstream frontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; }'
   - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
@@ -212,4 +220,14 @@ ngx_upstreams:
   - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
   - 'upstream netdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
   - 'upstream theia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
-
+# ########## CH PROXY ##########
+_chproxy_user_config:
+  - allow_cors: true
+    to_cluster: 'default'
+    to_user: 'default'
+    max_concurrent_queries: 2
+    max_queue_size: 100
+    max_queue_time: 30s
+    max_execution_time: 30s
+_chproxy_users:
+  - "{{ {'name': main_user, 'password': main_user_password}|combine(_chproxy_user_config) }}"
