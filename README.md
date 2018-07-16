@@ -40,19 +40,18 @@ for second level domains:
 
 ### Setup / upgrade / reconfigure
 
-Once you should setup curl for get install script from repository.
+You need to setup curl once
 
 ```bash
 sudo apt -qqy update && sudo apt -qqy install curl
 ```
 
-Next times you can just execute setup manager using:
+Next times you just execute setup manager using and follow instructions:
 
 ```bash
 sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
 ```
 
-Then follow instructions. Platform will be installed to `/srv/platform`
 
 
 ## Take a power implicit using Ansible 
