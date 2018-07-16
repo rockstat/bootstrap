@@ -101,8 +101,36 @@ redis requirements
     sysctl -w net.ipv4.tcp_fin_timeout=20
     sysctl -w net.ipv4.ip_local_port_range='20000 60000'
 
-
     echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+## Special cases
+
+### 2nd server on same domain
+
+on 1st server configure configure frontier extra location for 2nd server (/v3) for example
+
+```yaml
+_nginx_frontier_extra:
+  - location /v3 {
+      proxy_redirect   off;
+      proxy_http_version 1.1;
+      proxy_set_header X-Real-IP       $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_cookie_domain new_server_domain current_server_domain;
+      proxy_set_header Host      strip.rstat.org;
+      proxy_redirect default;
+      proxy_pass       https://new_server_domain:443/;
+    }
+```
+
+on 2nd server configure nginx params. Add to `group_vars/private` 
+
+```yaml
+_nginx_proxy_params_extra:
+  - set_real_ip_from  92.53.78.198
+  - real_ip_header    X-Forwarded-For
+  - real_ip_recursive on
+```
 
 ## Community
 

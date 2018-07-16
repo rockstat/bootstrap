@@ -6,6 +6,7 @@
     - vars/config.yml
   tasks:
 
+    ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.server
@@ -19,6 +20,7 @@
       tags: ['os', 'system']
 
 
+    ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.docker
@@ -35,6 +37,7 @@
       tags: ['docker', 'system']
 
 
+    ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.exposeur
@@ -44,6 +47,8 @@
           expo_expose_rules: '{{expose_rules|default([]) + host_expose_rules|default([]) + group_expose_rules|default([])}}'
       tags: ['firewall', 'system']
 
+
+    ##### ##### ##### ##### #####    OpenVPN server    ##### ##### ##### ##### ##### 
     - block:
       - debug:
           msg: "docker_net_name:{{docker_net_name}}, docker_ipnetwork:{{docker_ipnetwork}} docker_netmask:{{docker_netmask}} "
@@ -62,6 +67,8 @@
           ovpn_port: '{{ports.openvpn.0}}'
       tags: ['never', 'ovpn', 'system']
 
+
+    ##### ##### ##### ##### #####    Lets encrypt    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.letsencrypt
@@ -72,6 +79,7 @@
       tags: ['ssl', 'system']
 
 
+    ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
     - block:
       - name: Loading nginx users
         include_vars:
@@ -86,20 +94,21 @@
         vars:
           nginx_official_repo: no
           keep_only_specified: yes
-          nginx_http_params: '{{cfg_nginx_http_params}}'
-          nginx_sites: "{{_nginx_sites}}"
+          nginx_http_params: '{{_nginx_http_params}}'
+          nginx_sites: "{{_nginx_sites|combine(_nginx_sites_extra|default({}))}}"
           nginx_auth_basic_files:
             common: "{{users_data.users|default([])}}"
           nginx_configs:
-            upgrade: '{{nginx_protoup}}'
-            gzip: '{{cfg_nginx_gzip_params}}'
-            proxy: '{{cfg_nginx_proxy_params}}'
+            upgrade: '{{_nginx_proto_upgrade}}'
+            gzip: '{{_nginx_gzip_params}}'
+            proxy: '{{_nginx_proxy_params + _nginx_proxy_params_extra|default([])}}'
             upstream: '{{_nginx_upstreams}}'
-            ssl: '{{cfg_nginx_ssl_params}}'
+            ssl: '{{_nginx_ssl_params}}'
       when: "setup_nginx == True"
       tags: ['nginx', 'system']
 
 
+    ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.netdata
@@ -116,6 +125,7 @@
       tags: ['netdata', 'system']
 
 
+    ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
     - block: 
       - include_role:
           name: AlexeySetevoi.clickhouse
@@ -131,6 +141,7 @@
       tags: ['clickhouse', 'system']
 
 
+    ##### ##### ##### ##### #####    Clickhouse Proxy    ##### ##### ##### ##### ##### 
     - block:
       - name: CHProxy setup
         debug: msg="role begin"
@@ -139,14 +150,15 @@
         vars:
           chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
           chproxy_def_node: "{{if_inner}}:{{ports.clickhouse.0}}"
-          chproxy_clusters: "{{hst_chproxy_clusters|default(omit)}}"
+          chproxy_clusters: "{{hst_chproxy_clusters|default([])}}"
           chproxy_docker_net: "{{docker_net_name}}"
-          chproxy_users: "{{_chproxy_users|default(omit)}}"
-          chproxy_allowed_networks: "{{chproxy_allow_from|default(omit)}}"
+          chproxy_users: "{{_chproxy_users|default([])}}"
+          chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
           chproxy_build_path: "{{build_dir}}/chproxy"
       tags: ['chproxy', '3rdparty']
 
 
+    ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
     - name: Redis setup
       block:
       - include_role:
@@ -162,6 +174,7 @@
       tags: ['redis', 'system', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
     - name: Logspout with Loggly streaming
       block:
       - include_role:
@@ -182,6 +195,7 @@
       tags: ['logspout', 'system', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
       - name: Anaconda setup
         debug: msg="bind to {{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"
@@ -210,6 +224,7 @@
       tags: ['anaconda', '3rdparty', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
     - block:
       - name: Creating Grafana datadir
         file:
@@ -232,14 +247,6 @@
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-            # GF_USERS_ALLOW_SIGN_UP: 'false'
-            # GF_USERS_AUTO_ASSIGN_ORG: yes
-            # GF_USERS_AUTO_ASSIGN_ORG_ROLE: Editor
-            # GF_AUTH_PROXY_ENABLED: yes
-            # GF_AUTH_PROXY_AUTO_SIGN_UP: yes
-            # GF_AUTH_PROXY_HEADER_NAME: X-WEBAUTH-USER
-            # GF_AUTH_BASIC_ENABLED: yes
-            # GF_SECURITY_ADMIN_PASSWORD: secret
           drdc_memory_limit: '200m'
           drdc_labels: "{{docker_band_lbls}}"
           drdc_volumes:
@@ -250,16 +257,29 @@
       tags: ['grafana', '3rdparty', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.static-service
         vars:
           dr_name: splash
           dr_dir: '{{dirs.splash}}'
-          dr_repo: https://github.com/rockstat/splash
+          dr_repo: https://github.com/rockstat/splash.git
       tags: ['splash', 'platform']
 
 
+    ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
+    - block:
+      - include_role:
+          name: dr.static-service
+        vars:
+          dr_name: dashboard
+          dr_dir: '{{dirs.dashboard}}'
+          dr_repo: https://github.com/rockstat/dashboard.git
+      tags: ['dashboard', 'platform']
+
+
+    ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
     - block:
       - name: Building band-base-py image
         include_role:
@@ -289,6 +309,7 @@
           drdc_memory_limit: '300m'
           drdc_volumes:
             - "{{dirs.band_set}}:/images/band_set:ro"
+            - "{{dirs.rockme_set}}:/images/rockme_set:ro"
             - "{{dirs.director_data}}:/data" # containers configs
             - "{{dirs.band}}:/images/band_base_py:ro"
             - "{{dirs.user_images}}:/images/user:cached"
@@ -298,6 +319,7 @@
       tags: ['band', 'platform', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
       - name: Creating User Images Directory
         file: state=directory path={{dirs.user_images}} owner=473 group=473
@@ -330,6 +352,7 @@
       tags: ['theia', 'platform', 'band', 'docker', 'docker-container']
 
 
+    ##### ##### ##### ##### #####    Frontier    ##### ##### ##### ##### ##### 
     - name: Frontier setup
       block:
       - include_role:
@@ -352,6 +375,8 @@
             - "{{if_inner}}:{{ports.frontier_ws.0}}:{{ports.frontier_ws.1}}"
       tags: ['frontier', 'platform', 'rockme', 'docker', 'docker-container']
 
+
+    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
     - name: Clickhouse writer
       block:
       - include_role:
@@ -378,6 +403,7 @@
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       tags: ['chwriter', 'chmigrate', 'platform', 'rockme', 'docker', 'docker-container']
 
+    ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
     - block:
       - include_role:
           name: dr.docker-container

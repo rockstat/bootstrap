@@ -18,15 +18,15 @@ contact_email: alex@ebalrefuckanal.de
 #domains
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
-  dashboard: 'app.{{domain}}'
+  app: 'app.{{domain}}'
   web: 'web.{{domain}}'
   grafana: 'grafana.{{domain}}'
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
-#main user
-main_user: god
-main_user_password: godmode8359
+#main user. (temp)
+main_user: default
+main_user_password: default
 #system users
 support_user: 'x011'
 remote_user: 'x011'
@@ -48,8 +48,8 @@ dirs:
   frontier_custom_config: "{{data_dir}}/frontier_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
-  band_set: "{{home_dir}}/images/band_set"
   band: "{{home_dir}}/images/band_base"
+  band_set: "{{home_dir}}/images/band_set"
   rockme_set: "{{home_dir}}/images/rockme_set"
   director_data: "{{data_dir}}/director_data"
   user_images: "{{data_dir}}/images"
@@ -58,6 +58,7 @@ dirs:
   uploads: "{{data_dir}}/uploads"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
+  dashboard: "{{home_dir}}/dashboard"
   clickhouse: "/srv/clickhouse"
   clickhouse_tmp: "/srv/clickhouse_tmp"
   redis: "/srv/redis"
@@ -70,6 +71,7 @@ ports:
   frontier_ws: [10002, 8082]
   heavyload: [10010, 8080]
   # tools
+  director: [10000, 8080]
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
   theia: [8000, 8000]
@@ -153,12 +155,11 @@ containers_env:
   STATSD_HOST: "{{if_inner}}"
   RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
 # ########## NGINX COMMONS ##########
-_nginx_uploader:
-  location /upload {
-    client_max_body_size 8m;
-    client_body_buffer_size 128K; 
-    limit_except POST { deny all; }
-    proxy_pass http://heavyload; }
+# configuration extra params
+_nginx_proxy_params_extra: []
+_nginx_sites_extra: {}
+_nginx_frontier_extra: []
+# common blocks
 _nginx_listen: 
   - "listen 443 ssl http2"
 _nginx_ssl:
@@ -171,14 +172,17 @@ _nginx_nocache:
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-_nginx_upgrade_handler:
+_nginx_upgrade_def:
   - proxy_http_version 1.1
   - proxy_set_header Upgrade $http_upgrade
   - proxy_set_header Connection $connection_upgrade
-_nginx_forward:
+# specific configurations
+_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl + _nginx_upgrade_def }}"
+_nginx_forward_vh:
   - server_name {sd}.{{domain}}
-  - location / { proxy_pass http://{sd}; }
-# ##########NGINX CUSTOMS ##########
+  - location / { proxy_pass http://u{sd}; }
+  - "{{_nginx_auth}}"
+  - "{{_nginx_base_vh}}"
 _nginx_defvh_http:
   - server_name _
   - listen 80 default_server
@@ -189,37 +193,49 @@ _nginx_defvh_https:
   - "{{_nginx_listen.0}} default_server"
   - "{{_nginx_ssl}}"
   - "return 301 https://{{domain}}"
+_nginx_uploader:
+  location /upload {
+    client_max_body_size 10m;
+    client_body_buffer_size 128K; 
+    limit_except POST { deny all; }
+    proxy_pass http://uheavyload; }
 _nginx_frontrier:
   - server_name {{domain}}
-  - "{{_nginx_listen}}"
-  - "{{_nginx_ssl}}"
+  - "{{_nginx_base_vh}}"
   - "root {{dirs.splash}}"
   - location / { try_files $uri $uri/index.html @upstream; }
-  - location /wss { proxy_pass http://frontier_ws; }
-  - location @upstream { proxy_pass http://frontier; }
+  - location @upstream { proxy_pass http://ufrontier; }
+  - location /wss { proxy_pass http://ufrontier_ws; }
   - "{{_nginx_uploader}}"
-  - "{{_nginx_upgrade_handler}}"
+  - "{{_nginx_frontier_extra}}"
+_nginx_dashboard:
+  - server_name app.{{domain}}
+  - "{{_nginx_base_vh}}"
+  - "{{_nginx_auth}}"
+  - "root {{dirs.dashboard}}/dist"
+  - location /api/ { proxy_pass http://udirector/; }
+  - location / { index index.html; }
 _nginx_grafana:
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_set_header Authorization  ""
-_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl + _nginx_upgrade_handler }}"
-_nginx_forward_vh: "{{ _nginx_base_vh + _nginx_forward + _nginx_auth }}"
 _nginx_sites:
   def_https: "{{_nginx_defvh_https|flatten }}"
   def_http: "{{_nginx_defvh_http|flatten }}"
   frontier: "{{_nginx_frontrier|flatten }}"
+  dashboard: "{{_nginx_dashboard|flatten }}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   grafana: "{{_nginx_forward_vh|flatten|map('replace','{sd}','grafana')|list + _nginx_grafana}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
 _nginx_upstreams:
-  - 'upstream frontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
-  - 'upstream frontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; }'
-  - 'upstream heavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
-  - 'upstream grafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
-  - 'upstream jupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
-  - 'upstream netdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
-  - 'upstream theia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
+  - 'upstream ufrontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
+  - 'upstream ufrontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; }'
+  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; }'
+  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
+  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
+  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
+  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
+  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
 # ########## CH PROXY ##########
 _chproxy_user_config:
   - allow_cors: true
@@ -229,5 +245,5 @@ _chproxy_user_config:
     max_queue_size: 100
     max_queue_time: 30s
     max_execution_time: 30s
-_chproxy_users:
-  - "{{ {'name': main_user, 'password': main_user_password}|combine(_chproxy_user_config) }}"
+# _chproxy_users:
+#   - "{{ {'name': main_user, 'password': main_user_password}|combine(_chproxy_user_config) }}"
