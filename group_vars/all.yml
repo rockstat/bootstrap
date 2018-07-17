@@ -33,13 +33,6 @@ remote_user: 'x011'
 #key for update manager to access server
 support_key_file: './public_keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
-#initial services
-services_default:
-  director: true
-  mmgeo: true
-  sxgeo: true
-  send_mixpanel: false
-  tg_hellobot: false
 #dirs
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
@@ -142,6 +135,7 @@ jup_with_pip: [""]
 ch_db: stats
 # ########## Common Envs ##########
 containers_env:
+  DOMAIN: "{{domain}}"
   LOG_LEVEL: "{{log_level}}"
   NETWORK: "{{docker_net_name}}"
   REDIS_HOST: "redis"
@@ -153,7 +147,6 @@ containers_env:
   FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
-  RUN_CONTAINERS: "{{services_default.keys()|join(',')}}"
 # ########## NGINX COMMONS ##########
 # configuration extra params
 _nginx_proxy_params_extra: []

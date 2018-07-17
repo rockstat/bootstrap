@@ -89,6 +89,19 @@ jup_with_pip:
 
     # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
 
+or using bash
+
+run prepared script and follow instruction
+ 
+```bash
+./bin/make_creds
+```
+
+
+```bash
+username=YOUR USER NAME
+printf "${username}:`openssl passwd -apr1 ${password}`\n"
+```
 
 ### Os params (dirty drarft)
 

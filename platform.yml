@@ -8,7 +8,8 @@
 
     ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Base Server role
+        include_role:
           name: dr.server
         vars:
           drs_setup_user: yes
@@ -22,7 +23,8 @@
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Docker role
+        include_role:
           name: dr.docker
         vars:
           drd_users:
@@ -39,7 +41,8 @@
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Exposeur role
+        include_role:
           name: dr.exposeur
         vars:
           expo_reset_ufw: true
@@ -56,7 +59,8 @@
         file:
           state: directory
           path: "{{dirs.ovpnkeys}}"
-      - include_role:
+      - name: Including OpenVPN server role
+        include_role:
           name: alco-openvpn-server
         vars:
           ovpn_domain: "{{domain}}"
@@ -70,7 +74,8 @@
 
     ##### ##### ##### ##### #####    Lets encrypt    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including LetsEncrypt role
+        include_role:
           name: dr.letsencrypt
         vars:
           letsencrypt_domains_groups: '{{domains_ssl}}'
@@ -81,7 +86,7 @@
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
     - block:
-      - name: Loading nginx users
+      - name: Loading Nginx users
         include_vars:
           file: "{{ item }}"
           name: users_data
@@ -89,7 +94,8 @@
           - "files/{{inventory_hostname }}/users.yml"
           - "files/users.yml"
           - "files/empty.yml"
-      - include_role:
+      - name: Including Nginx role
+        include_role:
           name: jdauphant.nginx
         vars:
           nginx_official_repo: no
@@ -110,7 +116,8 @@
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Netdata role
+        include_role:
           name: dr.netdata
         vars:
           drn_allow:
@@ -127,7 +134,8 @@
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
     - block: 
-      - include_role:
+      - name: Including ClickHouse role
+        include_role:
           name: AlexeySetevoi.clickhouse
         vars:
           nets: 
@@ -145,7 +153,8 @@
     - block:
       - name: CHProxy setup
         debug: msg="role begin"
-      - include_role: 
+      - name: Including ClickHouse proxy role
+        include_role: 
           name: chproxy
         vars:
           chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
@@ -161,7 +170,8 @@
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
     - name: Redis setup
       block:
-      - include_role:
+      - name: Including Docker container role for Redis server
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: "redis"
@@ -177,7 +187,8 @@
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
     - name: Logspout with Loggly streaming
       block:
-      - include_role:
+      - name: Including Docker container role for Logspout
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: "logspout"
@@ -199,7 +210,8 @@
     - block:
       - name: Anaconda setup
         debug: msg="bind to {{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"
-      - include_role:
+      - name: Including Docker container role for Anaconda
+        include_role:
           name: dr.docker-container
         vars:
           conda_list: "{{jup_with_conda_def + jup_with_conda}}"
@@ -238,7 +250,8 @@
           dest: '{{dirs.grafana_data}}/{{item}}'
         with_items:
           - grafana.ini
-      - include_role:
+      - name: Including Docker container role for Grafana
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: 'grafana'
@@ -259,7 +272,8 @@
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Static service role for Splash screen
+        include_role:
           name: dr.static-service
         vars:
           dr_name: splash
@@ -270,7 +284,8 @@
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Static service role for Dashboart
+        include_role:
           name: dr.static-service
         vars:
           dr_name: dashboard
@@ -290,7 +305,7 @@
           drdc_dir: '{{dirs.band}}'
           drdc_repo: "https://github.com/rockstat/band"
           drdc_run_container: no
-      - name: Building direсtor service
+      - name: Including Docker container role for Director service
         include_role:
           name: dr.docker-container
         vars:
@@ -325,7 +340,8 @@
         file: state=directory path={{dirs.user_images}} owner=473 group=473
       - name: Creating User Workspace Directory
         file: state=directory path={{dirs.workspace}} owner=473 group=473
-      - include_role:
+      - name: Including Docker container role for Theia IDE
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: 'theia'
@@ -355,7 +371,8 @@
     ##### ##### ##### ##### #####    Frontier    ##### ##### ##### ##### ##### 
     - name: Frontier setup
       block:
-      - include_role:
+      - name: Including Docker container role for Frontier service
+        include_role:
           name: dr.docker-container
         vars:
           env: {}
@@ -379,13 +396,15 @@
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
     - name: Clickhouse writer
       block:
-      - include_role:
+      - name: Including ClickHouse maintain role
+        include_role:
           name: clickhouse-maintain
         vars:
           role_ops_db: "{{ch_db}}"
           role_migrations_path: clickhouse_migrations
         tags: ['never', 'chmigrate']
-      - include_role:
+      - name: Including Docker container role for ClickHouse Writer service
+        include_role:
           name: dr.docker-container
         vars:
           env: {}
@@ -405,7 +424,8 @@
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
     - block:
-      - include_role:
+      - name: Including Docker container role for Heavyload service
+        include_role:
           name: dr.docker-container
         vars:
           drdc_name: 'heavyload'
