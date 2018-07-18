@@ -370,6 +370,7 @@
           drdc_labels: "{{docker_band_lbls}}"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
+          drdc_env: "{{containers_env}}"
           drdc_memory_limit: '2g'
           drdc_nocache: "{{nocache is defined}}"
           drdc_volumes:
