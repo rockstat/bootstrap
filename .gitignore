@@ -1,7 +1,7 @@
-inventory/priv*
-group_vars/priv*
+inventory/*
+group_vars/*
 host_vars/*
-public_keys/priv*
+public_keys/*
 ovpn_keys/*
 __pycache__
 /.vscode
@@ -12,3 +12,4 @@ __pycache__
 /files/.htpasswd.tools
 /files/users.yml
 /files/*
+/

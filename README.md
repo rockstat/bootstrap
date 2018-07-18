@@ -144,6 +144,46 @@ _nginx_proxy_params_extra:
   - real_ip_recursive on
 ```
 
+### Run your own ACME DNS sever
+
+Configure using config.cfg template, then run
+
+
+   -p 172.16.25.1:53:53/udp -p 172.16.25.1:19980:19980 -p 172.16.25.1:19943:19943 \
+```
+docker run --rm --name acmedns \
+   -p 53:53/udp -p 19980:19980 -p 19943:19943 \
+   -v /srv/acme-dns/config:/etc/acme-dns:ro \
+   -v /srv/acme-dns/data:/var/lib/acme-dns \
+   --network=host \
+   -d acme-dns
+```
+
+registering
+
+```
+curl -X POST http://auth.example.com/register
+```
+
+requesting 
+
+```
+docker run --rm \
+  -e ACMEDNS_UPDATE_URL="http://auth....io/update" \
+  -e ACMEDNS_USERNAME="..." \
+  -e ACMEDNS_PASSWORD="..." \
+  -e ACMEDNS_SUBDOMAIN="..." \
+  acmesh --issue -d dimain.org  -d '*.domain.org' --dns dns_acmedns --log
+```
+
+```
+docker run --rm acmesh --install-cert -d example.com \
+--cert-file      /path/to/certfile/in/apache/cert.pem  \
+--key-file       /path/to/keyfile/in/apache/key.pem  \
+--fullchain-file /path/to/fullchain/certfile/apache/fullchain.pem \
+```
+
+
 ## Community
 
 Join to discuss with other users

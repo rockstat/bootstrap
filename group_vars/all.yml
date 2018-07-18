@@ -8,10 +8,14 @@ log_level: info
 #features
 setup_server: yes
 setup_nginx: yes
-setup_ssl: yes
+_setup_ssl: yes
+_setup_ssl_wildcard: no # setup using acme dns challenge
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
+#services
+_acmedns_endpoint: auth.0x011.xyz
+_acmedns_setup: no
 #base
 person_name: Aldous Huxley
 contact_email: alex@ebalrefuckanal.de
@@ -24,6 +28,12 @@ domains:
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
+  httpdebug: 'httpdebug.{{domain}}'
+#ssl
+_ssl_certs:
+- domain: "{{domain}}"
+  wildcard: yes
+  email: "{{contact_email}}"
 #main user. (temp)
 main_user: default
 main_user_password: default
@@ -56,6 +66,9 @@ dirs:
   clickhouse_tmp: "/srv/clickhouse_tmp"
   redis: "/srv/redis"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
+  acmedns: "{{home_dir}}/acmedns"
+  acmesh: "{{home_dir}}/acmesh"
+  certificates: "/etc/nginx/certs"
 #ports directory
 ports:
   # services
@@ -69,6 +82,7 @@ ports:
   jupyter: [8888, 8888]
   theia: [8000, 8000]
   netdata: [19999]
+  httpdebug: [19992]
   # servers
   http: [80]
   https: [443]
@@ -114,11 +128,16 @@ if_outer: "{{ansible_default_ipv4.address}}"
 if_inner: "{{docker_host_ip}}"
 # ########## Firewall ##########
 disable_ipv6: true
-firewall_rules:
+firewall_rules_base:
   - { from_ip: '{{docker_net}}'}
   - { to_port: '{{ports.http.0}}'}
   - { to_port: '{{ports.https.0}}'}
   - { to_port: '{{ports.openvpn.0}}'}
+firewall_rules_acmedns:
+  - { to_port: "53", proto: 'udp'}
+  - { to_port: "19943" }
+  - { to_port: "19980" }
+firewall_rules: "{{firewall_rules_base + _acmedns_setup|ternary(firewall_rules_acmedns, [])}}"
 # ########## SSL ##########
 domains_ssl:
   - email: '{{contact_email}}'
@@ -156,19 +175,16 @@ _nginx_frontier_extra: []
 _nginx_listen: 
   - "listen 443 ssl http2"
 _nginx_ssl:
-  - ssl_certificate_key /etc/letsencrypt/live/{{domain}}/privkey.pem
-  - ssl_certificate     /etc/letsencrypt/live/{{domain}}/fullchain.pem
-  - ssl_trusted_certificate /etc/letsencrypt/live/{{domain}}/chain.pem
+  - ssl_certificate_key     {{dirs.certificates}}/{{domain}}/{{domain}}.key
+  - ssl_certificate         {{dirs.certificates}}/{{domain}}/fullchain.cer
+  - ssl_trusted_certificate {{dirs.certificates}}/{{domain}}/{{domain}}.cer
 _nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-_nginx_upgrade_def:
-  - proxy_http_version 1.1
-  - proxy_set_header Upgrade $http_upgrade
-  - proxy_set_header Connection $connection_upgrade
+_nginx_upgrade_def: []
 # specific configurations
 _nginx_base_vh: "{{ _nginx_listen + _nginx_ssl + _nginx_upgrade_def }}"
 _nginx_forward_vh:
@@ -210,7 +226,7 @@ _nginx_dashboard:
   - location / { index index.html; }
 _nginx_grafana:
   - proxy_set_header X-WEBAUTH-USER $remote_user
-  - proxy_set_header Authorization  ""
+  - proxy_hide_header Authorization
 _nginx_sites:
   def_https: "{{_nginx_defvh_https|flatten }}"
   def_http: "{{_nginx_defvh_http|flatten }}"
@@ -220,15 +236,17 @@ _nginx_sites:
   grafana: "{{_nginx_forward_vh|flatten|map('replace','{sd}','grafana')|list + _nginx_grafana}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
+  httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
 _nginx_upstreams:
-  - 'upstream ufrontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; }'
-  - 'upstream ufrontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; }'
-  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; }'
-  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; }'
-  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; }'
-  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; }'
-  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; }'
-  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; }'
+  - 'upstream ufrontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; keepalive 32; }'
+  - 'upstream ufrontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; keepalive 128; }'
+  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; keepalive 8; }'
+  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; keepalive 32; }'
+  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; keepalive 4; }'
+  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; keepalive 4; }'
+  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; keepalive 8; }'
+  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'
+  - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}} weight=10; }'
 # ########## CH PROXY ##########
 _chproxy_user_config:
   - allow_cors: true
