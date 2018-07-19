@@ -8,8 +8,8 @@ VERSION=0.2.4
   function _catch {
     # block B
     echo "Error caused"
-    echo "Try to send fail-report"
-    curl -F data=@install_log https://bolt.rstat.org/upload
+    # echo "Try to send fail-report"
+    # curl -F data=@install_log https://bolt.rstat.org/upload
     
     exit 0  # optional; use if you don't want to propagate (rethrow) error to outer shell
   }
