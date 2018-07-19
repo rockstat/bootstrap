@@ -514,7 +514,7 @@ class Ansible:
                 print(line.strip())
 
         cmd = 'ANSIBLE_STDOUT_CALLBACK=json_cb ' \
-              'ansible-playbook {} --connection=local'.format(HardcodedData.ROOT_PLAYBOOK_NAME)
+              'ansible-playbook {} --connection=local -e mode=configure'.format(HardcodedData.ROOT_PLAYBOOK_NAME)
         Helpers.run_process(cmd=cmd, workdir=self.bootstrap_dir, output_line_handler=on_line)
 
     def install_roles(self):
