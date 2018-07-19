@@ -34,24 +34,24 @@ VERSION=0.2.4
   printf "Rockstat bootstrap loader v$VERSION\n"
   printf "> installing/updating OS dependencies...\n"
   {
-    apt-get -q -y update  >> ./install_log 2>&1
+    apt-get -q -y update
     apt-get -q -y install \
       curl git locales \
       python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
       build-essential libffi-dev ca-certificates \
-      zlib1g-dev libssl-dev openssl  >> ./install_log 2>&1
+      zlib1g-dev libssl-dev openssl
   }
   printf "> applying en_US.UTF-8 locale...\n"
   {
     echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' > /etc/default/locale
-    locale-gen en_US.UTF-8 >> ./install_log  2>&1
+    locale-gen en_US.UTF-8
     export LANG=en_US.UTF-8
     export LC_ALL=en_US.UTF-8
   } 
   printf "> Installing/Updating python requirements...\n"
   {
-    pip3 install wheel >> ./install_log  2>&1
-    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators >> ./install_log  2>&1
+    pip3 install wheel
+    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators
   } 
   printf "> Downloading and running installer...\n"
   /usr/bin/env python3 <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
