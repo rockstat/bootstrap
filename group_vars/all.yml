@@ -206,7 +206,8 @@ _nginx_defvh_https:
   - "server_name _"
   - "{{_nginx_listen.0}} default_server"
   - "{{_nginx_ssl}}"
-  - "return 301 https://{{domain}}"
+  - "root {{dirs.splash}}"
+  - "location / { try_files $uri $uri/index.html; }"
 _nginx_uploader:
   location /upload {
     client_max_body_size 10m;
@@ -228,7 +229,7 @@ _nginx_dashboard:
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
   - location /api/ { proxy_pass http://udirector/; }
-  - location / { index index.html; }
+  - location / { try_files $uri $uri/index.html; }
 _nginx_grafana:
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_hide_header Authorization

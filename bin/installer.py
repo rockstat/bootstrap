@@ -978,7 +978,7 @@ class Installer:
 
 def main():
     if not Helpers.assert_root():
-        print ('installation may be launched only by root')
+        print ('installer required root credentials')
         sys.exit(1)
 
     temp_files = TempFiles()
