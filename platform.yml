@@ -93,7 +93,7 @@
           _r_acmesh_config_dir: "{{dirs.acmesh}}/config"
           _r_acmedns_config_dir: "{{dirs.acmedns}}/config"
           _r_acmedns_data_dir: "{{dirs.acmedns}}/data"
-          _r_acmesh_host_cert_root: "{{dirs.certificates}}"
+          _r_acmesh_host_cert_root: "{{_ssl_cert_dir}}"
           _r_acmedns_host: "{{_acmedns_endpoint}}"
           _r_acmedns_api: "http://{{_r_acmedns_host}}:19943"
           _r_acmedns_ns1_ip: "{{_challenge_ns1|default('0.0.0.0')}}"
@@ -101,7 +101,7 @@
           _r_acmedns_setup_dns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
       when: "_setup_ssl_wildcard == True"
-      tags: ['never', 'ssl', 'system']
+      tags: ['never', 'ssl']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
@@ -131,7 +131,7 @@
             upstream: '{{_nginx_upstreams}}'
             ssl: '{{_nginx_ssl_params}}'
       when: "setup_nginx == True"
-      tags: ['never', 'nginx', 'system']
+      tags: ['never', 'nginx']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
@@ -161,8 +161,8 @@
           nets: 
           ifaces: 
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_listen_host_default: ['::1', '127.0.0.1', "{{if_inner}}"]
-          clickhouse_networks_default: ['::1', '127.0.0.1', "{{docker_net}}"]
+          clickhouse_listen_host_default: ['127.0.0.1', "{{if_inner}}"] # '::1', 
+          clickhouse_networks_default: ['127.0.0.1', "{{docker_net}}"] # '::1', 
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
@@ -249,6 +249,7 @@
           drdc_memory_limit: '{{anaconda_mem_limit}}'
           drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
           drdc_labels: "{{docker_band_lbls}}"
+          drdc_env: "{{containers_env}}"
           drdc_volumes: 
             - '{{dirs.notebooks}}:/opt/notebooks'
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]

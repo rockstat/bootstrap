@@ -99,8 +99,7 @@ run prepared script and follow instruction
 
 
 ```bash
-username=YOUR USER NAME
-printf "${username}:`openssl passwd -apr1 ${password}`\n"
+username=YOUR USER NAME; printf "${username}:`openssl passwd -apr1 ${password}`\n"
 ```
 
 ### Os params (dirty drarft)
@@ -182,6 +181,19 @@ docker run --rm acmesh --install-cert -d example.com \
 --key-file       /path/to/keyfile/in/apache/key.pem  \
 --fullchain-file /path/to/fullchain/certfile/apache/fullchain.pem \
 ```
+
+### Referense info
+
+**default letsencrypt cert location**
+
+ssl_certificate_key /etc/letsencrypt/live/srv.digitalgod.me/privkey.pem;
+ssl_certificate     /etc/letsencrypt/live/srv.digitalgod.me/fullchain.pem;
+ssl_trusted_certificate /etc/letsencrypt/live/srv.digitalgod.me/chain.pem;
+
+**location when copy from asme.sh**
+ssl_certificate_key     {{dirs.certificates}}/{{domain}}/{{domain}}.key
+ssl_certificate         {{dirs.certificates}}/{{domain}}/fullchain.cer
+ssl_trusted_certificate {{dirs.certificates}}/{{domain}}/{{domain}}.cer
 
 
 ## Community
