@@ -110,7 +110,7 @@
           _r_acmedns_setup_dns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
       when: "_setup_ssl_wildcard == True"
-      tags: ['never', 'ssl']
+      tags: ['never', 'ssl', 'system']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
@@ -179,7 +179,7 @@
       vars:
         _nginx_users: {}
       when: "setup_nginx == True"
-      tags: ['never', 'nginx']
+      tags: ['never', 'nginx', 'system']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
