@@ -3,10 +3,10 @@
 # Running:
 #
 # ** for master release **
-# curl -s https://raw.github.com/rockstat/bootstrap/master/loader | sudo -E bash -
+# curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/kickstart | sudo -E bash -
 # 
 # ** for dev version **
-# curl -s https://raw.github.com/rockstat/bootstrap/dev/loader | sudo -E bash -
+# curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
 #
 # What shold can be do:
 # - Request/check root
@@ -29,7 +29,7 @@ REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
 INSTALLER_BIN=/bin/kickstart
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
-
+LINK_TO_BIN=/usr/local/bin/rockstat
 FACT_CONF=/etc/ansible/facts.d/config.fact
 
 # state vars
@@ -167,10 +167,10 @@ setup_code() {
 }
 
 setup_symlink() {
-  cd /usr/local/bin
+  cd dirname(LINK_TO_BIN)
   
-  if [ -a "rockstat" ]; then
-    ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" rockstat
+  if [ -h $LINK_TO_BIN ]; then
+    ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" $LINK_TO_BIN
   fi
   cd $BOOTSTRAP_DIR
 }

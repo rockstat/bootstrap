@@ -50,7 +50,12 @@ Next times you just execute setup manager using and follow instructions:
 
 ```bash
 sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
+
+
+curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader | sudo bash -
+
 ```
+
 
 
 
@@ -182,7 +187,9 @@ docker run --rm acmesh --install-cert -d example.com \
 --fullchain-file /path/to/fullchain/certfile/apache/fullchain.pem \
 ```
 
-### Referense info
+### Referense
+
+#### SSL certificates location
 
 **default letsencrypt cert location**
 
@@ -191,10 +198,9 @@ ssl_certificate     /etc/letsencrypt/live/srv.digitalgod.me/fullchain.pem;
 ssl_trusted_certificate /etc/letsencrypt/live/srv.digitalgod.me/chain.pem;
 
 **location when copy from asme.sh**
-ssl_certificate_key     {{dirs.certificates}}/{{domain}}/{{domain}}.key
-ssl_certificate         {{dirs.certificates}}/{{domain}}/fullchain.cer
-ssl_trusted_certificate {{dirs.certificates}}/{{domain}}/{{domain}}.cer
-
+ssl_certificate_key     /etc/nginx/certs/{{domain}}/{{domain}}.key
+ssl_certificate         /etc/nginx/certs/{{domain}}/fullchain.cer
+ssl_trusted_certificate /etc/nginx/certs/{{domain}}/{{domain}}.cer
 
 ## Community
 
@@ -206,7 +212,7 @@ Join to discuss with other users
 ## Rockstat Bootstrap License and Authors
 
 * Author:: Dmitry Rodin <madiedinro@gmail.com>
-* Author:: Ivan Golubenko <fedorsymkin52@gmail.com>
+* Maintainer:: Ivan Golubenko <fedorsymkin52@gmail.com>
 * Maintainer:: Alexander Shvets <ashwets@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
