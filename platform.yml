@@ -5,6 +5,15 @@
   vars_files:
     - vars/config.yml
   tasks:
+    - name: Fail wrong python
+      assert:
+        that: 
+          - "ansible_python_interpreter == '/usr/bin/python3'"
+        msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
+      tags: ["always"]
+
+    - debug: var=ansible_local
+      tags: ["always"]
 
     ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
@@ -105,7 +114,44 @@
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
+
     - block:
+      - command: 'cat /srv/platform/bootstrap/files/users.yml'
+        register: users_out
+        failed_when: 'False'
+      - block:
+          # - debug: var=pb_users
+          # - debug: var=users_data
+          # - debug: msg="loc_gen:{{loc_gen}}"
+          # - debug: msg="loc_conf:{{loc_conf}}"
+          # - debug: msg="loc_admpwd:{{loc_admpwd}}"
+          # - debug: msg="pb_woadmin:{{pb_notadmin}}"
+          # - debug: msg="pb_admin:{{pb_admin}}"
+          # - debug: msg="loc_users:{{loc_users}}"
+          - set_fact:
+              _nginx_users: "{{ _nginx_users | combine({row.0: row.1}) }}"
+            vars:
+              row: "{{item.split(':')}}"
+            loop: "{{users_list|flatten}}"
+          - debug: var=_nginx_users
+        vars:
+          users_data: "{{ (users_out is succeeded) | ternary(users_out.stdout|from_yaml, {}) }}"
+          pb_users: "{{ users_data.iternal_users | default(users_data.users|default([])) }}"
+          loc_conf: "{{ ansible_local.config | default({}) }}"
+          loc_gen: "{{ loc_conf.general | default({}) }}"
+          loc_admpwd: "{{ loc_gen.admin_password | default('') }}"
+          loc_adm: "{{ (loc_admpwd != '')|ternary(['admin:'+loc_admpwd], []) }}"
+          init_adm: "{{ ['admin:'+init_admin_pass] if init_admin_pass is defined else [] }}"
+          loc_users: "{{ loc_gen.users|default('[]')|from_json }}"
+          pb_notadmin: "{{ pb_users | select('match', '^(?!admin).*$') | list }}"
+          pb_admin: "{{ pb_users | select('match', '^admin.*$') | list }}"
+          users_list:
+            - "{{loc_users}}"
+            - "{{pb_notadmin}}"
+            - "{{init_adm}}"
+            - "{{pb_admin}}"
+            - "{{loc_adm}}"
+
       - name: Loading Nginx users
         include_vars:
           file: "{{ item }}"
@@ -123,13 +169,15 @@
           nginx_http_params: '{{_nginx_http_params}}'
           nginx_sites: "{{_nginx_sites|combine(_nginx_sites_extra|default({}))}}"
           nginx_auth_basic_files:
-            common: "{{users_data.users|default([])}}"
+            common: "{% for k in _nginx_users.keys() %}{{ k+':'+_nginx_users[k] }}{% endfor %}"
           nginx_configs:
             upgrade: '{{_nginx_proto_upgrade}}'
             gzip: '{{_nginx_gzip_params}}'
             proxy: '{{_nginx_proxy_params + _nginx_proxy_params_extra|default([])}}'
             upstream: '{{_nginx_upstreams}}'
             ssl: '{{_nginx_ssl_params}}'
+      vars:
+        _nginx_users: {}
       when: "setup_nginx == True"
       tags: ['never', 'nginx']
 

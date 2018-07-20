@@ -44,6 +44,10 @@
   version: master
   name: dr.letsencrypt
 
+- src: https://github.com/madiedinro/ansible-letsencrypt-wildcatd-dns-auto.git
+  version: master
+  name: dr.letsencrypt.wildcard.auto
+
 - src: https://github.com/madiedinro/ansible-openvpn-server-role
   version: master
   name: dr.openvpn-server

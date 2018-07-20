@@ -1,58 +1,37 @@
-#! /usr/bin/env bash
-[ "$UID" -eq 0 ] || exec sudo -E $0 $@
+#!/usr/bin/env bash
 
-VERSION=0.2.4
+if test -t 1; then # if terminal
+    ncolors=$(which tput > /dev/null && tput colors) # supports color
+    if test -n "$ncolors" && test $ncolors -ge 8; then
+        termcols=$(tput cols)
+        bold="$(tput bold)"
+        underline="$(tput smul)"
+        standout="$(tput smso)"
+        normal="$(tput sgr0)"
+        black="$(tput setaf 0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+        magenta="$(tput setaf 5)"
+        cyan="$(tput setaf 6)"
+        white="$(tput setaf 7)"
+    fi
+fi
 
-(
-  set -Ee
-  function _catch {
-    # block B
-    echo "Error caused"
-    # echo "Try to send fail-report"
-    # curl -F data=@install_log https://bolt.rstat.org/upload
-    
-    exit 0  # optional; use if you don't want to propagate (rethrow) error to outer shell
-  }
-  function _finally {
-    # block C
-    rm -f install_log
-  }
-  trap _catch ERR
-  trap _finally EXIT
-  #   block A
-  set -o nounset
-  set -o errexit
-  set -o pipefail
-  IFS=$'\n\t'
-  DEBIAN_FRONTEND=noninteractive
+base_print() {
+    echo -e "\n$1\n"
+}
 
-  BR=dev
-  REPO_NAME=bootstrap
-  PLATFORM_HOME=/srv/platform
-  REPOSRC=https://github.com/rockstat/$REPO_NAME
-  LOCALREPO=$PLATFORM_HOME/$REPO_NAME
-  printf "Rockstat bootstrap loader v$VERSION\n"
-  printf "> installing/updating OS dependencies...\n"
-  {
-    apt-get -q -y update
-    apt-get -q -y install \
-      curl git locales \
-      python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
-      build-essential libffi-dev ca-certificates \
-      zlib1g-dev libssl-dev openssl
-  }
-  printf "> applying en_US.UTF-8 locale...\n"
-  {
-    echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' > /etc/default/locale
-    locale-gen en_US.UTF-8
-    export LANG=en_US.UTF-8
-    export LC_ALL=en_US.UTF-8
-  } 
-  printf "> Installing/Updating python requirements...\n"
-  {
-    pip3 install wheel
-    pip3 install ansible prompt_toolkit==1.0 cryptography==2.2 validators
-  } 
-  printf "> Downloading and running installer...\n"
-  /usr/bin/env python3 <(curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/installer.py)
-)
+print_status() {
+  base_print "${cyan}${bold}>> ${blue}${1}${normal}"
+}
+
+print_pref() {
+  base_print "${yellow}${bold}!> ${normal}{1}$"
+}
+
+print_pref "##"
+print_pref "##"
+print_pref "##"
+print_pref "## Current installer is deprecated."

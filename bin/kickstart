@@ -1,0 +1,403 @@
+#!/usr/bin/env bash
+#
+# Running:
+#
+# ** for master release **
+# curl -s https://raw.github.com/rockstat/bootstrap/master/loader | sudo -E bash -
+# 
+# ** for dev version **
+# curl -s https://raw.github.com/rockstat/bootstrap/dev/loader | sudo -E bash -
+#
+# What shold can be do:
+# - Request/check root
+# - Показать текущие настройки
+# - Показать какие опции запуска есть
+# - Запросить какой использовать домен для установки
+# - 
+# - 
+# - Клонировать/обновить репозиторий
+# - 
+# - 
+# - 
+
+VERSION=1.0.0
+PLATFORM_HOME=/srv/platform
+BOOTSTRAP_BRANCH=dev
+BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
+BOOTSTRAP_DIR=/srv/platform/bootstrap
+REPORT_COLLECTOR=https://bolt.rstat.org/upload
+TARGET_DIR=/srv/platform
+INSTALLER_BIN=/bin/kickstart
+INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
+
+FACT_CONF=/etc/ansible/facts.d/config.fact
+
+# state vars
+DOMAIN=""
+NAME=""
+EMAIL=""
+ADMIN_PASSWORD=""
+INSTALLED=""
+USERS=""
+USERS_MOVED=""
+
+################################################################################
+# 2. Library
+################################################################################
+
+umask 022
+
+if test -t 1; then # if terminal
+    ncolors=$(which tput > /dev/null && tput colors) # supports color
+    if test -n "$ncolors" && test $ncolors -ge 8; then
+        termcols=$(tput cols)
+        bold="$(tput bold)"
+        underline="$(tput smul)"
+        standout="$(tput smso)"
+        normal="$(tput sgr0)"
+        black="$(tput setaf 0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+        magenta="$(tput setaf 5)"
+        cyan="$(tput setaf 6)"
+        white="$(tput setaf 7)"
+    fi
+fi
+
+base_print() {
+    echo -e "\n$1\n"
+}
+
+print_status() {
+  base_print "${cyan}${bold}>> ${blue}${1}${normal}"
+}
+
+print_error() {
+  base_print "${red}${bold}!> ${1}${normal}"
+}
+
+print_ok() {
+  echo "${cyan}${bold}>> ${normal}Ok"
+}
+
+################################################################################
+## Request root and banner
+################################################################################
+
+clear
+
+base_print """
+${cyan}${bold}##${normal}
+${cyan}${bold}## Rockstat Bootstrap${normal}
+${cyan}${bold}##${normal}
+${cyan}${bold}## ${normal}version ${VERSION}
+${cyan}${bold}## ${normal}logs output $INSTALL_LOG
+${cyan}${bold}##${normal}"""
+
+################################################################################
+## Checks
+################################################################################
+
+
+if [ ! "$UID" -eq 0 ]; then
+  print_error "Run as root or insert 'sudo -E' before 'bash'"
+  exit 1
+fi
+
+# debian-like
+if [[ ! -f /etc/debian_version ]]; then
+    print_error "Target OS is Ubutu 16.04"
+    exit 1
+fi
+
+################################################################################
+## System deps
+################################################################################
+
+export DEBIAN_FRONTEND=noninteractive
+
+setup_locale() {
+  print_status "Setting en_US.UTF-8 locale"
+  echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' > /etc/default/locale
+  locale-gen en_US.UTF-8 > $INSTALL_LOG
+  export LANG=en_US.UTF-8
+  export LC_ALL=en_US.UTF-8
+  print_ok
+}
+
+setup_system_packages() {
+  print_status "Updating packages registry"
+  apt-get -yqq update
+  print_ok
+
+  print_status "Installing requirements"
+  apt-get -yqq install \
+    dialog whiptail nano \
+    curl git locales \
+    python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
+    build-essential libffi-dev ca-certificates zlib1g-dev libssl-dev openssl > $INSTALL_LOG
+  print_ok
+}
+
+setup_python_packages() {
+  print_status "Installing required python packages"
+  pip3 -q install wheel
+  pip3 -q install ansible prompt_toolkit cryptography validators
+  print_ok
+}
+
+setup_code() {
+  if [[ -d "$BOOTSTRAP_DIR" ]]; then
+    print_status "Updating Bootstrap repository"
+    cd $BOOTSTRAP_DIR
+    git pull --rebase
+  else
+    print_status "Cloning Bootstrap repository"
+    mkdir -p $TARGET_DIR
+    cd $TARGET_DIR
+    echo $(pwd)
+    git clone $BOOTSTRAP_REPO
+  fi
+  print_status "Updating ansible roles"
+  cd $BOOTSTRAP_DIR
+  ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG
+  print_ok
+}
+
+setup_symlink() {
+  cd /usr/local/bin
+  
+  if [ -a "rockstat" ]; then
+    ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" rockstat
+  fi
+  cd $BOOTSTRAP_DIR
+}
+
+################################################################################
+## Actions
+################################################################################
+
+
+run_ansible_full() {
+  ansible-playbook platform.yml --connection=local --tags=base,system,platform -e 'ansible_python_interpreter=/usr/bin/python3'
+  exit 1
+}
+
+
+################################################################################
+## Dialogs
+################################################################################
+
+whiptailInput() {
+    eval local init="\$$1"
+    case "$1" in
+        *PASSWORD*) local prompt='passwordbox'; showval="" ;;
+        *) local prompt='inputbox'; showval=$init; ;;	
+    esac
+    local value=$(whiptail --title "$2" --${prompt} "$3" $4 $5 $showval 3>&1 1>&2 2>&3)
+    local rc=$?
+    if [ $rc = 0 ]; then
+      if [ $prompt == 'passwordbox' ]; then
+        local confirmation=$(whiptail --title "$2 / confirmation" --${prompt} "$3" $4 $5 $showval 3>&1 1>&2 2>&3)
+        local rc=$?
+        if [ $rc = 0 ]; then
+          if [ "$value" != "$init" ]; then
+            if [ $value == $confirmation ]; then
+              if [[ -n ${value// } ]]; then
+                enc=$(openssl passwd -apr1 ${value})
+                eval $1="'$enc'"
+              fi
+            fi
+          fi
+        fi
+      else
+        eval $1="$value"
+      fi
+    fi
+}
+
+
+request_domain(){
+  whiptailInput "DOMAIN" "Domain" "Please enter domain for your tracker" 8 78
+  save_config
+}
+
+
+request_email(){
+  whiptailInput "EMAIL" "Email" "Please enter your email to receive ssl notifitation" 8 78
+  save_config
+}
+
+
+request_password(){
+  whiptailInput "ADMIN_PASSWORD" "Admin password" "Please type sectet password for admin user" 8 78
+  save_config
+}
+
+
+################################################################################
+## Configs
+################################################################################
+
+save_inventory(){
+  cd $BOOTSTRAP_DIR
+  echo """
+[private]
+rstat ansible_host=${DOMAIN}
+
+[rockstat]
+rstat
+""" > inventory/private
+}
+
+
+save_config(){
+  mkdir -p $(dirname $FACT_CONF)
+  save_inventory
+  echo """[general]
+domain=${DOMAIN}
+email=${EMAIL}
+admin_password=${ADMIN_PASSWORD}
+users=${USERS}
+users_moved=${USERS_MOVED}
+installed=${INSTALLED}""" > $FACT_CONF
+
+}
+
+
+load_config(){
+  if [ -f "$FACT_CONF" ]; then
+    INSTALLED=$(awk -F "=" '/installed/ {print $2}' ${FACT_CONF})
+    DOMAIN=$(awk -F "=" '/domain/ {print $2}' ${FACT_CONF})
+    EMAIL=$(awk -F "=" '/email/ {print $2}' ${FACT_CONF})
+    ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' ${FACT_CONF})
+    USERS=$(awk -F "=" '/users/ {print $2}' ${FACT_CONF})
+    USERS_MOVED=$(awk -F "=" '/users_moved/ {print $2}' ${FACT_CONF})
+  fi
+}
+
+
+################################################################################
+## Executing
+################################################################################
+
+
+setup_platform(){
+  setup_system_packages
+  setup_locale
+  setup_python_packages
+  setup_code
+  setup_symlink
+  INSTALLED=1
+  save_config
+}
+
+update_platform(){
+  # setup_code
+  setup_symlink
+}
+
+configure(){
+  while [ -z "${DOMAIN// }" ]; do
+    request_domain
+  done
+  while [ -z "${EMAIL// }" ]; do
+    request_email
+  done
+  while [ -z ${ADMIN_PASSWORD// } ]; do
+    request_password
+  done
+
+  # echo -e "DOMAIN: ${DOMAIN}\nEMAIL:${EMAIL}\nADMIN_PASSWORD:${ADMIN_PASSWORD}"
+}
+
+load_config
+
+if [ -z $INSTALLED ]; then
+  print_status "Preparing system"
+else
+  update_platform
+fi
+
+while [ -z $INSTALLED ]; do
+  setup_platform
+  sleep 10
+done
+
+configure
+
+menu() {
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 25 78 8 --nocancel \
+  "01" "Change Admin Password" \
+  "08" "Change Domain '${DOMAIN}'" \
+  "10" "Change Email '${EMAIL}'" \
+  "50" "Save config" \
+  "80" "Run Ansible (install/update)" \
+  "99" "Exit"  3>&1 1>&2 2>&3)
+  # echo "code: ${$?}"
+  case "$OPTION" in
+    "01") request_password ;;
+    "08") request_domain ;;
+    "10") request_email ;;
+    "50") save_config ;;
+    "80") run_ansible_full ;;
+    "99") exit 1 ;;
+    *) echo "Unknown actin" ;;	
+  esac
+  sleep 0.5
+}
+
+# echo "running menu"
+while [ 1 ]; do
+  menu
+done
+
+
+
+# IFS=$'\n' read -r -d '' nome morada telefone mail < <( dialog ... )
+
+
+# echo "params"
+# while [ "$1" != "" ]; do
+#     PARAM=`echo $1 | awk -F= '{print $1}'`
+#     VALUE=`echo $1 | awk -F= '{print $2}'`
+#     case $PARAM in
+#         -h | --help)
+#             usage
+#             exit
+#             ;;
+#         --setup)
+#             setup
+#             ;;
+#         --update)
+#             setup
+#             ;;
+#         --environment)
+#             ENVIRONMENT=$VALUE
+#             ;;
+#         --db-path)
+#             DB_PATH=$VALUE
+#             ;;
+#         *)
+#             echo "ERROR: unknown parameter \"$PARAM\""
+#             usage
+#             exit 1
+#             ;;
+#     esac
+#     shift
+# done
+
+
+
+# function usage()
+# {
+#     echo "if this was a real script you would see something useful here"
+#     echo ""
+#     echo "./simple_args_parsing.sh"
+#     echo "\t-h --help"
+#     echo "\t--environment=$ENVIRONMENT"
+#     echo "\t--db-path=$DB_PATH"
+#     echo ""
+# }
