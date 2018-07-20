@@ -248,6 +248,25 @@ request_password(){
 ## Configs
 ################################################################################
 
+
+load_config(){
+  if [ -f "$FACT_CONF" ]; then
+    INSTALLED=$(awk -F "=" '/installed/ {print $2}' ${FACT_CONF})
+    DOMAIN=$(awk -F "=" '/domain/ {print $2}' ${FACT_CONF})
+    EMAIL=$(awk -F "=" '/email/ {print $2}' ${FACT_CONF})
+    ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' ${FACT_CONF})
+    USERS=$(awk -F "=" '/users/ {print $2}' ${FACT_CONF})
+    if [ -z $USERS ]; then
+      USERS="[]"
+    fi
+    USERS_MOVED=$(awk -F "=" '/users_moved/ {print $2}' ${FACT_CONF})
+    if [ -z $USERS_MOVED ]; then
+      USERS_MOVED="0"
+    fi
+  fi
+}
+
+
 save_inventory(){
   cd $BOOTSTRAP_DIR
   echo """
@@ -271,18 +290,6 @@ users=${USERS}
 users_moved=${USERS_MOVED}
 installed=${INSTALLED}""" > $FACT_CONF
 
-}
-
-
-load_config(){
-  if [ -f "$FACT_CONF" ]; then
-    INSTALLED=$(awk -F "=" '/installed/ {print $2}' ${FACT_CONF})
-    DOMAIN=$(awk -F "=" '/domain/ {print $2}' ${FACT_CONF})
-    EMAIL=$(awk -F "=" '/email/ {print $2}' ${FACT_CONF})
-    ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' ${FACT_CONF})
-    USERS=$(awk -F "=" '/users/ {print $2}' ${FACT_CONF})
-    USERS_MOVED=$(awk -F "=" '/users_moved/ {print $2}' ${FACT_CONF})
-  fi
 }
 
 

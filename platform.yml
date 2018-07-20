@@ -128,12 +128,12 @@
           # - debug: msg="pb_woadmin:{{pb_notadmin}}"
           # - debug: msg="pb_admin:{{pb_admin}}"
           # - debug: msg="loc_users:{{loc_users}}"
-          - set_fact:
-              _nginx_users: "{{ _nginx_users | combine({row.0: row.1}) }}"
-            vars:
-              row: "{{item.split(':')}}"
-            loop: "{{users_list|flatten}}"
-          - debug: var=_nginx_users
+        - set_fact:
+            _nginx_users: "{{ _nginx_users | combine({row.0: row.1}) }}"
+          vars:
+            row: "{{item.split(':')}}"
+          loop: "{{users_list|flatten}}"
+        - debug: var=_nginx_users
         vars:
           users_data: "{{ (users_out is succeeded) | ternary(users_out.stdout|from_yaml, {}) }}"
           pb_users: "{{ users_data.iternal_users | default(users_data.users|default([])) }}"
