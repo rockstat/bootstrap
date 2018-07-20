@@ -169,7 +169,10 @@ setup_code() {
 setup_symlink() {
   cd $(dirname $LINK_TO_BIN)
   
-  if [ -h $LINK_TO_BIN ]; then
+  if [ ! -h $LINK_TO_BIN ]; then
+    if [ -a $LINK_TO_BIN ]; then
+      rm -rm $LINK_TO_BIN
+    fi 
     ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" $LINK_TO_BIN
   fi
   cd $BOOTSTRAP_DIR
@@ -295,7 +298,7 @@ setup_platform(){
 }
 
 update_platform(){
-  # setup_code
+  setup_code
   setup_symlink
 }
 
