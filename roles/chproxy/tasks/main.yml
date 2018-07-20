@@ -29,15 +29,6 @@
     - config.yml
     - Dockerfile
 
-- debug:
-    msg:
-      drdc_name: "{{chproxy_container}}"
-      drdc_network: '{{chproxy_docker_net}}'
-      drdc_dir: "{{chproxy_build_path}}"
-      drdc_purge_networks: yes
-      drdc_memory_limit: '200m'
-      drdc_ports: ["{{chproxy_docker_bind}}"]
-
 - include_role:
     name: dr.docker-container
   vars:
