@@ -167,7 +167,7 @@ setup_code() {
 }
 
 setup_symlink() {
-  cd dirname(LINK_TO_BIN)
+  cd $(dirname $LINK_TO_BIN)
   
   if [ -h $LINK_TO_BIN ]; then
     ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" $LINK_TO_BIN

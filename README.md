@@ -49,10 +49,7 @@ sudo apt -qqy update && sudo apt -qqy install curl
 Next times you just execute setup manager using and follow instructions:
 
 ```bash
-sudo bash -c 'bash <(curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader)'
-
-
-curl -Ss https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/loader | sudo bash -
+curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
 
 ```
 
