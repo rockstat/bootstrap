@@ -149,7 +149,7 @@ setup_system_packages() {
 setup_python_packages() {
   print_status "Installing required python packages"
   pip3 -q install wheel
-  pip3 -q install ansible prompt_toolkit cryptography==1.9 validators
+  pip3 -q install ansible prompt_toolkit cryptography==1.9 validators passlib netaddr
   print_ok
 }
 
