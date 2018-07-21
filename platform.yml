@@ -12,10 +12,7 @@
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
 
-    - debug: var=ansible_local
-      tags: ["always"]
-
-    ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
+      ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
       - name: Including Base Server role
         include_role:
@@ -89,13 +86,13 @@
         vars:
           letsencrypt_domains_groups: '{{domains_ssl}}'
           letsencrypt_pause_services: ['nginx']
-      when: "_setup_ssl == True and not _setup_ssl_wildcard"
-      tags: ['never', 'ssl', 'system']
+      when: "_setup_ssl == True and not _setup_ssl_wildcard | bool == True"
+      tags: ['never', 'ssl', 'http']
 
 
     ##### ##### ##### ##### #####    Lets encrypt WildCard    ##### ##### ##### ##### ##### 
     - block:
-      - name: Including LetsEncrypt role
+      - name: Including LetsEncrypt AcmeDNS role
         include_role:
           name: dr.letsencrypt.wildcard.auto
         vars:
@@ -109,57 +106,13 @@
           _r_acmedns_ns2_ip: "{{_challenge_ns2|default('0.0.0.0')}}"
           _r_acmedns_setup_dns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
-      when: "_setup_ssl_wildcard == True"
-      tags: ['never', 'ssl', 'system']
+      when: "_setup_ssl_wildcard | bool == True"
+      tags: ['never', 'ssl', 'wildcard', 'http']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
 
     - block:
-      - command: 'cat /srv/platform/bootstrap/files/users.yml'
-        register: users_out
-        failed_when: 'False'
-      - block:
-          # - debug: var=pb_users
-          # - debug: var=users_data
-          # - debug: msg="loc_gen:{{loc_gen}}"
-          # - debug: msg="loc_conf:{{loc_conf}}"
-          # - debug: msg="loc_admpwd:{{loc_admpwd}}"
-          # - debug: msg="pb_woadmin:{{pb_notadmin}}"
-          # - debug: msg="pb_admin:{{pb_admin}}"
-          # - debug: msg="loc_users:{{loc_users}}"
-        - set_fact:
-            _nginx_users: "{{ _nginx_users | combine({row.0: row.1}) }}"
-          vars:
-            row: "{{item.split(':')}}"
-          loop: "{{users_list|flatten}}"
-        - debug: var=_nginx_users
-        vars:
-          users_data: "{{ (users_out is succeeded) | ternary(users_out.stdout|from_yaml, {}) }}"
-          pb_users: "{{ users_data.iternal_users | default(users_data.users|default([])) }}"
-          loc_conf: "{{ ansible_local.config | default({}) }}"
-          loc_gen: "{{ loc_conf.general | default({}) }}"
-          loc_admpwd: "{{ loc_gen.admin_password | default('') }}"
-          loc_adm: "{{ (loc_admpwd != '')|ternary(['admin:'+loc_admpwd], []) }}"
-          init_adm: "{{ ['admin:'+init_admin_pass] if init_admin_pass is defined else [] }}"
-          loc_users: "{{ loc_gen.users|default('[]')|from_json }}"
-          pb_notadmin: "{{ pb_users | select('match', '^(?!admin).*$') | list }}"
-          pb_admin: "{{ pb_users | select('match', '^admin.*$') | list }}"
-          users_list:
-            - "{{loc_users}}"
-            - "{{pb_notadmin}}"
-            - "{{init_adm}}"
-            - "{{pb_admin}}"
-            - "{{loc_adm}}"
-
-      - name: Loading Nginx users
-        include_vars:
-          file: "{{ item }}"
-          name: users_data
-        with_first_found:
-          - "files/{{inventory_hostname }}/users.yml"
-          - "files/users.yml"
-          - "files/empty.yml"
       - name: Including Nginx role
         include_role:
           name: jdauphant.nginx
@@ -169,7 +122,7 @@
           nginx_http_params: '{{_nginx_http_params}}'
           nginx_sites: "{{_nginx_sites|combine(_nginx_sites_extra|default({}))}}"
           nginx_auth_basic_files:
-            common: "{% for k in _nginx_users.keys() %}{{ k+':'+_nginx_users[k] }}{% endfor %}"
+            common: "{{ common_users|flatten }}"
           nginx_configs:
             upgrade: '{{_nginx_proto_upgrade}}'
             gzip: '{{_nginx_gzip_params}}'
@@ -177,10 +130,13 @@
             upstream: '{{_nginx_upstreams}}'
             ssl: '{{_nginx_ssl_params}}'
       vars:
-        _nginx_users: {}
+        local_config: "{{ansible_local.config|default({})}}"
+        local_general: "{{local_config.general|default({})}}"
+        common_users:
+          - "admin:{{local_general.admin_password}}"
+          - "{{local_general.users}}"
       when: "setup_nginx == True"
       tags: ['never', 'nginx', 'system']
-
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
     - block:

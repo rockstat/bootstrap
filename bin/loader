@@ -28,7 +28,7 @@ print_status() {
 }
 
 print_pref() {
-  base_print "${yellow}${bold}!> ${normal}{1}$"
+  base_print "${yellow}${bold}!> ${normal}${1}"
 }
 
 print_pref "##"

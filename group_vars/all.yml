@@ -9,7 +9,7 @@ log_level: info
 setup_server: yes
 setup_nginx: yes
 _setup_ssl: yes
-_setup_ssl_wildcard: no # setup using acme dns challenge
+_setup_ssl_wildcard: no
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
