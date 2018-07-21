@@ -170,6 +170,8 @@
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
+        retries: 3
+        delay: 3
       tags: ['never', 'clickhouse', 'system']
 
 
