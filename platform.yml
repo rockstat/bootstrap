@@ -5,12 +5,15 @@
   vars_files:
     - vars/config.yml
   tasks:
-    - name: Fail wrong python
+
+
+    - name: Checking python interpreter
       assert:
         that: 
           - "ansible_python_interpreter == '/usr/bin/python3'"
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
+
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
@@ -24,7 +27,7 @@
           drs_pub_key_file: '{{support_key_file}}'
           drs_disable_ipv6: "{{disable_ipv6}}"
       when: 'setup_server == True'
-      tags: ['never', 'os', 'base']
+      tags: ['never', 'os', 'network', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
@@ -42,7 +45,7 @@
           drd_interface: '{{docker_interface}}'
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
-      tags: ['never', 'docker', 'base']
+      tags: ['never', 'docker', 'docker-server', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
@@ -54,7 +57,7 @@
           expo_reset_ufw: true
           expo_rules: '{{firewall_rules|flatten + host_firewall_rules|default([]) + group_firewall_rules|default([])}}'
           expo_expose_rules: '{{expose_rules|default([]) + host_expose_rules|default([]) + group_expose_rules|default([])}}'
-      tags: ['never', 'firewall', 'base']
+      tags: ['never', 'firewall', 'network', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    OpenVPN server    ##### ##### ##### ##### ##### 
@@ -75,7 +78,7 @@
           ovpn_docker_network: '{{docker_ipnetwork}}'
           ovpn_docker_netmask: '{{docker_netmask}}'
           ovpn_port: '{{ports.openvpn.0}}'
-      tags: ['never', 'ovpn', 'base']
+      tags: ['never', 'ovpn', 'network', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Lets encrypt    ##### ##### ##### ##### ##### 
@@ -87,7 +90,7 @@
           letsencrypt_domains_groups: '{{domains_ssl}}'
           letsencrypt_pause_services: ['nginx']
       when: "_setup_ssl == True and not _setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'http']
+      tags: ['never', 'ssl', 'ssl-certbot', 'http', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Lets encrypt WildCard    ##### ##### ##### ##### ##### 
@@ -107,11 +110,10 @@
           _r_acmedns_setup_dns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
       when: "_setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'wildcard', 'http']
+      tags: ['never', 'ssl', 'ssl-wildcard', 'http', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
-
     - block:
       - name: Including Nginx role
         include_role:
@@ -136,7 +138,20 @@
           - "admin:{{local_general.admin_password}}"
           - "{{local_general.users}}"
       when: "setup_nginx == True"
-      tags: ['never', 'nginx', 'system']
+      tags: ['never', 'nginx', 'http', 'system', 'full_setup']
+
+
+    ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
+    - block:
+      - name: Including Static service role for Splash screen
+        include_role:
+          name: dr.static-service
+        vars:
+          dr_name: splash
+          dr_dir: '{{dirs.splash}}'
+          dr_repo: https://github.com/rockstat/splash.git
+      tags: ['splash', 'ppart', 'static', 'full_setup']
+
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
     - block:
@@ -153,7 +168,7 @@
           drn_stream: '{{netdata_stream_config|default({})}}'
           drn_backend: '{{netdata_backend_config|default({})}}'
           drn_bind_to: "{{if_inner}}"
-      tags: ['never', 'netdata', 'system']
+      tags: ['never', 'netdata', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
@@ -172,7 +187,7 @@
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
         retries: 3
         delay: 3
-      tags: ['never', 'clickhouse', 'system']
+      tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Clickhouse Proxy    ##### ##### ##### ##### ##### 
@@ -190,7 +205,7 @@
           chproxy_users: "{{_chproxy_users|default([])}}"
           chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
           chproxy_build_path: "{{build_dir}}/chproxy"
-      tags: ['never', 'chproxy', 'system']
+      tags: ['never', 'clickhouse-proxy', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
@@ -207,7 +222,7 @@
           drdc_memory_limit: '200m'
           drdc_volumes: ["{{dirs.redis}}:/data"]
           drdc_ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
-      tags: ['never', 'redis', 'system', 'docker', 'docker-container']
+      tags: ['never', 'redis', 'docker', 'system', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
@@ -236,7 +251,7 @@
             - /var/run/docker.sock:/var/run/docker.sock
           drdc_env: "{{envs[logspout_target]|default({})}}"
       when: "_logspout_enabled|default(False) == True"
-      tags: ['never', 'logspout', 'system', 'docker', 'docker-container']
+      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'system', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
@@ -267,7 +282,7 @@
             - '{{dirs.notebooks}}:/opt/notebooks'
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'system', 'platform', 'docker', 'docker-container']
+      tags: ['never', 'anaconda', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -301,31 +316,19 @@
             - "{{dirs.grafana_data}}/grafana.ini:/etc/grafana/grafana.ini"
           drdc_ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
-      tags: ['never', 'grafana', 'platform', 'docker', 'docker-container']
-
-
-    ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
-    - block:
-      - name: Including Static service role for Splash screen
-        include_role:
-          name: dr.static-service
-        vars:
-          dr_name: splash
-          dr_dir: '{{dirs.splash}}'
-          dr_repo: https://github.com/rockstat/splash.git
-      tags: ['splash', 'platform']
+      tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
     - block:
-      - name: Including Static service role for Dashboart
+      - name: Including Static service role for Dashboars
         include_role:
           name: dr.static-service
         vars:
           dr_name: dashboard
           dr_dir: '{{dirs.dashboard}}'
           dr_repo: https://github.com/rockstat/dashboard.git
-      tags: ['dashboard', 'platform']
+      tags: ['dashboard', 'ppart', 'static', 'full_setup', 'static']
 
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
@@ -365,7 +368,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
           drdc_ports:
             - "{{if_inner}}:{{ports.band.0}}:{{ports.band.1}}"
-      tags: ['band', 'platform', 'docker', 'docker-container']
+      tags: ['band', 'ppart', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
@@ -402,7 +405,7 @@
       vars:
         workspace: "/home/theia/project"
       when: 'setup_theia == True'
-      tags: ['theia', 'platform', 'band', 'docker', 'docker-container']
+      tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Frontier    ##### ##### ##### ##### ##### 
@@ -427,7 +430,7 @@
           drdc_ports:
             - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
             - "{{if_inner}}:{{ports.frontier_ws.0}}:{{ports.frontier_ws.1}}"
-      tags: ['frontier', 'platform', 'rockme', 'docker', 'docker-container']
+      tags: ['frontier', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
@@ -457,7 +460,7 @@
           drdc_volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
-      tags: ['chwriter', 'chmigrate', 'platform', 'rockme', 'docker', 'docker-container']
+      tags: ['chwriter', 'chmigrate', 'ppart', 'rockme', 'docker', 'docker-container','full_setup']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
     - block:
@@ -479,7 +482,7 @@
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
           drdc_volumes:
             - "{{dirs.uploads}}:/go/src/heavyload/upload"
-      tags: ['heavyload', 'platform', 'docker', 'docker-container']
+      tags: ['heavyload', 'docker', 'pservice', 'docker-container', 'full_setup']
 
     # - import_tasks: extensions/metrics_server.yml
     #   when: 'metrics_server == True'

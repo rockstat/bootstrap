@@ -204,12 +204,12 @@ _nginx_forward_vh:
   - "{{_nginx_auth}}"
   - "{{_nginx_base_vh}}"
 _nginx_defvh_http:
-  - server_name _
+  - server_name _http
   - listen 80 default_server
   - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
   - location / { return 301 https://$host$request_uri; }
 _nginx_defvh_https:
-  - "server_name _"
+  - "server_name _https"
   - "{{_nginx_listen.0}} default_server"
   - "{{_nginx_ssl}}"
   - "root {{dirs.splash}}"
