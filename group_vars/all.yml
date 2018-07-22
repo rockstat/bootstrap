@@ -189,9 +189,8 @@ _nginx_nocache:
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-_nginx_upgrade_def: []
+_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"
 # specific configurations
-_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl + _nginx_upgrade_def }}"
 _nginx_forward_vh:
   - server_name {sd}.{{domain}}
   - location / { proxy_pass http://u{sd}; }
@@ -231,6 +230,11 @@ _nginx_dashboard:
   - location /api/ { proxy_pass http://udirector/; }
   - location / { try_files $uri $uri/index.html; }
 _nginx_grafana:
+  - server_name grafana.{{domain}}
+  - location / { proxy_pass http://ugrafana; }
+  - location /public/ { auth_basic off; proxy_pass http://ugrafana; }
+  - "{{_nginx_auth}}"
+  - "{{_nginx_base_vh}}"
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_hide_header Authorization
 _nginx_sites:
@@ -238,8 +242,8 @@ _nginx_sites:
   def_http: "{{_nginx_defvh_http|flatten }}"
   frontier: "{{_nginx_frontrier|flatten }}"
   dashboard: "{{_nginx_dashboard|flatten }}"
+  grafana: "{{_nginx_grafana|flatten}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
-  grafana: "{{_nginx_forward_vh|flatten|map('replace','{sd}','grafana')|list + _nginx_grafana}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
   httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
