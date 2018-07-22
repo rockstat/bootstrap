@@ -272,17 +272,17 @@ request_password(){
 
 load_config(){
   if [ -a "$FACT_CONF" ]; then
-    cfg.parser '$FACT_CONF'
+    cfg.parser "$FACT_CONF"
     INSTALLED=cfg.general.installed
     DOMAIN=cfg.general.domain
     EMAIL=cfg.general.email
     ADMIN_PASSWORD=cfg.general.admin_password
     USERS=cfg.general.users
-    if [ -z $USERS ]; then
+    if [ -z "$USERS" ]; then
       USERS="[]"
     fi
     USERS_MOVED=cfg.general.users_moved
-    if [ -z $USERS_MOVED ]; then
+    if [ -z "$USERS_MOVED" ]; then
       USERS_MOVED="0"
     fi
   fi
@@ -290,7 +290,7 @@ load_config(){
 
 
 save_inventory(){
-  cd $BOOTSTRAP_DIR
+  cd "$BOOTSTRAP_DIR"
   echo """
 [private]
 rstat ansible_host=${DOMAIN}
