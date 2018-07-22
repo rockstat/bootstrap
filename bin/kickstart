@@ -344,9 +344,11 @@ done
 
 # exec ${BOOTSTRAP_DIR}${INSTALLER_BIN}
 
-if [ -a "$FACT_CONF" ! -z $(which python3) ]; then
-  print_status "Reading local configuration"
-  load_config
+if [ -a "$FACT_CONF" ]; then
+  if [ ! -z $(which python3)  ]; then
+    print_status "Reading local configuration"
+    load_config
+  fi
 fi
 
 
