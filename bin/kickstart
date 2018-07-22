@@ -123,6 +123,20 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 
+update_bootstrap() {
+  if [[ -d "$BOOTSTRAP_DIR" ]]; then
+    print_status "Updating Bootstrap repository"
+    cd $BOOTSTRAP_DIR
+    git pull --rebase
+  else
+    print_status "Cloning Bootstrap repository"
+    mkdir -p $TARGET_DIR
+    cd $TARGET_DIR
+    echo $(pwd)
+    git clone $BOOTSTRAP_REPO
+  fi
+}
+
 setup_langvars() {
   export LANG=en_US.UTF-8
   export LC_ALL=en_US.UTF-8
@@ -151,21 +165,6 @@ setup_python_packages() {
   pip3 -q install wheel
   pip3 -q install ansible prompt_toolkit cryptography==1.9 validators passlib netaddr
   print_ok
-}
-
-setup_code() {
-  if [[ -d "$BOOTSTRAP_DIR" ]]; then
-    print_status "Updating Bootstrap repository"
-    cd $BOOTSTRAP_DIR
-    git pull --rebase
-  else
-    print_status "Cloning Bootstrap repository"
-    mkdir -p $TARGET_DIR
-    cd $TARGET_DIR
-    echo $(pwd)
-    git clone $BOOTSTRAP_REPO
-  fi
-
 }
 
 setup_symlink() {
@@ -257,7 +256,7 @@ request_password(){
 
 
 load_config(){
-  if [ -f "$FACT_CONF" ]; then
+  if [ -a "$FACT_CONF" ]; then
     INSTALLED=$(awk -F "=" '/installed/ {print $2}' ${FACT_CONF})
     DOMAIN=$(awk -F "=" '/domain/ {print $2}' ${FACT_CONF})
     EMAIL=$(awk -F "=" '/email/ {print $2}' ${FACT_CONF})
@@ -309,15 +308,15 @@ setup_platform(){
   setup_langvars
   setup_system_packages
   setup_locale
+  update_bootstrap
   setup_python_packages
-  setup_code
   setup_symlink
   INSTALLED=$VERSION
   save_config
 }
 
 update_platform(){
-  setup_code
+  update_bootstrap
   setup_symlink
 }
 
@@ -331,12 +330,20 @@ configure(){
   while [ -z ${ADMIN_PASSWORD// } ]; do
     request_password
   done
-
-  # echo -e "DOMAIN: ${DOMAIN}\nEMAIL:${EMAIL}\nADMIN_PASSWORD:${ADMIN_PASSWORD}"
 }
 
-load_config
+WORKER_MODE=0
+for arg in "$@"
+do
+    if [ "$arg" == "--run-updated" ] || [ "$arg" == "-h" ]
+    then
+      WORKER_MODE=1
+    fi
+done
 
+# exec ${BOOTSTRAP_DIR}${INSTALLER_BIN}
+
+load_config
 print_status "Preparing system"
 
 if [ "$INSTALLED" == "$VERSION" ]; then
@@ -375,6 +382,7 @@ menu() {
 while [ 1 ]; do
   menu
 done
+
 
 
 
