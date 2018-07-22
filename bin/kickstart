@@ -194,7 +194,14 @@ setup_playbook() {
 
 run_ansible_full() {
   setup_playbook
-  ansible-playbook platform.yml --connection=local --tags=base,system,platform -e 'ansible_python_interpreter=/usr/bin/python3'
+  ansible-playbook platform.yml --connection=local --tags=full_setup -e 'ansible_python_interpreter=/usr/bin/python3'
+  exit 1
+}
+
+
+run_ansible_nginx() {
+  setup_playbook
+  ansible-playbook platform.yml --connection=local --tags=nginx -e 'ansible_python_interpreter=/usr/bin/python3'
   exit 1
 }
 
@@ -377,7 +384,8 @@ menu() {
   "10" "Change Email '${EMAIL}'" \
   "20" "Change Users '${EMAIL}'" \
   "50" "Save config" \
-  "80" "Run Ansible (install/update)" \
+  "80" "Run Ansible / full" \
+  "81" "Run Ansible / update users" \
   "99" "Exit"  3>&1 1>&2 2>&3)
   # echo "code: ${$?}"
   case "$OPTION" in
@@ -387,6 +395,7 @@ menu() {
     "20") request_users ;;
     "50") save_config ;;
     "80") run_ansible_full ;;
+    "81") run_ansible_nginx ;;
     "99") exit 1 ;;
     *) echo "Unknown action" ;;	
   esac
