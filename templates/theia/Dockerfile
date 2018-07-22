@@ -1,0 +1,2 @@
+FROM madiedinro/theia-build
+
