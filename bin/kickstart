@@ -249,6 +249,11 @@ request_password(){
   save_config
 }
 
+request_users(){
+  whiptailInput "USERS" "Users list" "Recorn should be valid json array" 8 78
+  save_config
+}
+
 
 ################################################################################
 ## Configs
@@ -257,7 +262,7 @@ request_password(){
 
 load_config(){
   if [ -a "$FACT_CONF" ]; then
-    eval $("./exportini.py $FACT_CONF")
+    eval $(python3 ./exportini.py "$FACT_CONF")
     # INSTALLED=cfg.general.installed
     # DOMAIN=cfg.general.domain
     # EMAIL=cfg.general.email
@@ -370,6 +375,7 @@ menu() {
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
+  "20" "Change Users '${EMAIL}'" \
   "50" "Save config" \
   "80" "Run Ansible (install/update)" \
   "99" "Exit"  3>&1 1>&2 2>&3)
@@ -378,10 +384,11 @@ menu() {
     "01") request_password ;;
     "08") request_domain ;;
     "10") request_email ;;
+    "20") request_users ;;
     "50") save_config ;;
     "80") run_ansible_full ;;
     "99") exit 1 ;;
-    *) echo "Unknown actin" ;;	
+    *) echo "Unknown action" ;;	
   esac
   sleep 0.5
 }

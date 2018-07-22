@@ -11,5 +11,6 @@ if len(sys.argv) == 2:
     config.read(fn)
 
     if 'general' in config:
-        for key in config[section]:  
-            print(f'export {key.upper()}="{config[section][key]}"')
+        for key in config[section]:
+            print('export {}="{}"'.format(key.upper(),config[section][key]))
+
