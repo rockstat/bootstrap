@@ -341,6 +341,7 @@
           drdc_image: 'rst/band-base-py'
           drdc_dir: '{{dirs.band}}'
           drdc_repo: "https://github.com/rockstat/band"
+          # drdc_nocache: yes
           drdc_run_container: no
       - name: Including Docker container role for Director service
         include_role:
@@ -355,6 +356,7 @@
           drdc_rel_path: '/director'
           drdc_repo: "https://github.com/rockstat/band-services"
           drdc_network: '{{docker_net_name}}'
+          # drdc_nocache: yes
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_env: "{{env|combine(containers_env, director_env_extra|default({}))}}"
@@ -368,7 +370,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
           drdc_ports:
             - "{{if_inner}}:{{ports.band.0}}:{{ports.band.1}}"
-      tags: ['band', 'ppart', 'docker', 'docker-container', 'full_setup']
+      tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 

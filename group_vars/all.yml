@@ -173,7 +173,7 @@ containers_env:
   LOG_LEVEL: "{{log_level}}"
   JSON_LOGS: 1
   NETWORK: "{{docker_net_name}}"
-  REDIS_DSN: "redis://redis:6379/0"
+  REDIS_DSN: "redis://redis:6379"
   CH_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
   FRONTIER_URL: "http://frontier:{{ports.frontier.1}}"
   HOST_ADDR: "{{if_inner}}"

@@ -84,21 +84,6 @@ print_ok() {
   echo "${cyan}${bold}>> ${normal}Ok"
 }
 
-cfg.parser () {
-    fixed_file=$(cat $1 | sed 's/ = /=/g')  # fix ' = ' to be '='
-    IFS=$'\n' && ini=( $fixed_file )              # convert to line-array
-    ini=( ${ini[*]//;*/} )                   # remove comments
-    ini=( ${ini[*]/#[/\}$'\n'cfg.section.} ) # set section prefix
-    ini=( ${ini[*]/%]/ \(} )                 # convert text2function (1)
-    ini=( ${ini[*]/=/=\( } )                 # convert item to array
-    ini=( ${ini[*]/%/ \)} )                  # close array parenthesis
-    ini=( ${ini[*]/%\( \)/\(\) \{} )         # convert text2function (2)
-    ini=( ${ini[*]/%\} \)/\}} )              # remove extra parenthesis
-    ini[0]=''                                # remove first element
-    ini[${#ini[*]} + 1]='}'                  # add the last brace
-    eval "$(echo "${ini[*]}")"               # eval the result
-}
-
 ################################################################################
 ## Request root and banner
 ################################################################################
@@ -272,16 +257,16 @@ request_password(){
 
 load_config(){
   if [ -a "$FACT_CONF" ]; then
-    cfg.parser "$FACT_CONF"
-    INSTALLED=cfg.general.installed
-    DOMAIN=cfg.general.domain
-    EMAIL=cfg.general.email
-    ADMIN_PASSWORD=cfg.general.admin_password
-    USERS=cfg.general.users
+    eval $("./exportini.py $FACT_CONF")
+    # INSTALLED=cfg.general.installed
+    # DOMAIN=cfg.general.domain
+    # EMAIL=cfg.general.email
+    # ADMIN_PASSWORD=cfg.general.admin_password
+    # USERS=cfg.general.users
     if [ -z "$USERS" ]; then
       USERS="[]"
     fi
-    USERS_MOVED=cfg.general.users_moved
+    # USERS_MOVED=cfg.general.users_moved
     if [ -z "$USERS_MOVED" ]; then
       USERS_MOVED="0"
     fi
@@ -359,7 +344,12 @@ done
 
 # exec ${BOOTSTRAP_DIR}${INSTALLER_BIN}
 
-load_config
+if [ -a "$FACT_CONF" ! -z $(which python3) ]; then
+  print_status "Reading local configuration"
+  load_config
+fi
+
+
 print_status "Preparing system"
 
 if [ "$INSTALLED" == "$VERSION" ]; then
