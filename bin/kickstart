@@ -43,7 +43,7 @@ NAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
 INSTALLED=""
-USERS=""
+USERS="[]"
 USERS_MOVED=""
 
 ################################################################################
@@ -85,6 +85,21 @@ print_error() {
 
 print_ok() {
   echo "${cyan}${bold}>> ${normal}Ok"
+}
+
+cfg.parser () {
+    fixed_file=$(cat $1 | sed 's/ = /=/g')  # fix ' = ' to be '='
+    IFS=$'\n' && ini=( $fixed_file )              # convert to line-array
+    ini=( ${ini[*]//;*/} )                   # remove comments
+    ini=( ${ini[*]/#[/\}$'\n'cfg.section.} ) # set section prefix
+    ini=( ${ini[*]/%]/ \(} )                 # convert text2function (1)
+    ini=( ${ini[*]/=/=\( } )                 # convert item to array
+    ini=( ${ini[*]/%/ \)} )                  # close array parenthesis
+    ini=( ${ini[*]/%\( \)/\(\) \{} )         # convert text2function (2)
+    ini=( ${ini[*]/%\} \)/\}} )              # remove extra parenthesis
+    ini[0]=''                                # remove first element
+    ini[${#ini[*]} + 1]='}'                  # add the last brace
+    eval "$(echo "${ini[*]}")"               # eval the result
 }
 
 ################################################################################
@@ -257,15 +272,16 @@ request_password(){
 
 load_config(){
   if [ -a "$FACT_CONF" ]; then
-    INSTALLED=$(awk -F "=" '/installed/ {print $2}' ${FACT_CONF})
-    DOMAIN=$(awk -F "=" '/domain/ {print $2}' ${FACT_CONF})
-    EMAIL=$(awk -F "=" '/email/ {print $2}' ${FACT_CONF})
-    ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' ${FACT_CONF})
-    USERS=$(awk -F "=" '/users/ {print $2}' ${FACT_CONF})
+    cfg.parser '$FACT_CONF'
+    INSTALLED=cfg.general.installed
+    DOMAIN=cfg.general.domain
+    EMAIL=cfg.general.email
+    ADMIN_PASSWORD=cfg.general.admin_password
+    USERS=cfg.general.users
     if [ -z $USERS ]; then
       USERS="[]"
     fi
-    USERS_MOVED=$(awk -F "=" '/users_moved/ {print $2}' ${FACT_CONF})
+    USERS_MOVED=cfg.general.users_moved
     if [ -z $USERS_MOVED ]; then
       USERS_MOVED="0"
     fi
