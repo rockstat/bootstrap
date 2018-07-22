@@ -29,6 +29,15 @@ domains:
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
   httpdebug: 'httpdebug.{{domain}}'
+# ########## Logs ##########
+#loggly
+_loggly_hostname: logs-01.loggly...
+_loggly_api_key: 10bbf2d8...
+#papertrail
+_papertrail_hostname: logs7.pape....
+#destination
+_logspout_target: "loggly"
+_logspout_enabled: no
 # ########## SSL ##########
 # ssl definition for new wildcard role
 _ssl_certs:
@@ -89,7 +98,7 @@ ports:
   director: [10000, 8080]
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
-  theia: [8000, 8000]
+  theia: [8887, 8080]
   netdata: [19999]
   httpdebug: [19992]
   # servers

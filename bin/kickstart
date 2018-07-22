@@ -165,10 +165,7 @@ setup_code() {
     echo $(pwd)
     git clone $BOOTSTRAP_REPO
   fi
-  print_status "Updating ansible roles"
-  cd $BOOTSTRAP_DIR
-  ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG
-  print_ok
+
 }
 
 setup_symlink() {
@@ -183,12 +180,21 @@ setup_symlink() {
   cd $BOOTSTRAP_DIR
 }
 
+
+setup_playbook() {
+  print_status "Updating ansible roles"
+  cd $BOOTSTRAP_DIR
+  ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG
+  print_ok
+}
+
 ################################################################################
 ## Actions
 ################################################################################
 
 
 run_ansible_full() {
+  setup_playbook
   ansible-playbook platform.yml --connection=local --tags=base,system,platform -e 'ansible_python_interpreter=/usr/bin/python3'
   exit 1
 }
