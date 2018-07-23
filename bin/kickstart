@@ -47,17 +47,17 @@ SKIP_SETUP=NO
 # Args
 ################################################################################
 
-# for i in "$@"; do
-#   case $i in
-#       # -p=*|--prefix=*)
-#       # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
-#       # -l=*|--lib=*) DIR="${i#*=}" ;;
-#       --skip-setup*) SKIP_SETUP=YES ;;
-#       *)
-#               # unknown option
-#       ;;
-#   esac
-# done
+for i in "$@"; do
+  case $i in
+      # -p=*|--prefix=*)
+      # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
+      # -l=*|--lib=*) DIR="${i#*=}" ;;
+      --skip-setup*) SKIP_SETUP=YES ;;
+      *)
+              # unknown option
+      ;;
+  esac
+done
 
 ################################################################################
 # 2. Library
