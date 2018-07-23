@@ -136,7 +136,7 @@
         local_general: "{{local_config.general|default({})}}"
         common_users:
           - "admin:{{local_general.admin_password}}"
-          - "{{local_general.users}}"
+          # - "{{local_general.users}}"
       when: "setup_nginx == True"
       tags: ['never', 'nginx', 'http', 'system', 'full_setup']
 
@@ -328,7 +328,7 @@
           dr_name: dashboard
           dr_dir: '{{dirs.dashboard}}'
           dr_repo: https://github.com/rockstat/dashboard.git
-      tags: ['dashboard', 'ppart', 'static', 'full_setup', 'static']
+      tags: ['dashboard', 'ppart', 'static', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 

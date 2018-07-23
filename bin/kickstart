@@ -25,6 +25,7 @@ PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
+BOOTSTRAP_BIN=${BOOTSTRAP_DIR}/bin
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
 INSTALLER_BIN=/bin/kickstart
@@ -41,7 +42,6 @@ EMAIL=""
 ADMIN_PASSWORD=""
 INSTALLED=""
 USERS="[]"
-USERS_MOVED=""
 
 ################################################################################
 # 2. Library
@@ -141,8 +141,9 @@ setup_langvars() {
 
 setup_locale() {
   print_status "Setting en_US.UTF-8 locale"
-  echo -e 'LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8' > /etc/default/locale
+  echo -e 'LANGUAGE=en_US.UTF-8\nLANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\nLC_TYPE=en_US.UTF-8' > /etc/default/locale
   locale-gen en_US.UTF-8 > $INSTALL_LOG
+  dpkg-reconfigure locales > $INSTALL_LOG
   setup_langvars
   print_ok
 }
@@ -186,25 +187,6 @@ setup_playbook() {
   ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG
   print_ok
 }
-
-################################################################################
-## Actions
-################################################################################
-
-
-run_ansible_full() {
-  setup_playbook
-  ansible-playbook platform.yml --connection=local --tags=full_setup -e 'ansible_python_interpreter=/usr/bin/python3'
-  exit 1
-}
-
-
-run_ansible_nginx() {
-  setup_playbook
-  ansible-playbook platform.yml --connection=local --tags=nginx -e 'ansible_python_interpreter=/usr/bin/python3'
-  exit 1
-}
-
 
 ################################################################################
 ## Dialogs
@@ -261,27 +243,45 @@ request_users(){
   save_config
 }
 
+################################################################################
+## Actions
+################################################################################
+
+run_ansible() {
+  ansible-playbook platform.yml --connection=local --tags=${1} -e 'ansible_python_interpreter=/usr/bin/python3'
+}
+
+
+run_ansible_full() {
+  setup_playbook
+  run_ansible full_setup
+  exit 1
+}
+
+
+run_ansible_nginx() {
+  setup_playbook
+  run_ansible nginx
+  exit 1
+}
+
+
+run_ansible_platform() {
+  setup_playbook
+  run_ansible pservice,ppart
+  exit 1
+}
 
 ################################################################################
 ## Configs
 ################################################################################
 
-
 load_config(){
   if [ -a "$FACT_CONF" ]; then
-    eval $(python3 ./exportini.py "$FACT_CONF")
-    # INSTALLED=cfg.general.installed
-    # DOMAIN=cfg.general.domain
-    # EMAIL=cfg.general.email
-    # ADMIN_PASSWORD=cfg.general.admin_password
-    # USERS=cfg.general.users
-    if [ -z "$USERS" ]; then
-      USERS="[]"
-    fi
-    # USERS_MOVED=cfg.general.users_moved
-    if [ -z "$USERS_MOVED" ]; then
-      USERS_MOVED="0"
-    fi
+    INSTALLED=$(awk -F "=" '/installed/ {print $2}' $FACT_CONF)
+    DOMAIN=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
+    EMAIL=$(awk -F "=" '/email/ {print $2}' $FACT_CONF)
+    ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
   fi
 }
 
@@ -305,10 +305,7 @@ save_config(){
 domain=${DOMAIN}
 email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
-users=${USERS}
-users_moved=${USERS_MOVED}
 installed=${INSTALLED}""" > $FACT_CONF
-
 }
 
 
@@ -356,11 +353,9 @@ done
 
 # exec ${BOOTSTRAP_DIR}${INSTALLER_BIN}
 
-if [ -a "$FACT_CONF" ]; then
-  if [ ! -z $(which python3)  ]; then
-    print_status "Reading local configuration"
-    load_config
-  fi
+if [[ -a "$FACT_CONF" && ! -z $(which python3)  ]]; then
+  print_status "Reading local configuration"
+  load_config
 fi
 
 
@@ -382,10 +377,10 @@ menu() {
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
-  "20" "Change Users '${EMAIL}'" \
   "50" "Save config" \
-  "80" "Run Ansible / full" \
-  "81" "Run Ansible / update users" \
+  "80" "Run / Full install/upgrade" \
+  "81" "Run / Update users" \
+  "82" "Run / Update platform" \
   "99" "Exit"  3>&1 1>&2 2>&3)
   # echo "code: ${$?}"
   case "$OPTION" in
@@ -396,6 +391,7 @@ menu() {
     "50") save_config ;;
     "80") run_ansible_full ;;
     "81") run_ansible_nginx ;;
+    "82") run_ansible_platform ;;
     "99") exit 1 ;;
     *) echo "Unknown action" ;;	
   esac
@@ -406,52 +402,3 @@ menu() {
 while [ 1 ]; do
   menu
 done
-
-
-
-
-# IFS=$'\n' read -r -d '' nome morada telefone mail < <( dialog ... )
-
-
-# echo "params"
-# while [ "$1" != "" ]; do
-#     PARAM=`echo $1 | awk -F= '{print $1}'`
-#     VALUE=`echo $1 | awk -F= '{print $2}'`
-#     case $PARAM in
-#         -h | --help)
-#             usage
-#             exit
-#             ;;
-#         --setup)
-#             setup
-#             ;;
-#         --update)
-#             setup
-#             ;;
-#         --environment)
-#             ENVIRONMENT=$VALUE
-#             ;;
-#         --db-path)
-#             DB_PATH=$VALUE
-#             ;;
-#         *)
-#             echo "ERROR: unknown parameter \"$PARAM\""
-#             usage
-#             exit 1
-#             ;;
-#     esac
-#     shift
-# done
-
-
-
-# function usage()
-# {
-#     echo "if this was a real script you would see something useful here"
-#     echo ""
-#     echo "./simple_args_parsing.sh"
-#     echo "\t-h --help"
-#     echo "\t--environment=$ENVIRONMENT"
-#     echo "\t--db-path=$DB_PATH"
-#     echo ""
-# }
