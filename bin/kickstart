@@ -367,8 +367,8 @@ fi
 
 print_status "Preparing system"
 
+if [[ $SKIP_SETUP != YES ]]; then
 
-if [[ $SKIP_SETUP != 'NO' ]]; then
   if [ "$INSTALLED" == "$VERSION" ]; then
     update_platform
   fi
