@@ -26,11 +26,11 @@ BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
 BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
-KICKSTART=kickstart
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
-LINK_TO_BIN=/usr/local/bin/rockstat
+KICKSTART= ${BOOTSTRAP_BINDIR}/kickstart
+SYMLINK=/usr/local/bin/rockstat
 FACT_CONF=/etc/ansible/facts.d/config.fact
 SYSTEM_PACKAGES=""
 
@@ -185,13 +185,13 @@ setup_python_packages() {
 }
 
 setup_symlink() {
-  cd $(dirname $LINK_TO_BIN)
+  cd $(dirname $KICKSTART)
   
-  if [ ! -h $LINK_TO_BIN ]; then
-    if [ -a $LINK_TO_BIN ]; then
-      rm -rm $LINK_TO_BIN
+  if [ ! -h $SYMLINK ]; then
+    if [ -a $SYMLINK ]; then
+      rm -rm $SYMLINK
     fi 
-    ln -s "${BOOTSTRAP_BINDIR}/${KICKSTART}" $LINK_TO_BIN
+    ln -s "${KICKSTART}" $SYMLINK
   fi
   cd $BOOTSTRAP_DIR
 }
@@ -376,11 +376,11 @@ if [[ $SKIP_SETUP != 'NO' ]]; then
     setup_platform
   done
 
-  CHECKOUT_VERSION=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
+  CHECKOUT_VERSION=$(awk -F "=" '/VERSION/ {print $2}' ${KICKSTART})
 fi
 
 if [[ $CHECKOUT_VERSION != $VERSION ]]; then
-  exec ${BOOTSTRAP_BINDIR}/${KICKSTART} --skip-setup
+  exec ${KICKSTART} --skip-setup
   exit 0
 fi
 
