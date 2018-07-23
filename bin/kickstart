@@ -367,16 +367,17 @@ fi
 
 print_status "Preparing system"
 
+
+if [ "$INSTALLED" == "$VERSION" ]; then
+  update_platform
+fi
+
+while [ "$INSTALLED" != "$VERSION" ]; do
+  setup_platform
+done
+
+
 if [[ $SKIP_SETUP != YES ]]; then
-
-  if [ "$INSTALLED" == "$VERSION" ]; then
-    update_platform
-  fi
-
-  while [ "$INSTALLED" != "$VERSION" ]; do
-    setup_platform
-  done
-
   CHECKOUT_VERSION=$(awk -F "=" '/VERSION/ {print $2}' ${KICKSTART})
 
   if [[ $CHECKOUT_VERSION != $VERSION ]]; then
