@@ -26,11 +26,11 @@ BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
 BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
+KICKSTART=${BOOTSTRAP_BINDIR}/kickstart
+BINALIAS=/usr/local/bin/rockstat
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
-KICKSTART= ${BOOTSTRAP_BINDIR}/kickstart
-SYMLINK=/usr/local/bin/rockstat
 FACT_CONF=/etc/ansible/facts.d/config.fact
 SYSTEM_PACKAGES=""
 
@@ -47,17 +47,17 @@ SKIP_SETUP=NO
 # Args
 ################################################################################
 
-for i in "$@"; do
-  case $i in
-      # -p=*|--prefix=*)
-      # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
-      # -l=*|--lib=*) DIR="${i#*=}" ;;
-      --skip-setup) SKIP_SETUP=YES ;;
-      *)
-              # unknown option
-      ;;
-  esac
-done
+# for i in "$@"; do
+#   case $i in
+#       # -p=*|--prefix=*)
+#       # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
+#       # -l=*|--lib=*) DIR="${i#*=}" ;;
+#       --skip-setup*) SKIP_SETUP=YES ;;
+#       *)
+#               # unknown option
+#       ;;
+#   esac
+# done
 
 ################################################################################
 # 2. Library
@@ -184,14 +184,15 @@ setup_python_packages() {
   print_ok
 }
 
+
 setup_symlink() {
   cd $(dirname $KICKSTART)
   
-  if [ ! -h $SYMLINK ]; then
-    if [ -a $SYMLINK ]; then
-      rm -rm $SYMLINK
+  if [ ! -h $BINALIAS ]; then
+    if [ -a $BINALIAS ]; then
+      rm -rm $BINALIAS
     fi 
-    ln -s "${KICKSTART}" $SYMLINK
+    ln -s "${KICKSTART}" $BINALIAS
   fi
   cd $BOOTSTRAP_DIR
 }
@@ -377,12 +378,15 @@ if [[ $SKIP_SETUP != 'NO' ]]; then
   done
 
   CHECKOUT_VERSION=$(awk -F "=" '/VERSION/ {print $2}' ${KICKSTART})
+
+  if [[ $CHECKOUT_VERSION != $VERSION ]]; then
+    print_status "Executing new version"
+    exec $KICKSTART --skip-setup
+    exit 0
+  fi
 fi
 
-if [[ $CHECKOUT_VERSION != $VERSION ]]; then
-  exec ${KICKSTART} --skip-setup
-  exit 0
-fi
+
 
 
 configure
