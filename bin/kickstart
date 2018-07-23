@@ -20,7 +20,7 @@
 # - 
 # - 
 
-VERSION=1.0.2
+VERSION=1.0.5
 PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
