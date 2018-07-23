@@ -25,15 +25,14 @@ PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
-BOOTSTRAP_BIN=${BOOTSTRAP_DIR}/bin
+BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
+KICKSTART=kickstart
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
-INSTALLER_BIN=/bin/kickstart
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
 LINK_TO_BIN=/usr/local/bin/rockstat
 FACT_CONF=/etc/ansible/facts.d/config.fact
 SYSTEM_PACKAGES=""
-
 
 # state vars
 DOMAIN=""
@@ -42,6 +41,23 @@ EMAIL=""
 ADMIN_PASSWORD=""
 INSTALLED=""
 USERS="[]"
+SKIP_SETUP=NO
+
+################################################################################
+# Args
+################################################################################
+
+for i in "$@"; do
+  case $i in
+      # -p=*|--prefix=*)
+      # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
+      # -l=*|--lib=*) DIR="${i#*=}" ;;
+      --skip-setup) SKIP_SETUP=YES ;;
+      *)
+              # unknown option
+      ;;
+  esac
+done
 
 ################################################################################
 # 2. Library
@@ -175,7 +191,7 @@ setup_symlink() {
     if [ -a $LINK_TO_BIN ]; then
       rm -rm $LINK_TO_BIN
     fi 
-    ln -s "${BOOTSTRAP_DIR}${INSTALLER_BIN}" $LINK_TO_BIN
+    ln -s "${BOOTSTRAP_BINDIR}/${KICKSTART}" $LINK_TO_BIN
   fi
   cd $BOOTSTRAP_DIR
 }
@@ -342,17 +358,6 @@ configure(){
   done
 }
 
-WORKER_MODE=0
-for arg in "$@"
-do
-    if [ "$arg" == "--run-updated" ] || [ "$arg" == "-h" ]
-    then
-      WORKER_MODE=1
-    fi
-done
-
-# exec ${BOOTSTRAP_DIR}${INSTALLER_BIN}
-
 if [[ -a "$FACT_CONF" && ! -z $(which python3)  ]]; then
   print_status "Reading local configuration"
   load_config
@@ -361,14 +366,24 @@ fi
 
 print_status "Preparing system"
 
-if [ "$INSTALLED" == "$VERSION" ]; then
-  update_platform
+
+if [[ $SKIP_SETUP != 'NO' ]]; then
+  if [ "$INSTALLED" == "$VERSION" ]; then
+    update_platform
+  fi
+
+  while [ "$INSTALLED" != "$VERSION" ]; do
+    setup_platform
+  done
+
+  CHECKOUT_VERSION=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
 fi
 
-while [ "$INSTALLED" != "$VERSION" ]; do
-  setup_platform
-  sleep 10
-done
+if [[ $CHECKOUT_VERSION != $VERSION ]]; then
+  exec ${BOOTSTRAP_BINDIR}/${KICKSTART} --skip-setup
+  exit 0
+fi
+
 
 configure
 
