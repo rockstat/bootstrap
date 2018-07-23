@@ -396,7 +396,6 @@ menu() {
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
-  "50" "Save config" \
   "80" "Run / Full install/upgrade" \
   "81" "Run / Update users" \
   "82" "Run / Update platform" \
@@ -407,7 +406,6 @@ menu() {
     "08") request_domain ;;
     "10") request_email ;;
     "20") request_users ;;
-    "50") save_config ;;
     "80") run_ansible_full ;;
     "81") run_ansible_nginx ;;
     "82") run_ansible_platform ;;
