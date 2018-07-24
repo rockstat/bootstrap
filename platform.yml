@@ -150,7 +150,7 @@
           dr_name: splash
           dr_dir: '{{dirs.splash}}'
           dr_repo: https://github.com/rockstat/splash.git
-      tags: ['splash', 'ppart', 'static', 'full_setup']
+      tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
@@ -328,7 +328,7 @@
           dr_name: dashboard
           dr_dir: '{{dirs.dashboard}}'
           dr_repo: https://github.com/rockstat/dashboard.git
-      tags: ['dashboard', 'ppart', 'static', 'full_setup']
+      tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
