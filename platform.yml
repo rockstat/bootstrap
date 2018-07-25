@@ -220,6 +220,7 @@
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '200m'
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_volumes: ["{{dirs.redis}}:/data"]
           drdc_ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
       tags: ['never', 'redis', 'docker', 'system', 'docker-container', 'full_setup']
@@ -246,6 +247,7 @@
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '200m'
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_cmd: "{{endpoints[logspout_target]}}"
           drdc_volumes:
             - /var/run/docker.sock:/var/run/docker.sock
@@ -273,6 +275,7 @@
           drdc_name: 'anaconda'
           drdc_image: "continuumio/anaconda3"
           drdc_network: '{{docker_net_name}}'
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_memory_limit: '{{anaconda_mem_limit}}'
           drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
@@ -282,7 +285,7 @@
             - '{{dirs.notebooks}}:/opt/notebooks'
           drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'pservice', 'docker', 'docker-container', 'full_setup']
+      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -307,6 +310,7 @@
           drdc_image: "grafana/grafana"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
           drdc_memory_limit: '200m'
@@ -341,7 +345,7 @@
           drdc_image: 'rst/band-base-py'
           drdc_dir: '{{dirs.band}}'
           drdc_repo: "https://github.com/rockstat/band"
-          # drdc_nocache: yes
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_run_container: no
       - name: Including Docker container role for Director service
         include_role:
@@ -351,12 +355,12 @@
             PORT: "{{ports.band.1}}"
             IMAGES_PATH: /images
           drdc_image: 'rst/band-director'
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_name: 'director'
           drdc_dir: '{{dirs.band_set}}'
           drdc_rel_path: '/director'
           drdc_repo: "https://github.com/rockstat/band-services"
           drdc_network: '{{docker_net_name}}'
-          # drdc_nocache: yes
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_env: "{{env|combine(containers_env, director_env_extra|default({}))}}"
@@ -387,10 +391,10 @@
           drdc_image: madiedinro/theia-build
           drdc_labels: "{{docker_band_lbls}}"
           drdc_network: '{{docker_net_name}}'
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_hosts: "{{docker_etc_hosts}}"
           drdc_env: "{{containers_env}}"
           drdc_memory_limit: '2g'
-          drdc_nocache: "{{nocache is defined}}"
           drdc_volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
@@ -424,6 +428,7 @@
           drdc_repo: "https://github.com/rockstat/frontier"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_env: "{{env|combine(containers_env, frontier_env_extra|default({}) )}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
@@ -456,6 +461,7 @@
           drdc_repo: "https://github.com/rockstat/chwriter"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_env: "{{env|combine(containers_env)}}"
           drdc_labels: "{{docker_band_lbls}}"
           drdc_memory_limit: '300m'
@@ -479,6 +485,7 @@
           drdc_repo: https://github.com/rockstat/heavyload
           drdc_labels: "{{docker_band_lbls}}"
           drdc_dir: "{{build_dir}}/heavyload"
+          drdc_nocache: "{{dock_no_cache}}"
           drdc_memory_limit: '100m'
           drdc_ports:
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
