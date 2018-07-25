@@ -40,7 +40,7 @@
             src: 'facts.d/config.fact.j2'
             dest: /etc/ansible/facts.d/config.fact
           vars:
-            _facts_dict: "{{ loc_gen|combine({'users':_nginx_users.values()|list|to_json, 'admin_password': (_nginx_admin.values()|list)[0]})}}"
+            _facts_dict: "{{ loc_gen|combine({'admin_password': (_nginx_admin.values()|list)[0]})}}"
         vars:
           users_data: "{{ (users_out.rc == 0) | ternary(users_out.stdout|from_yaml, {}) }}"
           pb_users: "{{ users_data.iternal_users | default(users_data.users|default([])) }}"
