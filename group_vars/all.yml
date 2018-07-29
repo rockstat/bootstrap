@@ -99,7 +99,7 @@ ports:
   director: [10000, 8080]
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
-  theia: [8887, 8080]
+  theia: [8887, 8000]
   netdata: [19999]
   httpdebug: [19992]
   # servers
