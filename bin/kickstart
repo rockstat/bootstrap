@@ -197,7 +197,7 @@ setup_python_packages() {
 
 
 setup_runner() {
-  rm $BINALIAS
+  rm -f $BINALIAS
   echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS
   chmod +x $BINALIAS
 }
@@ -402,26 +402,25 @@ configure
 menu() {
   # --menu <text> <height> <width> <listheight>
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 25 60 15 \
-  "01" "Change Admin Password" \
-  "08" "Change Domain '${DOMAIN}'" \
-  "10" "Change Email '${EMAIL}'" \
-  "70" "Upgrade OS" \
-  "73" "Request SSL cert" \
-  "80" "Run / Full install/upgrade" \
-  "81" "Run / Update users" \
-  "82" "Run / Update platform" \
+  "1" "Upgrade OS" \
+  "2" "Request SSL cert" \
+  "3" "Install/upgrade system and platform" \
+  "4" "Upgrade only platform components" \
+  "11" "Change Admin Password" \
+  "12" "Change Domain '${DOMAIN}'" \
+  "13" "Change Email '${EMAIL}'" \
+  "14" "Apply user changes" \
   "99" "Exit"  3>&1 1>&2 2>&3)
   # echo "code: ${$?}"
   case "$OPTION" in
-    "01") request_password ;;
-    "08") request_domain ;;
-    "10") request_email ;;
-    "20") request_users ;;
-    "70") run_upgrade_playbook ;;
-    "73") run_platform_playbook ssl ;;
-    "80") run_platform_playbook full_setup ;;
-    "81") run_platform_playbook nginx ;;
-    "82") run_platform_playbook pservice,ppart ;;
+    "1") run_upgrade_playbook ;;
+    "2") run_platform_playbook ssl ;;
+    "3") run_platform_playbook full_setup ;;
+    "4") run_platform_playbook pservice,ppart ;;
+    "11") request_password ;;
+    "12") request_domain ;;
+    "13") request_email ;;
+    "14") run_platform_playbook nginx ;;
     "99") exit 1 ;;
     *) echo "Unknown action" ;;	
   esac
