@@ -116,7 +116,7 @@
     - service:
         name: nginx
         state: restarted
-      failed_when: "{{ False }}"
+      failed_when: no
       tags: ['never', 'ssl', 'ssl-wildcard']
 
 
