@@ -180,7 +180,7 @@ setup_system_packages() {
   print_ok
 
   print_status "Installing requirements"
-  apt-get -yqq install apt-utils
+  apt-get -yqq install apt-utils > $INSTALL_LOG
   apt-get -yqq install dialog whiptail nano \
     curl git locales \
     python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
@@ -201,18 +201,6 @@ setup_runner() {
   echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS
   chmod +x $BINALIAS
 }
-
-# setup_symlink() {
-#   cd $(dirname $KICKSTART)
-  
-#   if [ ! -h $BINALIAS ]; then
-#     if [ -a $BINALIAS ]; then
-#       rm -rm $BINALIAS
-#     fi 
-#     ln -s "${KICKSTART}" $BINALIAS
-#   fi
-#   cd $BOOTSTRAP_DIR
-# }
 
 
 setup_playbook() {
@@ -354,7 +342,7 @@ update_platform(){
   setup_runner
 }
 
-configure(){
+initialize(){
   while [ -z "${DOMAIN// }" ]; do
     request_domain
   done
@@ -384,34 +372,32 @@ while [ "$INSTALLED" != "$VERSION" ]; do
 done
 
 
-# if [[ $SKIP_SETUP != YES ]]; then
-#   CHECKOUT_VERSION=$(awk -F "=" '/VERSION/ {print $2}' ${KICKSTART})
-
-#   if [[ $CHECKOUT_VERSION != $VERSION ]]; then
-#     print_status "Executing new version"
-#     exec $KICKSTART --skip-setup
-#     exit 0
-#   fi
-# fi
-
-
-
-
-configure
+MENU_TEXT=$(cat <<'HEREDOC'
+Choose your option:
+------------------
+For new installation: sequentially 1, 2, 3
+For upgrade platform: only 4
+For set new password: sequentially 11, 14
+HEREDOC
+)
 
 menu() {
   # --menu <text> <height> <width> <listheight>
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 25 60 15 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 12 \
   "1" "Upgrade OS" \
-  "2" "Request SSL cert" \
-  "3" "Install/upgrade system and platform" \
+  "2" "Request SSL certificate" \
+  "3" "Install/upgrade server and platform" \
   "4" "Upgrade only platform components" \
   "11" "Change Admin Password" \
   "12" "Change Domain '${DOMAIN}'" \
   "13" "Change Email '${EMAIL}'" \
-  "14" "Apply user changes" \
-  "99" "Exit"  3>&1 1>&2 2>&3)
-  # echo "code: ${$?}"
+  "14" "Apply new admin password" \
+  "0" "Exit"  3>&1 1>&2 2>&3)
+  EXITCODE=$?
+  [[ "$EXITCODE" = 1 ]] && break;
+  [[ "$EXITCODE" = 255 ]] && break;
+  echo "exitcode: $EXITCODE"
+
   case "$OPTION" in
     "1") run_upgrade_playbook ;;
     "2") run_platform_playbook ssl ;;
@@ -421,12 +407,14 @@ menu() {
     "12") request_domain ;;
     "13") request_email ;;
     "14") run_platform_playbook nginx ;;
-    "99") exit 1 ;;
-    *) echo "Unknown action" ;;	
+    "0") exit 1 ;;
+    *) echo "Unknown action '${OPTION}'" ;;	
   esac
-  sleep 0.5
+  # sleep 0.5
 }
 
+# initial configuration
+initialize
 # echo "running menu"
 while [ 1 ]; do
   menu
