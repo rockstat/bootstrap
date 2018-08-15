@@ -390,6 +390,10 @@
         file: state=directory path={{dirs.user_images}} owner=473 group=473
       - name: Creating User Workspace Directory
         file: state=directory path={{dirs.workspace}} owner=473 group=473
+      - name: Cloning Theia repo
+        git:
+          repo: https://github.com/rockstat/theia-build.git
+          dest: "{{build_dir}}/theia"
       - name: Including Docker container role for Theia IDE
         include_role:
           name: dr.docker-container
