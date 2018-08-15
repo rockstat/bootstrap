@@ -1,0 +1,8 @@
+_ssl_cert_dir: "/etc/nginx/certs"
+_ssl_cert_fullchain: fullchain.cer
+_ssl_cert_trust: "{{domain}}.cer"
+_ssl_cert_key: "{{domain}}.key"
+
+_setup_ssl_wildcard: yes
+_challenge_ns1: 159.69.15.103
+_challenge_ns2: 95.216.177.155
