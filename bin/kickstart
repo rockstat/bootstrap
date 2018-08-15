@@ -197,7 +197,9 @@ setup_python_packages() {
 
 
 setup_runner() {
-  echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS && chmod +x $BINALIAS
+  rm $BINALIAS
+  echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS
+  chmod +x $BINALIAS
 }
 
 # setup_symlink() {
