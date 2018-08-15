@@ -27,6 +27,7 @@ BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
 BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
 KICKSTART=${BOOTSTRAP_BINDIR}/kickstart
+KICKSTART_CMD="curl -s https://raw.githubusercontent.com/rockstat/bootstrap/${BOOTSTRAP_BRANCH}/kickstart | sudo -E bash -"
 BINALIAS=/usr/local/bin/rockstat
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
@@ -191,17 +192,21 @@ setup_python_packages() {
 }
 
 
-setup_symlink() {
-  cd $(dirname $KICKSTART)
-  
-  if [ ! -h $BINALIAS ]; then
-    if [ -a $BINALIAS ]; then
-      rm -rm $BINALIAS
-    fi 
-    ln -s "${KICKSTART}" $BINALIAS
-  fi
-  cd $BOOTSTRAP_DIR
+setup_runner() {
+  echo -e "#!/bin/bash\n${KICKSTART_CMD}\n" > $KICKSTART
 }
+
+# setup_symlink() {
+#   cd $(dirname $KICKSTART)
+  
+#   if [ ! -h $BINALIAS ]; then
+#     if [ -a $BINALIAS ]; then
+#       rm -rm $BINALIAS
+#     fi 
+#     ln -s "${KICKSTART}" $BINALIAS
+#   fi
+#   cd $BOOTSTRAP_DIR
+# }
 
 
 setup_playbook() {
@@ -331,7 +336,7 @@ setup_platform(){
     update_bootstrap
   fi
   setup_python_packages
-  setup_symlink
+  setup_runner
   INSTALLED=$VERSION
   save_config
 }
@@ -340,7 +345,7 @@ update_platform(){
   if [[ $UPDATE_SOURCE = YES ]]; then
     update_bootstrap
   fi
-  setup_symlink
+  setup_runner
 }
 
 configure(){
