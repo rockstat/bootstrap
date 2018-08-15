@@ -33,7 +33,6 @@ REPORT_COLLECTOR=https://bolt.rstat.org/upload
 TARGET_DIR=/srv/platform
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
 FACT_CONF=/etc/ansible/facts.d/config.fact
-SYSTEM_PACKAGES=""
 
 # state vars
 DOMAIN=""
@@ -41,9 +40,6 @@ NAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
 INSTALLED=""
-USERS="[]"
-SKIP_SETUP=NO
-UPDATE_SOURCE=YES
 
 # Preventing "bash: event not found" error
 set +H
@@ -57,11 +53,9 @@ for i in "$@"; do
       # -p=*|--prefix=*)
       # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
       # -l=*|--lib=*) DIR="${i#*=}" ;;
-      --skip-setup*) SKIP_SETUP=YES ;;
-      --no-update*) UPDATE_SOURCE=NO ;;
-      *)
-              # unknown option
-      ;;
+      # --skip-setup*) SKIP_SETUP=YES ;;
+      # --no-update*) UPDATE_SOURCE=NO ;;
+      *) ;;  # unknown option
   esac
 done
 
@@ -113,7 +107,6 @@ print_ok() {
 ################################################################################
 
 clear
-
 base_print """
 ${cyan}${bold}##${normal}
 ${cyan}${bold}## Rockstat Bootstrap${normal}
@@ -126,13 +119,13 @@ ${cyan}${bold}##${normal}"""
 ## Checks
 ################################################################################
 
-
+# check credentials
 if [ ! "$UID" -eq 0 ]; then
   print_error "Run as root or insert 'sudo -E' before 'bash'"
   exit 1
 fi
 
-# debian-like
+# check debian-like
 if [[ ! -f /etc/debian_version ]]; then
     print_error "Target OS is Ubutu 16.04"
     exit 1
@@ -143,7 +136,6 @@ fi
 ################################################################################
 
 export DEBIAN_FRONTEND=noninteractive
-
 update_bootstrap() {
   if [[ -d "$BOOTSTRAP_DIR" ]]; then
     print_status "Updating Bootstrap repository"
@@ -213,6 +205,13 @@ setup_playbook() {
 ################################################################################
 ## Dialogs
 ################################################################################
+
+# whiptail --title "Radio list example" --radiolist \
+# "Choose user's permissions" 20 78 4 \
+# "NET_OUTBOUND" "Allow connections to other hosts" ON \
+# "NET_INBOUND" "Allow connections from other hosts" OFF \
+# "LOCAL_MOUNT" "Allow mounting of local devices" OFF \
+# "REMOTE_MOUNT" "Allow mounting of remote devices" OFF
 
 whiptailInput() {
     eval local init="\$$1"
@@ -326,9 +325,7 @@ setup_platform(){
   setup_langvars
   setup_system_packages
   setup_locale
-  if [[ $UPDATE_SOURCE = YES ]]; then
-    update_bootstrap
-  fi
+  update_bootstrap
   setup_python_packages
   setup_runner
   INSTALLED=$VERSION
@@ -336,9 +333,7 @@ setup_platform(){
 }
 
 update_platform(){
-  if [[ $UPDATE_SOURCE = YES ]]; then
-    update_bootstrap
-  fi
+  update_bootstrap
   setup_runner
 }
 
@@ -374,29 +369,30 @@ done
 
 MENU_TEXT=$(cat <<'HEREDOC'
 Choose your option:
-------------------
-For new installation: sequentially 1, 2, 3
-For upgrade platform: only 4
-For set new password: sequentially 11, 14
+--------------------------------------------------------
+New installation:        sequentially 1, 2, 3
+Upgrade platform:        option 4
+Change admin password:   sequentially 11, 14 or 11, 3
+--------------------------------------------------------
 HEREDOC
 )
 
 menu() {
   # --menu <text> <height> <width> <listheight>
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 12 \
-  "1" "Upgrade OS" \
-  "2" "Request SSL certificate" \
-  "3" "Install/upgrade server and platform" \
-  "4" "Upgrade only platform components" \
-  "11" "Change Admin Password" \
-  "12" "Change Domain '${DOMAIN}'" \
-  "13" "Change Email '${EMAIL}'" \
-  "14" "Apply new admin password" \
-  "0" "Exit"  3>&1 1>&2 2>&3)
+  "1"  "    Upgrade OS" \
+  "2"  "    Request SSL certificate" \
+  "3"  "    Install/upgrade server and platform" \
+  "4"  "    Upgrade only platform components" \
+  "11" "    Change Admin Password" \
+  "12" "    Change Domain '${DOMAIN}'" \
+  "13" "    Change Email '${EMAIL}'" \
+  "14" "    Apply new admin password" \
+  "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
   [[ "$EXITCODE" = 255 ]] && break;
-  echo "exitcode: $EXITCODE"
+  # echo "exitcode: $EXITCODE"
 
   case "$OPTION" in
     "1") run_upgrade_playbook ;;
@@ -415,7 +411,7 @@ menu() {
 
 # initial configuration
 initialize
-# echo "running menu"
+# start menu loop
 while [ 1 ]; do
   menu
 done
