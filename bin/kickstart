@@ -61,6 +61,8 @@ for i in "$@"; do
   esac
 done
 
+echo UPDATE_SOURCE $UPDATE_SOURCE
+
 ################################################################################
 # 2. Library
 ################################################################################
@@ -388,7 +390,7 @@ configure
 
 menu() {
   # --menu <text> <height> <width> <listheight>
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 80 80 60 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 80 80 15 \
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
