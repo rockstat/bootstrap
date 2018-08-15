@@ -390,7 +390,7 @@ configure
 
 menu() {
   # --menu <text> <height> <width> <listheight>
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 80 80 15 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 80 25 15 \
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
