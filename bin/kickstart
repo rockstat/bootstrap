@@ -42,6 +42,7 @@ ADMIN_PASSWORD=""
 INSTALLED=""
 USERS="[]"
 SKIP_SETUP=NO
+UPDATE_SOURCE=YES
 
 ################################################################################
 # Args
@@ -53,6 +54,7 @@ for i in "$@"; do
       # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
       # -l=*|--lib=*) DIR="${i#*=}" ;;
       --skip-setup*) SKIP_SETUP=YES ;;
+      --no-update*) UPDATE_SOURCE=NO ;;
       *)
               # unknown option
       ;;
@@ -323,7 +325,9 @@ setup_platform(){
   setup_langvars
   setup_system_packages
   setup_locale
-  update_bootstrap
+  if [[ $UPDATE_SOURCE = YES ]]; then
+    update_bootstrap
+  fi
   setup_python_packages
   setup_symlink
   INSTALLED=$VERSION
@@ -331,7 +335,9 @@ setup_platform(){
 }
 
 update_platform(){
-  update_bootstrap
+  if [[ $UPDATE_SOURCE = YES ]]; then
+    update_bootstrap
+  fi
   setup_symlink
 }
 
@@ -381,7 +387,8 @@ fi
 configure
 
 menu() {
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 25 78 8 --nocancel \
+  # --menu <text> <height> <width> <listheight>
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "Choose your option" 80 80 60 \
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
