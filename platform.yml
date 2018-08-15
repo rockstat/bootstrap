@@ -89,7 +89,7 @@
           letsencrypt_domains_groups: '{{domains_ssl}}'
           letsencrypt_pause_services: ['nginx']
       when: "_setup_ssl == True and not _setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'ssl-certbot', 'http', 'system', 'full_setup']
+      tags: ['never', 'ssl', 'ssl-certbot', 'http']
 
 
     ##### ##### ##### ##### #####    Lets encrypt WildCard    ##### ##### ##### ##### ##### 
@@ -111,13 +111,13 @@
           _r_acmedns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
       when: "_setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'ssl-wildcard', 'http', 'system', 'full_setup']
+      tags: ['never', 'ssl', 'ssl-wildcard']
 
     - service:
         name: nginx
         state: restarted
       failed_when: "{{ False }}"
-      tags: ['never', 'ssl', 'ssl-wildcard', 'http', 'full_setup']
+      tags: ['never', 'ssl', 'ssl-wildcard']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
