@@ -1,5 +1,9 @@
+- debug:
+    msg:
+      - "{{op}}"
+      - "{{db}}"
 
-- name: 'Preparing migration {{name}}'
+- name: Preparing migration {{name}}
   set_fact:
     use_name: '{{op.name|default(op.file)|splitext|first}}'
   changed_when: False

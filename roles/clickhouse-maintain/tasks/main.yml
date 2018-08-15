@@ -27,7 +27,6 @@
   vars:
     db: "{{role_ops_db}}"
     op:
-      name: "{{(item.split('/')|last).split('.')|first}}"
+      name: "{{item|basename|splitext|first}}"
       file: "{{item}}"
-  with_fileglob:
-    - "{{role_migrations_path}}/*"
+  with_list: "{{lookup('fileglob', role_migrations_path+'/*.yml').split(',')|sort}}"

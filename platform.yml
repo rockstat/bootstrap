@@ -6,7 +6,6 @@
     - vars/config.yml
   tasks:
 
-
     - name: Checking python interpreter
       assert:
         that: 
@@ -78,7 +77,7 @@
           ovpn_docker_network: '{{docker_ipnetwork}}'
           ovpn_docker_netmask: '{{docker_netmask}}'
           ovpn_port: '{{ports.openvpn.0}}'
-      tags: ['never', 'ovpn', 'network', 'system', 'full_setup']
+      tags: ['never', 'ovpn', 'network', 'system']
 
 
     ##### ##### ##### ##### #####    Lets encrypt    ##### ##### ##### ##### ##### 
@@ -94,6 +93,7 @@
 
 
     ##### ##### ##### ##### #####    Lets encrypt WildCard    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including LetsEncrypt AcmeDNS role
         include_role:
@@ -101,16 +101,23 @@
         vars:
           _r_acmesh_config_dir: "{{dirs.acmesh}}/config"
           _r_acmedns_config_dir: "{{dirs.acmedns}}/config"
+          # _r_request: 
           _r_acmedns_data_dir: "{{dirs.acmedns}}/data"
           _r_acmesh_host_cert_root: "{{_ssl_cert_dir}}"
           _r_acmedns_host: "{{_acmedns_endpoint}}"
           _r_acmedns_api: "http://{{_r_acmedns_host}}:19943"
           _r_acmedns_ns1_ip: "{{_challenge_ns1|default('0.0.0.0')}}"
           _r_acmedns_ns2_ip: "{{_challenge_ns2|default('0.0.0.0')}}"
-          _r_acmedns_setup_dns: "{{_acmedns_setup}}"
+          _r_acmedns: "{{_acmedns_setup}}"
           _r_domains: "{{_ssl_certs}}"
       when: "_setup_ssl_wildcard | bool == True"
       tags: ['never', 'ssl', 'ssl-wildcard', 'http', 'system', 'full_setup']
+
+    - service:
+        name: nginx
+        state: restarted
+      failed_when: "{{ False }}"
+      tags: ['never', 'ssl', 'ssl-wildcard', 'http', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
@@ -440,16 +447,22 @@
       tags: ['frontier', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
 
 
+
+
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
-    - name: Clickhouse writer
+    - name: Including ClickHouse maintain role
       block:
-      - name: Including ClickHouse maintain role
-        include_role:
+      - include_role:
           name: clickhouse-maintain
         vars:
           role_ops_db: "{{ch_db}}"
           role_migrations_path: clickhouse_migrations
-        tags: ['never', 'chmigrate']
+      tags: ['never', 'chmigrate']
+
+
+    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
+    - name: Clickhouse writer
+      block:
       - name: Including Docker container role for ClickHouse Writer service
         include_role:
           name: dr.docker-container

@@ -266,28 +266,14 @@ request_users(){
 ## Actions
 ################################################################################
 
-run_ansible() {
+run_platform_playbook() {
+  setup_playbook
   ansible-playbook platform.yml --connection=local --tags=${1} -e 'ansible_python_interpreter=/usr/bin/python3'
-}
-
-
-run_ansible_full() {
-  setup_playbook
-  run_ansible full_setup
   exit 1
 }
 
-
-run_ansible_nginx() {
-  setup_playbook
-  run_ansible nginx
-  exit 1
-}
-
-
-run_ansible_platform() {
-  setup_playbook
-  run_ansible pservice,ppart
+run_upgrade_playbook() {
+  ansible-playbook os_upgrade.yml --connection=local
   exit 1
 }
 
@@ -399,6 +385,8 @@ menu() {
   "01" "Change Admin Password" \
   "08" "Change Domain '${DOMAIN}'" \
   "10" "Change Email '${EMAIL}'" \
+  "70" "Upgrade OS" \
+  "73" "Request SSL cert" \
   "80" "Run / Full install/upgrade" \
   "81" "Run / Update users" \
   "82" "Run / Update platform" \
@@ -409,9 +397,11 @@ menu() {
     "08") request_domain ;;
     "10") request_email ;;
     "20") request_users ;;
-    "80") run_ansible_full ;;
-    "81") run_ansible_nginx ;;
-    "82") run_ansible_platform ;;
+    "70") run_upgrade_playbook ;;
+    "73") run_platform_playbook ssl ;;
+    "80") run_platform_playbook full_setup ;;
+    "81") run_platform_playbook nginx ;;
+    "82") run_platform_playbook pservice,ppart ;;
     "99") exit 1 ;;
     *) echo "Unknown action" ;;	
   esac

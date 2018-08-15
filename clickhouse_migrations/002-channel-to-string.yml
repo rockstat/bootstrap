@@ -1,0 +1,3 @@
+- ALTER TABLE stats.events MODIFY COLUMN channel String
+- ALTER TABLE stats.activity MODIFY COLUMN channel String
+- ALTER TABLE stats.webhooks MODIFY COLUMN channel String
