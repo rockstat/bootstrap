@@ -33,6 +33,8 @@ DOMAIN=""
 NAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
+HOSTALIAS=""
+DEF_HOSTALIAS="rstat"
 INSTALLED=""
 
 # setup state vars
@@ -115,16 +117,9 @@ ${cyan}${bold}##${normal}"""
 ################################################################################
 
 # check credentials
-if [ ! "$UID" -eq 0 ]; then
-  print_error "Run as root or insert 'sudo -E' before 'bash'"
-  exit 1
-fi
-
+if [ ! "$UID" -eq 0 ]; then print_error "Run as root or insert 'sudo -E' before 'bash'"; exit 1; fi
 # check debian-like
-if [[ ! -f /etc/debian_version ]]; then
-    print_error "Target OS is Ubutu 16.04"
-    exit 1
-fi
+if [[ ! -f /etc/debian_version ]]; then print_error "Target OS is Ubutu 16.04"; exit 1; fi
 
 ################################################################################
 ## System deps
@@ -236,18 +231,20 @@ whiptailInput() {
     fi
 }
 
-
 request_domain(){
   whiptailInput "DOMAIN" "Domain" "Please enter domain for your tracker" 8 78
   save_config
 }
 
+request_hostalias(){
+  whiptailInput "HOSTALIAS" "Short hostname" "Please enter short hostname for server" 8 78
+  save_config
+}
 
 request_email(){
   whiptailInput "EMAIL" "Email" "Please enter your email to receive ssl notifitation" 8 78
   save_config
 }
-
 
 request_password(){
   whiptailInput "ADMIN_PASSWORD" "Admin password" "Please type sectet password for admin user" 8 78
@@ -265,11 +262,13 @@ request_users(){
 
 run_platform_playbook() {
   setup_playbook
+  print_status "Starting ansible"
   ansible-playbook platform.yml --connection=local --tags=${1} -e 'ansible_python_interpreter=/usr/bin/python3'
-  exit 1
+  if [ $? -eq 0 ]; then print_status "Done"; else print_error "FAILED"; exit 1; fi
 }
 
 run_upgrade_playbook() {
+  print_status "Starting ansible"
   ansible-playbook os_upgrade.yml --connection=local
   exit 1
 }
@@ -284,6 +283,8 @@ load_config(){
     DOMAIN=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
     EMAIL=$(awk -F "=" '/email/ {print $2}' $FACT_CONF)
     ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
+    HOSTALIAS=$(awk -F "=" '/hostalias/ {print $2}' $FACT_CONF)
+    if [[ -z "$HOSTALIAS" ]]; then HOSTALIAS=$DEF_HOSTALIAS; fi
   fi
 }
 
@@ -291,10 +292,10 @@ save_inventory(){
   cd "$BOOTSTRAP_DIR"
   echo """
 [private]
-rstat ansible_host=${DOMAIN}
+${HOSTALIAS} ansible_host=${DOMAIN}
 
 [rockstat]
-rstat
+${HOSTALIAS}
 """ > inventory/private
 }
 
@@ -305,6 +306,7 @@ save_config(){
 domain=${DOMAIN}
 email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
+hostalias=${HOSTALIAS}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
@@ -351,23 +353,26 @@ done
 MENU_TEXT=$(cat <<'HEREDOC'
 Choose your option:
 --------------------------------------------------------
-New installation:        sequentially 1, 2, 3
-Upgrade platform:        option 4
-Change admin password:   sequentially 11, 14 or 11, 3
+- New installation:       sequentially 1, 2, 3
+- Upgrade system and 
+  platform:               option 3
+- Upgrade platform:       option 4
+- Change admin password:  sequentially 11, 14 or 11, 3
 --------------------------------------------------------
 HEREDOC
 )
 
 menu() {
   # --menu <text> <height> <width> <listheight>
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 12 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 10 \
   "1"  "    Upgrade OS" \
   "2"  "    Request SSL certificate" \
   "3"  "    Install/upgrade server and platform" \
   "4"  "    Upgrade only platform components" \
   "11" "    Change Admin Password" \
   "12" "    Change Domain '${DOMAIN}'" \
-  "13" "    Change Email '${EMAIL}'" \
+  "13" "    Change Short hostname '${HOSTALIAS}'" \
+  "14" "    Change Email '${EMAIL}'" \
   "14" "    Apply new admin password" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
@@ -382,7 +387,8 @@ menu() {
     "4") run_platform_playbook pservice,ppart ;;
     "11") request_password ;;
     "12") request_domain ;;
-    "13") request_email ;;
+    "13") request_hostalias ;;
+    "14") request_email ;;
     "14") run_platform_playbook nginx ;;
     "0") exit 1 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
