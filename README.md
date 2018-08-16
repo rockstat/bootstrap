@@ -27,15 +27,15 @@ OS must be Ubutnu 16.04, moreover you should prepare domain name for platform
 Typically DNS zone looks like this:
 
 ```
-stats.yourdomain.ru    A  SERVER.IP
-*.stats.yourdomain.ru  A  SERVER.IP
+stats.yourdomain.ru    A  SE.RV.ER.IP
+*.stats.yourdomain.ru  A  SE.RV.ER.IP
 ```
 
 for second level domains:
 
 ```
-@                      A  SERVER.IP
-*.yourdomain.ru        A  SERVER.IP
+@                      A  SE.RV.ER.IP
+*.yourdomain.ru        A  SE.RV.ER.IP
 ```
 
 ### Setup / upgrade / reconfigure
@@ -49,6 +49,7 @@ sudo apt -qqy update && sudo apt -qqy install curl
 Next times you just execute setup manager using and follow instructions:
 
 ```bash
+
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
 
 ```

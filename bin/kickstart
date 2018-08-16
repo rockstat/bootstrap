@@ -2,12 +2,6 @@
 #
 # Running:
 #
-# ** for master release **
-# curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/kickstart | sudo -E bash -
-# 
-# ** for dev version **
-# curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
-#
 # What shold can be do:
 # - Request/check root
 # - Показать текущие настройки
@@ -20,7 +14,7 @@
 # - 
 # - 
 
-VERSION=1.0.5
+VERSION=1.1.1
 PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=dev
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
@@ -41,6 +35,9 @@ EMAIL=""
 ADMIN_PASSWORD=""
 INSTALLED=""
 
+# setup state vars
+ROLES_UPDATED=0
+
 # Preventing "bash: event not found" error
 set +H
 
@@ -58,8 +55,6 @@ for i in "$@"; do
       *) ;;  # unknown option
   esac
 done
-
-echo UPDATE_SOURCE $UPDATE_SOURCE
 
 ################################################################################
 # 2. Library
@@ -187,19 +182,19 @@ setup_python_packages() {
   print_ok
 }
 
-
 setup_runner() {
   rm -f $BINALIAS
   echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS
   chmod +x $BINALIAS
 }
 
-
 setup_playbook() {
+  if [ $ROLES_UPDATED -eq 1 ]; then return 1; fi
   print_status "Updating ansible roles"
   cd $BOOTSTRAP_DIR
   ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG
   print_ok
+  ROLES_UPDATED=1
 }
 
 ################################################################################
@@ -292,7 +287,6 @@ load_config(){
   fi
 }
 
-
 save_inventory(){
   cd "$BOOTSTRAP_DIR"
   echo """
@@ -304,7 +298,6 @@ rstat
 """ > inventory/private
 }
 
-
 save_config(){
   mkdir -p $(dirname $FACT_CONF)
   save_inventory
@@ -315,11 +308,9 @@ admin_password=${ADMIN_PASSWORD}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
-
 ################################################################################
 ## Executing
 ################################################################################
-
 
 setup_platform(){
   setup_langvars
@@ -338,14 +329,11 @@ update_platform(){
 }
 
 initialize(){
-  while [ -z "${DOMAIN// }" ]; do
-    request_domain
+  while [ -z "${DOMAIN// }" ]; do request_domain
   done
-  while [ -z "${EMAIL// }" ]; do
-    request_email
+  while [ -z "${EMAIL// }" ]; do request_email
   done
-  while [ -z ${ADMIN_PASSWORD// } ]; do
-    request_password
+  while [ -z ${ADMIN_PASSWORD// } ]; do request_password
   done
 }
 
@@ -354,16 +342,9 @@ if [[ -a "$FACT_CONF" && ! -z $(which python3)  ]]; then
   load_config
 fi
 
-
 print_status "Preparing system"
-
-
-if [ "$INSTALLED" == "$VERSION" ]; then
-  update_platform
-fi
-
-while [ "$INSTALLED" != "$VERSION" ]; do
-  setup_platform
+if [ "$INSTALLED" == "$VERSION" ]; then update_platform; fi
+while [ "$INSTALLED" != "$VERSION" ]; do setup_platform
 done
 
 

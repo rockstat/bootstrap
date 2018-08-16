@@ -393,34 +393,35 @@
       - name: Cloning Theia repo
         git:
           repo: https://github.com/rockstat/theia-build.git
-          dest: "{{build_dir}}/theia"
-      - name: Including Docker container role for Theia IDE
-        include_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: 'theia'
-          drdc_image: madiedinro/theia-build
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_network: '{{docker_net_name}}'
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_env: "{{containers_env}}"
-          drdc_memory_limit: '2g'
-          drdc_volumes:
+          dest: "{{build_path}}"
+      - name: Creating theia cointainer
+        docker_container:
+          name: theia
+          hostname: theia
+          image: madiedinro/theia-build
+          labels: "{{docker_band_lbls}}"
+          ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env: "{{containers_env}}"
+          # Use with present and started states to force the re-creation of an existing container.
+          # recreate: yes
+          # If true, always pull the latest version of an image. Otherwise, will only pull an image when missing.
+          pull: yes
+          restart: yes
+          memory: "2g"
+          volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
             - "{{dirs.band}}:{{workspace}}/sources_ro/band:ro"
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
             - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
-          drdc_ports: ["{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}"]
-          # build from sources
-          # drdc_dir: "{{build_dir}}/theia"
-          # drdc_repo: "https://github.com/rockstat/theia-build.git"
       - name: Copying bootstrap files
-        command: 'cp -nR {{build_dir}}/theia/bootstrap/.theia {{dirs.workspace}}/'
+        command: 'cp -nR {{build_path}}/bootstrap/.theia {{dirs.workspace}}/'
       vars:
         workspace: "/home/theia/project"
+        build_path: "{{build_dir}}/theia"
       when: 'setup_theia == True'
       tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
 
