@@ -435,7 +435,7 @@
 
 
 
-    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
+    ##### ##### ##### ##### #####    ClickHouse migrations    ##### ##### ##### ##### ##### 
     - name: Including ClickHouse maintain role
       block:
       - import_tasks: tasks/ch_migrate.yml
@@ -443,7 +443,7 @@
           operate_db: "{{ch_db}}"
           operate_host: "127.0.0.1"
           migrations_path: clickhouse_migrations
-      tags: ['never', 'chmigrate', 'ppart', 'full_setup']
+      tags: ['never', 'chmigrate']
 
 
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
