@@ -131,14 +131,13 @@
         file:
           path: "{{dirs.splash}}"
           state: directory
-          mode: "{{dr_dir_mode}}"
         when: 'dr_dir is defined'
 
       - name: Cloning splash screen repo
         git:
           repo: https://github.com/rockstat/splash.git
           accept_hostkey: yes
-          dest: '{{dr_dir|default(dr_name)}}'
+          dest: "{{dirs.splash}}"
       tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
 
 
