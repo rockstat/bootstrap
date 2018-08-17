@@ -1,4 +1,4 @@
-# Ansible playbook and managing tool for complete Rockstat setup
+# Rockstat bootstrap
 
 ## Rockstat architecture
 
