@@ -42,6 +42,9 @@ ROLES_UPDATED=0
 
 # Preventing "bash: event not found" error
 set +H
+# Any subsequent(*) commands which fail will cause the shell script to exit immediately
+set -e
+
 
 ################################################################################
 # Args
