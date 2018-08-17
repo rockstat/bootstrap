@@ -8,4 +8,3 @@ View [README.md](readme)
 
 add to /etc/nginx/sites-enabled/tracker.conf before `   location / {`.
 
-

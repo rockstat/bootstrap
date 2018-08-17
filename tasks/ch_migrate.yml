@@ -1,0 +1,26 @@
+---
+
+- name: Ensure database exists
+  command: "clickhouse-client -h {{operate_host}} -d default"
+  args:
+    stdin: "CREATE DATABASE IF NOT EXISTS {{operate_db}} "
+
+- name: Ensure migrations table exists
+  command: "clickhouse-client -h {{operate_host}} -d default"
+  args:
+    stdin: "CREATE TABLE IF NOT EXISTS {{operate_db}}.migrations (name String) ENGINE = Log"
+
+- name: Selecting applied migrations
+  command: "clickhouse-client -h {{operate_host}} -d default --query 'SELECT name FROM {{operate_db}}.migrations'"
+  register: ch_migrations_query
+
+- block:
+  - name: Apply migrations folder
+    include_tasks: 'ch_migration_run.yml'
+    vars:
+      op:
+        name: "{{item|basename|splitext|first}}"
+        file: "{{item}}"
+    with_list: "{{lookup('fileglob', migrations_path+'/*.yml').split(',')|sort}}"
+  vars:
+    ch_migrations_list: "{{ch_migrations_query.stdout.split('\n')}}"

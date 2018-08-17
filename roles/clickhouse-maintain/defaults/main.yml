@@ -1,4 +1,0 @@
-role_ops_list: []
-role_ops_host: 127.0.0.1
-role_ops_db: default
-role_migrations_path: /clickhouse_migrations

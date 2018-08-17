@@ -1,6 +1,0 @@
-
-- name: restart chwriter
-  docker_container:
-    name: chwriter
-    state: restarted
-

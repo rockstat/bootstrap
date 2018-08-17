@@ -1,0 +1,20 @@
+- debug:
+    msg:
+      - "{{op}}"
+      - "{{operate_db}}"
+      - "{{ch_migrations_list}}"
+
+- name: Running migration
+  command: 'clickhouse-client -h {{operate_host}} -d default'
+  args:
+    stdin: "{{query}}"
+  with_items: "{{lookup('file', op.file) | from_yaml}}"
+  loop_control:
+    loop_var: query
+  when: op.name not in ch_migrations_list
+
+- name: Saving migration info
+  command: 'clickhouse-client -h {{operate_host}} -d default'
+  args:
+    stdin: "INSERT INTO {{operate_db}}.migrations (name) VALUES('{{op.name}}')"
+  when: op.name not in ch_migrations_list
