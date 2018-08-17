@@ -2,7 +2,7 @@
 
 ## Rockstat architecture
 
-![Rockstat architecture](https://rstat.org/static/media/schemas/rockstat-main-components.svg)
+![Rockstat architecture](https://rstat.org/static/media/schemas/rockstat-main-components.svg?2)
 
 [Read more](https://rstat.org)
 
