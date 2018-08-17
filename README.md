@@ -1,10 +1,10 @@
-# Ansible playbook for deploy Rockstat platform
+# Ansible playbook and managing tool for complete Rockstat setup
 
 ## Rockstat architecture
 
-![Rockstat sheme](https://rockstat.ru/media/rockstat_v3_arch.png?3)
+![Rockstat architecture](https://rstat.org/static/media/schemas/rockstat-main-components.svg)
 
-[Read more](https://rockstat.ru/about)
+[Read more](https://rstat.org)
 
 ## Caution!
 
