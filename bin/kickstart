@@ -31,6 +31,9 @@ set +H
 # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 set -e
 
+# set -e
+# set -o pipefail
+
 ################################################################################
 # 2. Library
 ################################################################################
@@ -100,6 +103,7 @@ if [[ ! -f /etc/debian_version ]]; then print_error "Target OS is Ubutu 16.04"; 
 
 export DEBIAN_FRONTEND=noninteractive
 update_bootstrap() {
+  set -e
   if [[ -d "$BOOTSTRAP_DIR" ]]; then
     print_status "Updating Bootstrap repository"
     cd $BOOTSTRAP_DIR
@@ -121,6 +125,7 @@ setup_langvars() {
 }
 
 setup_locale() {
+  set -e
   print_status "Setting en_US.UTF-8 locale"
   echo -e 'LANGUAGE=en_US.UTF-8\nLANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\nLC_TYPE=en_US.UTF-8' > /etc/default/locale
   locale-gen en_US.UTF-8 > $INSTALL_LOG
@@ -130,6 +135,7 @@ setup_locale() {
 }
 
 setup_system_packages() {
+  set -e
   print_status "Updating packages registry"
   apt-get -yqq update
   print_ok
@@ -144,6 +150,7 @@ setup_system_packages() {
 }
 
 setup_python_packages() {
+  set -e
   print_status "Installing required python packages"
   pip3 -q install wheel
   pip3 -q install ansible prompt_toolkit cryptography==1.9 validators passlib netaddr
@@ -151,12 +158,14 @@ setup_python_packages() {
 }
 
 setup_runner() {
+  set -e
   rm -f $BINALIAS
   echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS
   chmod +x $BINALIAS
 }
 
 setup_playbook() {
+  set -e
   if [ $ROLES_UPDATED -eq 1 ]; then return 1; fi
   print_status "Updating ansible roles"
   cd $BOOTSTRAP_DIR

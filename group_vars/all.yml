@@ -194,7 +194,7 @@ containers_env:
   CHS_DSN: "{{chs_dsn}}"
 director_env:
   PORT: "{{ports.director.1}}"
-  IMAGES_PATH': "/images"
+  IMAGES_PATH: "/images"
 # ########## NGINX COMMONS ##########
 # configuration extra params
 _nginx_proxy_params_extra: []

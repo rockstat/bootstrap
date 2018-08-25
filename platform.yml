@@ -335,7 +335,7 @@
           ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
-          env: "{{director_env|combine(containers_env, director_env_extra|default({}))}}"
+          env: "{{ director_env|combine(containers_env, director_env_extra|default({})) }}"
           pull: yes
           restart: yes
           memory: "300m"
