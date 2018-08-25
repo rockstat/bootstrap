@@ -3,10 +3,6 @@
   version: master
   name: dr.server
 
-- src: https://github.com/madiedinro/ansible-openvpn-client-role
-  version: master
-  name: dr.openvpn-client
-
 - src: https://github.com/madiedinro/ansible-exposeur-role
   version: master
   name: dr.exposeur
@@ -50,6 +46,10 @@
 - src: https://github.com/madiedinro/ansible-letsencrypt-wildcatd-dns-auto.git
   version: master
   name: dr.letsencrypt.wildcard.auto
+
+- src: https://github.com/madiedinro/ansible-openvpn-client-role
+  version: master
+  name: dr.openvpn-client
 
 - src: https://github.com/madiedinro/ansible-openvpn-server-role
   version: master

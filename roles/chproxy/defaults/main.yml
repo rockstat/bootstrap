@@ -11,8 +11,6 @@ chproxy_docker_net: bridge
 chproxy_allowed_networks: []
 chproxy_allowed_networks_default:
   - 127.0.0.0/24
-  - 172.16.0.0/16
-
 chproxy_def_allow_cors: yes
 chproxy_def_max_queue_time: 30s
 chproxy_def_max_execution_time: 30s

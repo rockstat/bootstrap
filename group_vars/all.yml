@@ -126,7 +126,7 @@ docker_users:
 docker_net: "{{docker_net_pattern|ip_p2n}}"
 docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
-docker_ipnetwork: "{{docker_net|ipaddr('network')}}"
+docker_net_net: "{{docker_net|ipaddr('network')}}"
 # default docker network
 docker_initnet_pattern: 172.17.*
 # short name to access host and possible others
@@ -265,6 +265,9 @@ _nginx_upstreams:
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'
   - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}} weight=10; }'
 # ########## CH PROXY ##########
+_chproxy_allow_from:
+  - "{{docker_net}}"
+  - "{{s2s_vpn_net}}"
 _chproxy_user_config:
   - allow_cors: true
     to_cluster: 'default'

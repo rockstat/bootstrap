@@ -1,19 +1,11 @@
-    ##### ##### ##### ##### #####    OpenVPN server    ##### ##### ##### ##### ##### 
-    - block:
-      - debug:
-          msg: "docker_net_name:{{docker_net_name}}, docker_ipnetwork:{{docker_ipnetwork}} docker_netmask:{{docker_netmask}} "
-      - name: Creating vpn keys dir
-        file:
-          state: directory
-          path: "{{dirs.ovpnkeys}}"
-      - name: Including OpenVPN server role
-        include_role:
-          name: openvpn-server
-        vars:
-          ovpn_domain: "{{domain}}"
-          ovpn_keys_dir: '{{dirs.ovpnkeys}}'
-          ovpn_docker_net_name: '{{docker_net_name}}'
-          ovpn_docker_network: '{{docker_ipnetwork}}'
-          ovpn_docker_netmask: '{{docker_netmask}}'
-          ovpn_port: '{{ports.openvpn.0}}'
-      tags: ['never', 'ovpn']
+
+- import_role:
+    name: dr.openvpn-server
+  vars:
+    openvpn_port: "{{ports.openvpn.0}}"
+    openvpn_clients: 5
+    openvpn_comp_lz4: yes
+    openvpn_clients_net: "{{s2s_vpn_net}}"
+    openvpn_push:
+      - "route {{docker_net_net}} {{docker_netmask}}"
+  tags: ['openvpn']

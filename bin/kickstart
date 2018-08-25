@@ -224,40 +224,38 @@ whiptailInput() {
               if [[ -n ${value// } ]]; then
                 enc=$(openssl passwd -apr1 ${value})
                 eval $1="'$enc'"
+                save_config
               fi
             fi
           fi
         fi
       else
         eval $1="$value"
+        save_config
       fi
     fi
 }
 
 request_domain(){
   whiptailInput "DOMAIN" "Domain" "Please enter domain for your tracker" 8 78
-  save_config
 }
 
 request_hostalias(){
-  whiptailInput "HOSTALIAS" "Short hostname" "Please enter short hostname for server" 8 78
-  save_config
+  whiptailInput "HOSTALIAS" "Short hostname" "Shot server hostname that you can see at command line prompt)" 8 78
 }
 
 request_email(){
-  whiptailInput "EMAIL" "Email" "Please enter your email to receive ssl notifitation" 8 78
-  save_config
+  whiptailInput "EMAIL" "Email" "Email required for issuing letsencrypt SSL and GIT" 8 78
+}
+
+request_name(){
+  whiptailInput "NAME" "Name" "Will be default user name at GIT configuration" 8 78
 }
 
 request_password(){
   whiptailInput "ADMIN_PASSWORD" "Admin password" "Please type sectet password for admin user" 8 78
-  save_config
 }
 
-request_users(){
-  whiptailInput "USERS" "Users list" "Recorn should be valid json array" 8 78
-  save_config
-}
 
 ################################################################################
 ## Actions
@@ -286,6 +284,7 @@ load_config(){
     DOMAIN=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
     EMAIL=$(awk -F "=" '/email/ {print $2}' $FACT_CONF)
     ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
+    NAME=$(awk -F "=" '/name/ {print $2}' $FACT_CONF)
     HOSTALIAS=$(awk -F "=" '/hostalias/ {print $2}' $FACT_CONF)
     if [[ -z "$HOSTALIAS" ]]; then HOSTALIAS=$DEF_HOSTALIAS; fi
   fi
@@ -310,6 +309,7 @@ domain=${DOMAIN}
 email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
 hostalias=${HOSTALIAS}
+name=${NAME}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
@@ -369,7 +369,7 @@ menu() {
   # --menu <text> <height> <width> <listheight>
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 10 \
   "1"  "    Upgrade OS" \
-  "2"  "    Request SSL certificate" \
+  "2"  "    Issue SSL certificate" \
   "3"  "    Install/upgrade server and platform" \
   "4"  "    Upgrade only platform components" \
   "11" "    Change Admin Password" \

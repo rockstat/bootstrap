@@ -191,7 +191,7 @@
           chproxy_clusters: "{{hst_chproxy_clusters|default([])}}"
           chproxy_docker_net: "{{docker_net_name}}"
           chproxy_users: "{{_chproxy_users|default([])}}"
-          chproxy_allowed_networks: "{{chproxy_allow_from|default([])}}"
+          chproxy_allowed_networks: "{{_chproxy_allow_from|default([]) + _group_chproxy_allow_from|default([])}}"
           chproxy_build_path: "{{build_dir}}/chproxy"
       tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker', 'docker-container', 'full_setup']
 
@@ -492,6 +492,10 @@
           drdc_volumes:
             - "{{dirs.uploads}}:/go/src/heavyload/upload"
       tags: ['heavyload', 'docker', 'pservice', 'docker-container', 'full_setup']
+
+
+    - import_tasks: tasks/setup_vpn_server.yml
+      tags: ['never', 'ovpn-server']
 
     # - import_tasks: extensions/metrics_server.yml
     #   when: 'metrics_server == True'
