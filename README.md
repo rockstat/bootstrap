@@ -72,20 +72,6 @@ You can override configuration by specifing alternative values.
 By default setup tool disabling IPv6 support.
 To prevent set `disable_ipv6` to `no` at you custom config.
 
-## Extending bootstrap configuration
-
-
-
-### Anaconda/Jupyter additional packages
-
-
-```yaml
----
-jup_with_conda:
-  - ujson
-jup_with_pip:
-  - prodict
-```
 
 ### PWD gen
 
