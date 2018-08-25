@@ -14,14 +14,13 @@ Setup process do significant system reconfiguration and can kill others.
 
 ## Requirements
 
-Virtual or dedicated server
-
+Virtual or dedicated server with at least:
 
 - 2 core
 - 8 Gb mem
 - 60 Gb SSD
 
-OS: Ubutnu 16.04.x
+Requires OS: Ubutnu 16.04.x
 
 ### Domain records
 

@@ -16,7 +16,7 @@
 
 VERSION=1.1.1
 PLATFORM_HOME=/srv/platform
-BOOTSTRAP_BRANCH=dev
+BOOTSTRAP_BRANCH=master
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
 BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
