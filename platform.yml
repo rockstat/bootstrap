@@ -218,7 +218,7 @@
     - name: Logspout with Loggly streaming
       block:
       - debug:
-          msg: "Using {{logspout_target}} target"
+          msg: "Using {{_logspout_target}} target"
       - name: Including Docker container role for Logspout
         include_role:
           name: dr.docker-container
@@ -227,20 +227,21 @@
             loggly: "syslog+tcp://{{_loggly_hostname}}"
             papertrail: "syslog+tls://{{_papertrail_hostname}}"
           envs:
-            loggly: 
-              SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
+            common:
               SYSLOG_HOSTNAME: "{{hostname}}"
+              TAIL: 100
+            loggly:
+              SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
           drdc_name: "logspout"
           drdc_image: "gliderlabs/logspout"
           drdc_network: '{{docker_net_name}}'
           drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_memory_limit: '200m'
           drdc_nocache: "{{dock_no_cache}}"
-          drdc_cmd: "{{endpoints[logspout_target]}}"
+          drdc_cmd: "{{endpoints[_logspout_target]}}"
           drdc_volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-          drdc_env: "{{envs[logspout_target]|default({})}}"
-      when: "_logspout_enabled|default(False) == True"
+          drdc_env: "{{ {}|combine(envs.common, envs[_logspout_target]|default({})) }}"
+      when: "_logspout_enabled|default(0) == True"
       tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'system', 'docker-container', 'full_setup']
 
 

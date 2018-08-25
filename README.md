@@ -14,13 +14,14 @@ Setup process do significant system reconfiguration and can kill others.
 
 ## Requirements
 
-Cloud or dedicated server with at least:
+Virtual or dedicated server
 
-- 2 cores
-- 8 gb mem
-- 60 gb ssd (depends on your data amount)
 
-OS must be Ubutnu 16.04, moreover you should prepare domain name for platform
+- 2 core
+- 8 Gb mem
+- 60 Gb SSD
+
+OS: Ubutnu 16.04.x
 
 ### Domain records
 
@@ -40,24 +41,22 @@ for second level domains:
 
 ### Setup / upgrade / reconfigure
 
-You need to setup curl once
+Setup curl once
 
 ```bash
 sudo apt -qqy update && sudo apt -qqy install curl
 ```
 
-Next times you just execute setup manager using and follow instructions:
+Execute Rockstat management tool
 
 ```bash
-
-curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
-
+curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
 ```
 
+From this moment you able to start management tool just type `rockstat` in command line
 
 
-
-## Take a power implicit using Ansible 
+## Take a power using Ansible implicit
 
 
 ### Setup internal OpenVPN server
