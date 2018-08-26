@@ -1,7 +1,5 @@
 # Rockstat bootstrap
 
-## Rockstat architecture
-
 ![Rockstat architecture](https://rstat.org/static/media/schemas/rockstat-main-components.svg?3)
 
 [Read more](https://rstat.org)
