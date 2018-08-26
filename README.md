@@ -46,13 +46,17 @@ Setup curl once
 sudo apt -qqy update && sudo apt -qqy install curl
 ```
 
-Execute Rockstat management tool
+Run Rockstat management tool
 
 ```bash
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
 ```
 
-From this moment you able to start management tool just type `rockstat` in command line
+From this moment instead of long command you are able to start management in a simple way
+
+```
+rockstat
+```
 
 
 ## Take a power using Ansible implicit

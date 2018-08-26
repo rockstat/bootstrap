@@ -356,13 +356,13 @@ menu() {
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 10 \
   "1"  "    Upgrade OS" \
   "2"  "    Issue SSL certificate" \
-  "3"  "    Install/upgrade server and platform" \
+  "3"  "    Install/upgrade system and platform" \
   "4"  "    Upgrade only platform components" \
   "11" "    Change Admin Password" \
   "12" "    Change Domain '${DOMAIN}'" \
   "13" "    Change Short hostname '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
-  "14" "    Apply new admin password" \
+  "15" "    Apply new admin password" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
@@ -378,7 +378,7 @@ menu() {
     "12") request_domain ;;
     "13") request_hostalias ;;
     "14") request_email ;;
-    "14") run_platform_playbook nginx ;;
+    "15") run_platform_playbook nginx ;;
     "0") exit 1 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac
