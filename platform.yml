@@ -285,31 +285,33 @@
           path: "{{dirs.grafana_data}}"
           owner: 472 # grafana container ids
           group: 472
+
       - name: Rendering Grafana Config
         template:
           src: 'grafana/{{item}}.j2'
           dest: '{{dirs.grafana_data}}/{{item}}'
         with_items:
           - grafana.ini
-      - name: Including Docker container role for Grafana
-        include_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: 'grafana'
-          drdc_image: "grafana/grafana"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_env:
+          
+      - docker_container:
+          name: grafana
+          hostname: grafana
+          image: "grafana/grafana"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env:
             GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-          drdc_memory_limit: '200m'
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_volumes:
+          pull: yes
+          restart: yes
+          memory: "300m"
+          ports:
+            - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
+          volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
             - "{{dirs.grafana_data}}/grafana.ini:/etc/grafana/grafana.ini"
-          drdc_ports:
-            - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
-      tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
+        tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
+
 
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
@@ -326,16 +328,9 @@
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
     - block:
-      - name: Building band-base-py image
-        include_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: band-base-py
-          drdc_image: 'rst/band-base-py'
-          drdc_dir: '{{dirs.band}}'
-          drdc_repo: "https://github.com/rockstat/band"
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_run_container: no
+      - docker_image:
+          name: madiedinro/band-base-py
+          force: yes
       - name: Including Docker container role for Director service
         include_role:
           name: dr.docker-container
@@ -463,29 +458,6 @@
       vars:
         env: {}
       tags: ['chwriter', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
-
-
-      # block:
-      # - name: Including Docker container role for ClickHouse Writer service
-
-      #   include_role:
-      #     name: dr.docker-container
-      #   vars:
-      #     env: {}
-      #     drdc_name: 'chwriter'
-      #     drdc_image: 'rst/chwriter'
-      #     drdc_dir: "{{dirs.rockme_set}}/chwriter"
-      #     drdc_repo: "https://github.com/rockstat/chwriter"
-      #     drdc_network: '{{docker_net_name}}'
-      #     drdc_hosts: "{{docker_etc_hosts}}"
-      #     drdc_nocache: "{{dock_no_cache}}"
-      #     drdc_env: "{{env|combine(containers_env)}}"
-      #     drdc_labels: "{{docker_band_lbls}}"
-      #     drdc_memory_limit: '300m'
-      #     drdc_volumes:
-      #       - "{{dirs.chwriter_custom_config}}:/app/config/custom"
-      #       - "{{dirs.chwriter_emergency}}:/app/emergency"
-      
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
     - block:
