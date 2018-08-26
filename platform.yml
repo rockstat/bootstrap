@@ -409,31 +409,27 @@
 
 
     ##### ##### ##### ##### #####    Frontier    ##### ##### ##### ##### ##### 
-    - name: Frontier setup
-      block:
-      - name: Including Docker container role for Frontier service
-        include_role:
-          name: dr.docker-container
-        vars:
-          env: {}
-          drdc_name: 'frontier'
-          drdc_image: 'rst/frontier'
-          drdc_dir: "{{dirs.rockme_set}}/frontier"
-          drdc_repo: "https://github.com/rockstat/frontier"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_env: "{{env|combine(containers_env, frontier_env_extra|default({}) )}}"
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_memory_limit: '300m'
-          drdc_volumes:
-            - "{{dirs.frontier_custom_config}}:/app/config/custom"
-          drdc_ports:
+    - block:
+      - name: Running docker container for Frontier service
+        docker_container:
+          name: frontier
+          hostname: frontier
+          image: "madiedinro/frontier"
+          labels: "{{docker_band_lbls}}"
+          ports: 
             - "{{if_inner}}:{{ports.frontier.0}}:{{ports.frontier.1}}"
             - "{{if_inner}}:{{ports.frontier_ws.0}}:{{ports.frontier_ws.1}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env: "{{env|combine(containers_env, frontier_env_extra|default({}) )}}"
+          pull: yes
+          restart: yes
+          memory: "300m"
+          volumes:
+            - "{{dirs.frontier_custom_config}}:/app/config/custom"
+      vars:
+        env: {}
       tags: ['frontier', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
-
-
 
 
     ##### ##### ##### ##### #####    ClickHouse migrations    ##### ##### ##### ##### ##### 
@@ -447,28 +443,49 @@
       tags: ['never', 'chmigrate']
 
 
-    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
-    - name: Clickhouse writer
-      block:
-      - name: Including Docker container role for ClickHouse Writer service
-        include_role:
-          name: dr.docker-container
-        vars:
-          env: {}
-          drdc_name: 'chwriter'
-          drdc_image: 'rst/chwriter'
-          drdc_dir: "{{dirs.rockme_set}}/chwriter"
-          drdc_repo: "https://github.com/rockstat/chwriter"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_env: "{{env|combine(containers_env)}}"
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_memory_limit: '300m'
-          drdc_volumes:
+    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### =
+    - block:
+      - name: Running docker container for ClickHouse Writer service
+        docker_container:
+          name: chwriter
+          hostname: chwriter
+          image: "madiedinro/chwriter"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env: "{{env|combine(containers_env)}}"
+          pull: yes
+          restart: yes
+          memory: "300m"
+          volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
-      tags: ['chwriter', 'chmigrate', 'ppart', 'rockme', 'docker', 'docker-container','full_setup']
+      vars:
+        env: {}
+      tags: ['chwriter', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
+
+
+      # block:
+      # - name: Including Docker container role for ClickHouse Writer service
+
+      #   include_role:
+      #     name: dr.docker-container
+      #   vars:
+      #     env: {}
+      #     drdc_name: 'chwriter'
+      #     drdc_image: 'rst/chwriter'
+      #     drdc_dir: "{{dirs.rockme_set}}/chwriter"
+      #     drdc_repo: "https://github.com/rockstat/chwriter"
+      #     drdc_network: '{{docker_net_name}}'
+      #     drdc_hosts: "{{docker_etc_hosts}}"
+      #     drdc_nocache: "{{dock_no_cache}}"
+      #     drdc_env: "{{env|combine(containers_env)}}"
+      #     drdc_labels: "{{docker_band_lbls}}"
+      #     drdc_memory_limit: '300m'
+      #     drdc_volumes:
+      #       - "{{dirs.chwriter_custom_config}}:/app/config/custom"
+      #       - "{{dirs.chwriter_emergency}}:/app/emergency"
+      
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
     - block:
