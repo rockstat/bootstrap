@@ -16,7 +16,7 @@ FACT_CONF=/etc/ansible/facts.d/config.fact
 
 # state vars
 DOMAIN=""
-NAME=""
+USERNAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
 HOSTALIAS=""
@@ -192,6 +192,10 @@ setup_playbook() {
 # "LOCAL_MOUNT" "Allow mounting of local devices" OFF \
 # "REMOTE_MOUNT" "Allow mounting of remote devices" OFF
 
+show_dialog(){
+  whiptail --title "$1" --msgbox "$2" 8 78
+}
+
 whiptailInput() {
     eval local init="\$$1"
     case "$1" in
@@ -223,23 +227,31 @@ whiptailInput() {
 }
 
 request_domain(){
-  whiptailInput "DOMAIN" "Domain" "Please enter domain for your tracker" 8 78
+  whiptailInput "DOMAIN" "Domain" "Please enter domain for your tracker." 8 78
 }
 
 request_hostalias(){
-  whiptailInput "HOSTALIAS" "Short hostname" "Shot server hostname that you can see at command line prompt)" 8 78
+  whiptailInput "HOSTALIAS" "Short hostname" "Shot server hostname that you can see at command line prompt." 8 78
 }
 
 request_email(){
-  whiptailInput "EMAIL" "Email" "Email required for issuing letsencrypt SSL and GIT" 8 78
+  whiptailInput "EMAIL" "Email" "Email required for issuing letsencrypt SSL and GIT." 8 78
 }
 
 request_name(){
-  whiptailInput "NAME" "Name" "Will be default user name at GIT configuration" 8 78
+  whiptailInput "NAME" "Name" "Will be default user name at GIT configuration." 8 78
 }
 
 request_password(){
-  whiptailInput "ADMIN_PASSWORD" "Admin password" "Please type sectet password for admin user" 8 78
+  whiptailInput "ADMIN_PASSWORD" "Admin password" "Provide secret password for admin user." 8 78
+}
+
+request_username(){
+  whiptailInput "USERNAME" "User name" "Provide your first and last name. Will be used in git configuration." 8 78
+}
+
+update_reboot_dialog(){
+  show_dialog "System upgrade" "After upgrade complete server will be rebooted and you need to connect agant to continue."
 }
 
 
@@ -270,7 +282,7 @@ load_config(){
     DOMAIN=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
     EMAIL=$(awk -F "=" '/email/ {print $2}' $FACT_CONF)
     ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
-    NAME=$(awk -F "=" '/name/ {print $2}' $FACT_CONF)
+    USERNAME=$(awk -F "=" '/username/ {print $2}' $FACT_CONF)
     HOSTALIAS=$(awk -F "=" '/hostalias/ {print $2}' $FACT_CONF)
     if [[ -z "$HOSTALIAS" ]]; then HOSTALIAS=$DEF_HOSTALIAS; fi
   fi
@@ -295,7 +307,7 @@ domain=${DOMAIN}
 email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
 hostalias=${HOSTALIAS}
-name=${NAME}
+username=${USERNAME}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
@@ -362,7 +374,8 @@ menu() {
   "12" "    Change Domain '${DOMAIN}'" \
   "13" "    Change Short hostname '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
-  "15" "    Apply new admin password" \
+  "15" "    Change Name '${USERNAME}'" \
+  "20" "    Apply new admin password" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
@@ -370,7 +383,7 @@ menu() {
   # echo "exitcode: $EXITCODE"
 
   case "$OPTION" in
-    "1") run_upgrade_playbook ;;
+    "1") update_reboot_dialog; run_upgrade_playbook ;;
     "2") run_platform_playbook ssl ;;
     "3") run_platform_playbook full_setup ;;
     "4") run_platform_playbook pservice,ppart ;;
@@ -378,7 +391,8 @@ menu() {
     "12") request_domain ;;
     "13") request_hostalias ;;
     "14") request_email ;;
-    "15") run_platform_playbook nginx ;;
+    "15") request_username ;;
+    "20") run_platform_playbook nginx ;;
     "0") exit 1 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac

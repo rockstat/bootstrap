@@ -19,7 +19,6 @@ Requires OS: Ubutnu 16.04.x
 Rockstat required fresh server without any other software. Don't  install rockstat on existing server with other software! 
 Setup process do significant system reconfiguration.
 
-
 ### Domain records
 
 
@@ -37,9 +36,27 @@ yourdomain (or @)       A  1.2.3.4
 *.yourdomain            A  1.2.3.4
 ```
 
+### Start server
+
+Required steps depends of 
+
+### Connect to server
+
+#### On MacOS / Linux
+
+Open Terminal app and type:
+
+```bash
+ssh root@yourdomain
+```
+
+#### Windows users
+
+To connect you should use any terminal emulator with ssh support. For example [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) 
+
 ### Setup / upgrade / reconfigure
 
-You neet to setup curl only once
+You need to setup curl only once
 
 ```bash
 sudo apt -qqy update && sudo apt -qqy install curl
@@ -50,6 +67,7 @@ First-time setup tool execution
 ```bash
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
 ```
+curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
 
 Next times availavale helpful short alias
 
