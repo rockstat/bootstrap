@@ -286,30 +286,19 @@
           owner: 472 # grafana container ids
           group: 472
 
-      - name: Rendering Grafana Config
-        template:
-          src: 'grafana/{{item}}.j2'
-          dest: '{{dirs.grafana_data}}/{{item}}'
-        with_items:
-          - grafana.ini
-          
       - docker_container:
           name: grafana
           hostname: grafana
-          image: "grafana/grafana"
+          image: madiedinro/rockstat-grafana
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
-          env:
-            GF_INSTALL_PLUGINS: "{{(grafana_plugins_custom|default([]) + grafana_plugins)|join(',')}}"
-          pull: yes
           restart: yes
           memory: "300m"
           ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
-            - "{{dirs.grafana_data}}/grafana.ini:/etc/grafana/grafana.ini"
         tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 

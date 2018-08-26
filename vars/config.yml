@@ -55,23 +55,7 @@ _nginx_cors_base:
   - add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS'
   - add_header 'Access-Control-Allow-Headers' 'Origin, X-Requested-With, Content-Type, Accept'
 
-# ########## Grafana ##########
-grafana_plugins:
-  - grafana-clock-panel
-  - grafana-simple-json-datasource
-  - vertamedia-clickhouse-datasource
-  - grafana-piechart-panel
-  - petrslavotinek-carpetplot-panel
-  - jdbranham-diagram-panel
-  - raintank-worldping-app
-  - ryantxu-ajax-panel
-  - natel-discrete-panel
-# use this variable in your private config
-# grafana_plugins_custom:
-  # - plugin that i want
-
 # ########## Other things ##########
-
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
 
 # ########## Mailer config ##########
