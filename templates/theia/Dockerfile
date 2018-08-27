@@ -1,2 +1,2 @@
-FROM madiedinro/theia-build
+FROM rockstat/theia-image
 

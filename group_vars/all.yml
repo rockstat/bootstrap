@@ -3,6 +3,7 @@ playbook_version: 3.1.2
 # ########## Main params ##########
 #version
 branch: HEAD
+git_org: https://github.com/rockstat
 dock_no_cache: no
 #params
 log_level: info
@@ -67,7 +68,7 @@ home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 build_dir: '{{home_dir}}/build'
 dirs:
-  frontier_custom_config: "{{data_dir}}/frontier_custom_config"
+  front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
   band: "{{home_dir}}/images/band_base"
@@ -92,8 +93,8 @@ dirs:
 ports:
   # services
   band: [10000, 8080]
-  frontier: [10001, 8080]
-  frontier_ws: [10002, 8082]
+  front: [10001, 8080]
+  front_ws: [10002, 8082]
   heavyload: [10010, 8080]
   # tools
   director: [10000, 8080]
@@ -183,7 +184,7 @@ containers_env:
 # configuration extra params
 _nginx_proxy_params_extra: []
 _nginx_sites_extra: {}
-_nginx_frontier_extra: []
+_nginx_front_extra: []
 # common blocks
 _nginx_listen: 
   - "listen 443 ssl http2"
@@ -226,10 +227,10 @@ _nginx_frontrier:
   - "{{_nginx_base_vh}}"
   - "root {{dirs.splash}}"
   - location / { try_files $uri $uri/index.html @upstream; }
-  - location @upstream { proxy_pass http://ufrontier; }
-  - location /wss { proxy_pass http://ufrontier_ws; }
+  - location @upstream { proxy_pass http://ufront; }
+  - location /wss { proxy_pass http://ufront_ws; }
   - "{{_nginx_uploader}}"
-  - "{{_nginx_frontier_extra}}"
+  - "{{_nginx_front_extra}}"
 _nginx_dashboard:
   - server_name app.{{domain}}
   - "{{_nginx_base_vh}}"
@@ -248,7 +249,7 @@ _nginx_grafana:
 _nginx_sites:
   def_https: "{{_nginx_defvh_https|flatten }}"
   def_http: "{{_nginx_defvh_http|flatten }}"
-  frontier: "{{_nginx_frontrier|flatten }}"
+  front: "{{_nginx_frontrier|flatten }}"
   dashboard: "{{_nginx_dashboard|flatten }}"
   grafana: "{{_nginx_grafana|flatten}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
@@ -256,8 +257,8 @@ _nginx_sites:
   netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
   httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
 _nginx_upstreams:
-  - 'upstream ufrontier { server {{if_inner}}:{{ports.frontier.0}} weight=10; keepalive 32; }'
-  - 'upstream ufrontier_ws { server {{if_inner}}:{{ports.frontier_ws.0}} weight=10; keepalive 128; }'
+  - 'upstream ufront { server {{if_inner}}:{{ports.front.0}} weight=10; keepalive 32; }'
+  - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}} weight=10; keepalive 128; }'
   - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; keepalive 8; }'
   - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; keepalive 32; }'
   - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; keepalive 4; }'
