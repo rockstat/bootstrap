@@ -19,8 +19,8 @@ DOMAIN=""
 USERNAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
-HOSTALIAS=""
 DEF_HOSTALIAS="rstat"
+HOSTALIAS="$DEF_HOSTALIAS"
 INSTALLED=""
 
 # setup state vars
@@ -30,22 +30,6 @@ ROLES_UPDATED=0
 set +H
 # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 set -e
-
-
-################################################################################
-# Args
-################################################################################
-
-for i in "$@"; do
-  case $i in
-      # -p=*|--prefix=*)
-      # -s=*|--searchpath=*) SEARCHPATH="${i#*=}" ;;
-      # -l=*|--lib=*) DIR="${i#*=}" ;;
-      # --skip-setup*) SKIP_SETUP=YES ;;
-      # --no-update*) UPDATE_SOURCE=NO ;;
-      *) ;;  # unknown option
-  esac
-done
 
 ################################################################################
 # 2. Library
@@ -238,16 +222,12 @@ request_email(){
   whiptailInput "EMAIL" "Email" "Email required for issuing letsencrypt SSL and GIT." 8 78
 }
 
-request_name(){
-  whiptailInput "NAME" "Name" "Will be default user name at GIT configuration." 8 78
+request_username(){
+  whiptailInput "USERNAME" "User name" "Provide your first and last name. Will be used in git configuration." 8 78
 }
 
 request_password(){
   whiptailInput "ADMIN_PASSWORD" "Admin password" "Provide secret password for admin user." 8 78
-}
-
-request_username(){
-  whiptailInput "USERNAME" "User name" "Provide your first and last name. Will be used in git configuration." 8 78
 }
 
 update_reboot_dialog(){
@@ -300,8 +280,8 @@ ${HOSTALIAS}
 }
 
 save_config(){
-  mkdir -p $(dirname $FACT_CONF)
   save_inventory
+  mkdir -p $(dirname $FACT_CONF)
   echo """[general]
 domain=${DOMAIN}
 email=${EMAIL}
@@ -338,9 +318,13 @@ initialize(){
   done
   while [ -z ${ADMIN_PASSWORD// } ]; do request_password
   done
+  while [ -z ${USERNAME// } ]; do request_username
+  done
+  while [ -z ${HOSTALIAS// } ]; do request_hostalias
+  done
 }
 
-if [[ -a "$FACT_CONF" && ! -z $(which python3)  ]]; then
+if [[ -a "$FACT_CONF" ]]; then
   print_status "Reading local configuration"
   load_config
 fi
