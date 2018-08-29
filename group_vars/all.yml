@@ -280,3 +280,11 @@ _chproxy_user_config:
     max_execution_time: 30s
 # _chproxy_users:
 #   - "{{ {'name': main_user, 'password': main_user_password}|combine(_chproxy_user_config) }}"
+# ########## Other things ##########
+hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
+
+# ########## Mailer config ##########
+mailer_subj_key: "Ваши ключи OpenVPN ({{ domain }}) v{{ playbook_version }}"
+mailer_subj_snip: "Сниппет для сайта ({{ domain }}) v{{ playbook_version }}"
+
+

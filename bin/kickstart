@@ -204,7 +204,7 @@ whiptailInput() {
           fi
         fi
       else
-        eval $1="$value"
+        eval $1="'$value'"
         save_config
       fi
     fi

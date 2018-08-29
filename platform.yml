@@ -3,7 +3,7 @@
   hosts: rockstat
   become: yes
   vars_files:
-    - vars/config.yml
+    - vars/nginx.yml
   tasks:
     - name: Checking python interpreter
       assert:
@@ -11,7 +11,6 @@
           - "ansible_python_interpreter == '/usr/bin/python3'"
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
-
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
     - block:
@@ -290,7 +289,7 @@
       - docker_container:
           name: grafana
           hostname: grafana
-          image: rockstat/grafana-image
+          image: rockstat/grafana
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -359,7 +358,7 @@
         file: state=directory path={{dirs.workspace}} owner=473 group=473
       - name: Cloning Theia repo
         git:
-          repo: "{{git_org}}/theia-image.git"
+          repo: "{{git_org}}/theia-ide-image.git"
           dest: "{{build_path}}"
       - name: Creating theia cointainer
         docker_container:
