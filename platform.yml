@@ -116,10 +116,10 @@
             upstream: '{{_nginx_upstreams}}'
             ssl: '{{_nginx_ssl_params}}'
       vars:
-        local_config: "{{ansible_local.config|default({})}}"
-        local_general: "{{local_config.general|default({})}}"
+        # local_config: "{{ansible_local.config|default({})}}"
+        # local_general: "{{local_config.general|default({})}}"
         common_users:
-          - "admin:{{local_general.admin_password}}"
+          - "admin:{{_local_config.admin_password}}"
           # - "{{local_general.users}}"
       when: "setup_nginx == True"
       tags: ['never', 'nginx', 'system', 'full_setup']
@@ -135,7 +135,7 @@
 
       - name: Cloning splash screen repo
         git:
-          repo: "{{git_org}}/splash.git"
+          repo: "{{repos.splash}}"
           accept_hostkey: yes
           dest: "{{dirs.splash}}"
       tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
@@ -311,7 +311,7 @@
         vars:
           dr_name: dashboard
           dr_dir: '{{dirs.dashboard}}'
-          dr_repo: "{{git_org}}/dashboard.git"
+          dr_repo: "{{repos.dashboard}}"
       tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
 
 
@@ -320,35 +320,33 @@
       - docker_image:
           name: rockstat/band-base-py
           force: yes
+
+      - name: Cloning Band-set repo
+        git:
+          repo: "{{repos.band_set}}"
+          dest: "{{dirs.band_set}}"
+
       - name: Including Docker container role for Director service
-        include_role:
-          name: dr.docker-container
-        vars:
-          env:
-            PORT: "{{ports.band.1}}"
-            IMAGES_PATH: /images
-          drdc_image: 'rst/band-director'
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_name: 'director'
-          drdc_dir: '{{dirs.band_set}}'
-          drdc_rel_path: '/director'
-          drdc_repo: "{{git_org}}/band-services-set"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_env: "{{env|combine(containers_env, director_env_extra|default({}))}}"
-          drdc_memory_limit: '300m'
-          drdc_volumes:
+        docker_container:
+          name: director
+          hostname: director
+          image: rockstat/director
+          labels: "{{docker_band_lbls}}"
+          ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env: "{{director_env|combine(containers_env, director_env_extra|default({}))}}"
+          pull: yes
+          restart: yes
+          memory: "300m"
+          volumes:
             - "{{dirs.band_set}}:/images/band_set:ro"
             - "{{dirs.rockme_set}}:/images/rockme_set:ro"
             - "{{dirs.director_data}}:/data" # containers configs
-            - "{{dirs.band}}:/images/band_base_py:ro"
-            - "{{dirs.user_images}}:/images/user:cached"
+            # - "{{dirs.band}}:/images/band_base_py:ro"
+            - "{{dirs.user_images}}:/images/user:ro"
             - "/var/run/docker.sock:/var/run/docker.sock"
-          drdc_ports:
-            - "{{if_inner}}:{{ports.band.0}}:{{ports.band.1}}"
       tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
-
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
@@ -358,7 +356,7 @@
         file: state=directory path={{dirs.workspace}} owner=473 group=473
       - name: Cloning Theia repo
         git:
-          repo: "{{git_org}}/theia-ide-image.git"
+          repo: "{{repos.theia}}"
           dest: "{{build_path}}"
       - name: Creating theia cointainer
         docker_container:
@@ -370,16 +368,13 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           env: "{{containers_env}}"
-          # Use with present and started states to force the re-creation of an existing container.
-          # recreate: yes
-          # If true, always pull the latest version of an image. Otherwise, will only pull an image when missing.
           pull: yes
           restart: yes
           memory: "2g"
           volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
-            - "{{dirs.band}}:{{workspace}}/sources_ro/band:ro"
+            # - "{{dirs.band}}:{{workspace}}/sources_ro/band:ro"
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
             - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"

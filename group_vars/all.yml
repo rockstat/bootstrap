@@ -3,8 +3,9 @@ playbook_version: 3.1.5
 # ########## Main params ##########
 #version
 branch: HEAD
-git_org: https://github.com/rockstat
 dock_no_cache: no
+#local config
+_local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 #params
 log_level: info
 #features
@@ -18,6 +19,13 @@ metrics_server: no
 #services
 _acmedns_endpoint: auth.0x011.xyz
 _acmedns_setup: no
+#repos
+git_account: https://github.com/rockstat
+repos:
+  band_set: "{{git_account}}/band-services-set"
+  dashboard: "{{git_account}}/dashboard.git"
+  theia: "{{git_account}}/theia-ide-image.git"
+  splash: "{{git_account}}/splash.git"
 #base
 person_name: Aldous Huxley
 contact_email: alex@ebalrefuckanal.de
@@ -67,13 +75,15 @@ support_key: "{{ lookup('file', support_key_file) }}"
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 build_dir: '{{home_dir}}/build'
+images_dir: "{{home_dir}}/images"
+important_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}"]
 dirs:
   front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
-  band: "{{home_dir}}/images/band_base"
-  band_set: "{{home_dir}}/images/band_set"
-  rockme_set: "{{home_dir}}/images/rockme_set"
+  band: "{{images_dir}}/band_base"
+  band_set: "{{images_dir}}/band_set"
+  rockme_set: "{{images_dir}}/rockme_set"
   director_data: "{{data_dir}}/director_data"
   user_images: "{{data_dir}}/images"
   workspace: "{{data_dir}}/workspace"
@@ -82,22 +92,21 @@ dirs:
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   dashboard: "{{home_dir}}/dashboard"
-  clickhouse: "/srv/clickhouse"
-  clickhouse_tmp: "/srv/clickhouse_tmp"
-  redis: "/srv/redis"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
   acmedns: "{{home_dir}}/acmedns"
   acmesh: "{{home_dir}}/acmesh"
   certificates: "{{_ssl_cert_dir}}"
+  clickhouse: "/srv/clickhouse"
+  clickhouse_tmp: "/srv/clickhouse_tmp"
+  redis: "/srv/redis"
 #ports directory
 ports:
   # services
-  band: [10000, 8080]
+  director: [10000, 8080]
   front: [10001, 8080]
   front_ws: [10002, 8082]
   heavyload: [10010, 8080]
   # tools
-  director: [10000, 8080]
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
   theia: [8887, 8000]
@@ -168,6 +177,8 @@ jup_with_pip: [""]
 # todo: ability to specify additional packages for theia and others
 # ########## ClickHouse ##########
 ch_db: stats
+chp_dns: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
+chs_dns: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Common Envs ##########
 containers_env:
   # **ATTENTION! You have to configure variables at Director's config too!**
@@ -178,9 +189,12 @@ containers_env:
   JSON_LOGS: 1
   NETWORK: "{{docker_net_name}}"
   REDIS_DSN: "redis://redis:6379"
-  CHP_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
-  CH_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
-  CHS_DSN: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
+  CH_DSN: "{{chp_dsn}}"
+  CHP_DSN: "{{chp_dsn}}"
+  CHS_DSN: "{{chs_dsn}}"
+director_env:
+  PORT: "{{ports.director.1}}"
+  IMAGES_PATH': "/images"
 # ########## NGINX COMMONS ##########
 # configuration extra params
 _nginx_proxy_params_extra: []
@@ -283,9 +297,6 @@ _chproxy_user_config:
 #   - "{{ {'name': main_user, 'password': main_user_password}|combine(_chproxy_user_config) }}"
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
-
 # ########## Mailer config ##########
 mailer_subj_key: "Ваши ключи OpenVPN ({{ domain }}) v{{ playbook_version }}"
 mailer_subj_snip: "Сниппет для сайта ({{ domain }}) v{{ playbook_version }}"
-
-

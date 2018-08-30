@@ -354,6 +354,7 @@ menu() {
   "2"  "    Issue SSL certificate" \
   "3"  "    Install/upgrade system and platform" \
   "4"  "    Upgrade only platform components" \
+  "30" "    Setup OpenVPN server" \
   "11" "    Change Admin Password" \
   "12" "    Change Domain '${DOMAIN}'" \
   "13" "    Change Short hostname '${HOSTALIAS}'" \
@@ -377,6 +378,7 @@ menu() {
     "14") request_email ;;
     "15") request_username ;;
     "20") run_platform_playbook nginx ;;
+    "30") run_platform_playbook ovpn-server ;;
     "0") exit 1 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac
