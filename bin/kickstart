@@ -349,7 +349,7 @@ HEREDOC
 
 menu() {
   # --menu <text> <height> <width> <listheight>
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 25 60 10 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 14 \
   "1"  "    Upgrade OS" \
   "2"  "    Issue SSL certificate" \
   "3"  "    Install/upgrade system and platform" \

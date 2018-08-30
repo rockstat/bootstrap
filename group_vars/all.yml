@@ -179,6 +179,7 @@ containers_env:
   NETWORK: "{{docker_net_name}}"
   REDIS_DSN: "redis://redis:6379"
   CHP_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
+  CH_DSN: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
   CHS_DSN: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## NGINX COMMONS ##########
 # configuration extra params
