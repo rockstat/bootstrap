@@ -177,8 +177,8 @@ jup_with_pip: [""]
 # todo: ability to specify additional packages for theia and others
 # ########## ClickHouse ##########
 ch_db: stats
-chp_dns: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
-chs_dns: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
+chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
+chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Common Envs ##########
 containers_env:
   # **ATTENTION! You have to configure variables at Director's config too!**
