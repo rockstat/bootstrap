@@ -39,6 +39,20 @@ domains:
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
   httpdebug: 'httpdebug.{{domain}}'
+# ########## Images ##########
+images_default:
+  chproxy: rockstat/chproxy
+  redis: redis:4-alpine
+  logspout: gliderlabs/logspout
+  anaconda: continuumio/anaconda3
+  grafana: rockstat/grafana
+  band: rockstat/band-base-py
+  director: rockstat/director
+  theia: rockstat/theia-ide
+  front: rockstat/front
+  chwriter: rockstat/chwriter
+  heavyload: rockstat/heavyload
+images: "{{images_default|combine(images_custom|default({}))}}"
 # ########## Logs ##########
 #loggly
 _loggly_hostname: logs-01.loggly...
@@ -74,13 +88,12 @@ remote_user: 'x011'
 #key for update manager to access server
 support_key_file: './public_keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
-#dirs
+# ########## dirs ##########
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
 etc_dir: '{{home_dir}}/etc'
 build_dir: '{{home_dir}}/build'
 images_dir: "{{home_dir}}/images"
-important_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}"]
 dirs:
   front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
@@ -104,7 +117,8 @@ dirs:
   clickhouse_tmp: "/srv/clickhouse_tmp"
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
-#ports directory
+important_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}"]
+# ########## ports ##########
 ports:
   # services
   director: [10000, 8080]

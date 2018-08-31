@@ -140,7 +140,7 @@
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: "Creating directory for splash screen"
+      - name: Running Splash content
         file:
           path: "{{dirs.splash}}"
           state: directory
@@ -202,10 +202,11 @@
           src: 'chproxy/config.yml.j2'
           dest: '{{chproxy_config}}'
 
-      - docker_container:
+      - Running Chproxy cointainer
+        docker_container:
           name: chproxy
           hostname: chproxy
-          image: rockstat/chproxy
+          image: "{{images.chproxy}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -226,11 +227,12 @@
 
     - name: Redis setup
       block:
-      - name: Including Docker container role for Redis server
+
+      - name: Running Redis cointainer
         docker_container:
           name: redis
           hostname: redis
-          image: redis:4-alpine
+          image: "{{images.redis}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -245,14 +247,12 @@
 
     - name: Logspout with Loggly streaming
       block:
-      - debug:
-          msg: "Using {{_logspout_target}} target"
 
-      - name: Including Docker container role for Logspout
+      - name: Running Logspout cointainer
         docker_container:
           name: logspout
           hostname: logspout
-          image: gliderlabs/logspout
+          image: "{{images.logspout}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -277,11 +277,11 @@
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
-      - name: Including Docker container role for Anaconda
+      - name: Running Anaconda cointainer
         docker_container:
           name: anaconda
           hostname: anaconda
-          image: continuumio/anaconda3
+          image: "{{images.anaconda}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -313,10 +313,11 @@
           owner: 472 # grafana container ids
           group: 472
 
-      - docker_container:
+      - name: Running Grafana cointainer
+        docker_container:
           name: grafana
           hostname: grafana
-          image: rockstat/grafana
+          image: "{{images.grafana}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -332,7 +333,7 @@
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
     - block:
-      - name: Including Static service role for Dashboars
+      - name: Preparing dashboard content
         include_role:
           name: dr.static-service
         vars:
@@ -345,7 +346,7 @@
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
     - block:
       - docker_image:
-          name: rockstat/band-base-py
+          name: "{{images.band}}"
           force: yes
 
       - name: Cloning Band-set repo
@@ -353,11 +354,11 @@
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
 
-      - name: Including Docker container role for Director service
+      - name: Running Director cointainer
         docker_container:
           name: director
           hostname: director
-          image: rockstat/director
+          image: "{{images.director}}"
           labels: "{{docker_band_lbls}}"
           ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
@@ -378,22 +379,17 @@
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
 
-      - name: Creating User Images Directory
-        file: state=directory path={{dirs.user_images}} owner=473 group=473
+      - name: Creating required directories
+        file: state=directory path={{item}} owner=473 group=473
+        with_items:
+          - "{{dirs.user_images}}"
+          - "{{dirs.workspace}}"
 
-      - name: Creating User Workspace Directory
-        file: state=directory path={{dirs.workspace}} owner=473 group=473
-
-      - name: Cloning Theia repo
-        git:
-          repo: "{{repos.theia}}"
-          dest: "{{build_path}}"
-
-      - name: Creating theia cointainer
+      - name: Running Theia cointainer
         docker_container:
           name: theia
           hostname: theia
-          image: rockstat/theia-ide
+          image: "{{images.theia}}"
           labels: "{{docker_band_lbls}}"
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
@@ -405,25 +401,23 @@
           volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
-            # - "{{dirs.band}}:{{workspace}}/sources_ro/band:ro"
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
             - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
-
       vars:
         workspace: "/home/theia/project"
-        build_path: "{{build_dir}}/theia"
       when: 'setup_theia == True'
       tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
+
     - block:
-      - name: Running docker container for Front service
+      - name: Running Front cointainer
         docker_container:
           name: front
           hostname: front
-          image: "rockstat/front"
+          image: "{{images.front}}"
           labels: "{{docker_band_lbls}}"
           ports: 
             - "{{if_inner}}:{{ports.front.0}}:{{ports.front.1}}"
@@ -452,13 +446,14 @@
     #   tags: ['never', 'chmigrate']
 
 
-    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### =
+    ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
+
     - block:
-      - name: Running docker container for ClickHouse Writer service
+      - name: Running ChWriter cointainer
         docker_container:
           name: chwriter
           hostname: chwriter
-          image: "rockstat/chwriter"
+          image: "{{images.chwriter}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
@@ -474,12 +469,13 @@
       tags: ['chwriter', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including Docker container role for Heavyload service
         docker_container:
           name: heavyload
           hostname: heavyload
-          image: "rockstat/heavyload"
+          image: "{{images.heavyload}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
