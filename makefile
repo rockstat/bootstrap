@@ -11,4 +11,4 @@ demo:
 
 to_master:
 	@echo $(BR)
-	git checkout master && git merge $(BR) && git checkout $(BR)
+	git checkout master && git rebase $(BR) && git checkout $(BR)
