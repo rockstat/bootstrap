@@ -1,4 +1,4 @@
-playbook_version: 3.2.1
+playbook_version: 3.2.2
 
 # ########## local config ##########
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
