@@ -1,14 +1,9 @@
 playbook_version: 3.1.7
 
-# ########## Main params ##########
-#version
-branch: HEAD
-dock_no_cache: no
-#local config
+# ########## local config ##########
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
-#params
+# ########## Features ##########
 log_level: info
-#features
 setup_server: yes
 setup_nginx: yes
 _setup_ssl: yes
@@ -16,20 +11,32 @@ _setup_ssl_wildcard: no
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
-#services
+# ########## Creds ##########
+person_name: Aldous Huxley
+contact_email: alex@ebalrefuckanal.de
+#sysuser
+rsys_creds: [ "rsys", "" ]
+ruser_creds: [ "ruser", "" ]
+#main user. (temp)
+main_user: default
+main_user_password: default
+#system users
+support_user: 'x011'
+remote_user: 'x011'
+#key for update manager to access server
+support_key_file: './public_keys/support.pub'
+support_key: "{{ lookup('file', support_key_file) }}"
+# ########## AcmeDSN ##########
 _acmedns_endpoint: auth.0x011.xyz
 _acmedns_setup: no
-#repos
+# ########## Repos ##########
 git_account: https://github.com/rockstat
 repos:
   band_set: "{{git_account}}/band-services-set"
   dashboard: "{{git_account}}/dashboard.git"
   theia: "{{git_account}}/theia-ide-image.git"
   splash: "{{git_account}}/splash.git"
-#base
-person_name: Aldous Huxley
-contact_email: alex@ebalrefuckanal.de
-#domains
+# ########## Domains ##########
 domain: "{{tracker_domain|default(ansible_host)}}"
 domains:
   app: 'app.{{domain}}'
@@ -68,6 +75,7 @@ _ssl_certs:
   - domain: "{{domain}}"
     wildcard: yes
     email: "{{contact_email}}"
+# domains for regular reques
 domains_ssl:
   - email: '{{contact_email}}'
     domains: "{{[domain] + domains.values()|list|unique}}"
@@ -75,19 +83,6 @@ _ssl_cert_dir: "/etc/letsencrypt/live"
 _ssl_cert_fullchain: fullchain.pem
 _ssl_cert_trust: chain.pem
 _ssl_cert_key: privkey.pem
-# ########## Users ##########
-#sysuser
-rsys_creds: [ "rsys", "" ]
-ruser_creds: [ "ruser", "" ]
-#main user. (temp)
-main_user: default
-main_user_password: default
-#system users
-support_user: 'x011'
-remote_user: 'x011'
-#key for update manager to access server
-support_key_file: './public_keys/support.pub'
-support_key: "{{ lookup('file', support_key_file) }}"
 # ########## dirs ##########
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'

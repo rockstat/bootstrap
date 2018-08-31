@@ -6,6 +6,9 @@
     - vars/nginx.yml
   tasks:
 
+    - debug: msg={{_local_config}}
+      tags: ["always"]
+
     - name: Checking python interpreter
       assert:
         that: 
@@ -202,7 +205,7 @@
           src: 'chproxy/config.yml.j2'
           dest: '{{chproxy_config}}'
 
-      - Running Chproxy cointainer
+      - name: Running Chproxy cointainer
         docker_container:
           name: chproxy
           hostname: chproxy
