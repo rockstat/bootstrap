@@ -5,6 +5,7 @@
   vars_files:
     - vars/nginx.yml
   tasks:
+
     - name: Checking python interpreter
       assert:
         that: 
@@ -12,7 +13,15 @@
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
 
+    - name: Creating dirs
+      file:
+        state: directory
+        path: "{{item}}"
+      with_items: "{{important_dirs}}"
+      tags: ["always"]
+
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
+      
     - block:
       - name: Including Base Server role
         include_role:
@@ -29,6 +38,7 @@
 
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including Docker role
         include_role:
@@ -47,6 +57,7 @@
 
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including Exposeur role
         include_role:
@@ -98,6 +109,7 @@
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including Nginx role
         include_role:
@@ -126,6 +138,7 @@
 
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
+
     - block:
       - name: "Creating directory for splash screen"
         file:
@@ -142,6 +155,7 @@
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Including Netdata role
         include_role:
@@ -160,6 +174,7 @@
 
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
+
     - block: 
       - name: Including ClickHouse role
         include_role:
@@ -168,8 +183,8 @@
           nets: 
           ifaces: 
           clickhouse_users_custom: '{{ch_users|default([])}}'
-          clickhouse_listen_host_default: ['127.0.0.1', "{{if_inner}}"] # '::1', 
-          clickhouse_networks_default: ['127.0.0.1', "{{docker_net}}"] # '::1', 
+          clickhouse_listen_host_default: ['127.0.0.1', "{{if_inner}}"]
+          clickhouse_networks_default: ['127.0.0.1', "{{docker_net}}"]
           clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
@@ -179,100 +194,112 @@
 
 
     ##### ##### ##### ##### #####    Clickhouse Proxy    ##### ##### ##### ##### ##### 
+
     - block:
-      - name: CHProxy setup
-        debug: msg="role begin"
-      - name: Including ClickHouse proxy role
-        include_role: 
+
+      - name: Rendering CHProxy config
+        template:
+          src: 'chproxy/config.yml.j2'
+          dest: '{{chproxy_config}}'
+
+      - docker_container:
           name: chproxy
-        vars:
-          chproxy_docker_bind: "{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"
-          chproxy_def_node: "{{if_inner}}:{{ports.clickhouse.0}}"
-          chproxy_clusters: "{{hst_chproxy_clusters|default([])}}"
-          chproxy_docker_net: "{{docker_net_name}}"
-          chproxy_users: "{{_chproxy_users|default([])}}"
-          chproxy_allowed_networks: "{{_chproxy_allow_from|default([]) + _group_chproxy_allow_from|default([])}}"
-          chproxy_build_path: "{{build_dir}}/chproxy"
+          hostname: chproxy
+          image: rockstat/chproxy
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "200m"
+          ports: ["{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
+          volumes: ["{{chproxy_config}}:/config.yml:ro"]
+      vars:
+        chproxy_config: "{{etc_dir}}/chproxy.yml"
+        chproxy_defs: "{{_chproxy_defs}}"
+        chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
+        chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
+        chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
       tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
+
     - name: Redis setup
       block:
       - name: Including Docker container role for Redis server
-        include_role:
-          name: dr.docker-container
-        vars:
-          drdc_name: "redis"
-          drdc_image: "redis:4-alpine"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_memory_limit: '200m'
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_volumes: ["{{dirs.redis}}:/data"]
-          drdc_ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
+        docker_container:
+          name: redis
+          hostname: redis
+          image: redis:4-alpine
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "300m"
+          ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
+          volumes: ["{{dirs.redis}}:/data"]
       tags: ['never', 'redis', 'docker', 'system', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
+
     - name: Logspout with Loggly streaming
       block:
       - debug:
           msg: "Using {{_logspout_target}} target"
+
       - name: Including Docker container role for Logspout
-        include_role:
-          name: dr.docker-container
-        vars:
-          endpoints:
-            loggly: "syslog+tcp://{{_loggly_hostname}}"
-            papertrail: "syslog+tls://{{_papertrail_hostname}}"
-          env:
-            common:
-              SYSLOG_HOSTNAME: "{{hostname}}"
-              TAIL: 100
-            loggly:
-              SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
-          drdc_name: "logspout"
-          drdc_image: "gliderlabs/logspout"
-          drdc_network: '{{docker_net_name}}'
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_cmd: "{{endpoints[_logspout_target]}}"
-          drdc_volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-          drdc_env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
+        docker_container:
+          name: logspout
+          hostname: logspout
+          image: gliderlabs/logspout
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "300m"
+          volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+          env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
+          command: "{{endpoints[_logspout_target]}}"
+      vars:
+        endpoints:
+          loggly: "syslog+tcp://{{_loggly_hostname}}"
+          papertrail: "syslog+tls://{{_papertrail_hostname}}"
+        env:
+          common:
+            SYSLOG_HOSTNAME: "{{hostname}}"
+            TAIL: 100
+          loggly:
+            SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       when: "_logspout_enabled|default(0) == True"
-      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'system', 'docker-container', 'full_setup']
+      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'pservice', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
-      - name: Anaconda setup
-        debug: msg="bind to {{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"
       - name: Including Docker container role for Anaconda
-        include_role:
-          name: dr.docker-container
-        vars:
-          conda_list: "{{jup_with_conda_def + jup_with_conda}}"
-          pip_list: "{{jup_with_pip_def + jup_with_pip}}"
-          cmd_parts:
-            - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
-            - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
-            - "/opt/conda/bin/conda install jupyter -y --quiet && "
-            - "/opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-            - "--ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
-          drdc_name: 'anaconda'
-          drdc_image: "continuumio/anaconda3"
-          drdc_network: '{{docker_net_name}}'
-          drdc_nocache: "{{dock_no_cache}}"
-          drdc_hosts: "{{docker_etc_hosts}}"
-          drdc_memory_limit: '{{anaconda_mem_limit}}'
-          drdc_cmd: "/bin/bash -c \"{{cmd_parts|join(' ')}}\""
-          drdc_labels: "{{docker_band_lbls}}"
-          drdc_env: "{{containers_env}}"
-          drdc_volumes: 
-            - '{{dirs.notebooks}}:/opt/notebooks'
-          drdc_ports: ["{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}"]
+        docker_container:
+          name: anaconda
+          hostname: anaconda
+          image: continuumio/anaconda3
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "2g"
+          volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
+          ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
+          env: "{{ containers_env }}"
+          command: "/bin/bash -c \"{{cmd_parts|join('')}}\""
+      vars:
+        conda_list: "{{jup_with_conda_def + jup_with_conda}}"
+        pip_list: "{{jup_with_pip_def + jup_with_pip}}"
+        cmd_parts:
+          - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
+          - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
+          - " /opt/conda/bin/conda install jupyter -y --quiet"
+          - " && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
+          - " --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
       when: 'setup_jupyter == True'
       tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker', 'docker-container', 'full_setup']
 
@@ -350,14 +377,18 @@
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
+
       - name: Creating User Images Directory
         file: state=directory path={{dirs.user_images}} owner=473 group=473
+
       - name: Creating User Workspace Directory
         file: state=directory path={{dirs.workspace}} owner=473 group=473
+
       - name: Cloning Theia repo
         git:
           repo: "{{repos.theia}}"
           dest: "{{build_path}}"
+
       - name: Creating theia cointainer
         docker_container:
           name: theia
@@ -378,8 +409,7 @@
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
             - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
-      - name: Copying bootstrap files
-        command: 'cp -nR {{build_path}}/bootstrap/.theia {{dirs.workspace}}/'
+
       vars:
         workspace: "/home/theia/project"
         build_path: "{{build_dir}}/theia"
