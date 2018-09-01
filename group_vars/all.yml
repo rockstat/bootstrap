@@ -212,10 +212,10 @@ _chproxy_allowed_networks_default: "{{local_nets}}"
 _chproxy_clusters_default:
   - name: local
     nodes:
-      - "{{if_inner}}:{{ports.clickhouse.0}}"
+  - "{{if_inner}}:{{ports.clickhouse.0}}"
     users:
-      - { name: readonly, password: "" }
-      - { name: default, password: "" }
+  - { name: readonly, password: "" }
+  - { name: default, password: "" }
 _chproxy_users_default:
   - { to_user: 'readonly', name: 'readonly', password: 'readonly'}
   - { to_user: 'default', name: 'default', password: 'default'}

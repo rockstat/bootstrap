@@ -183,12 +183,12 @@
         include_role:
           name: AlexeySetevoi.clickhouse
         vars:
-          nets: 
-          ifaces: 
-          clickhouse_users_custom: '{{ch_users|default([])}}'
           clickhouse_listen_host_default: ['127.0.0.1', "{{if_inner}}"]
           clickhouse_networks_default: ['127.0.0.1', "{{docker_net}}"]
-          clickhouse_dbs_custom: [{name: '{{ch_db}}'}]
+          clickhouse_profiles_custom: "{{_clickhouse_profiles_custom}}"
+          clickhouse_users_custom: "{{_clickhouse_users_custom}}"
+          clickhouse_logger: "{{_clickhouse_logger}}"
+          clickhouse_dbs_custom: [ {name: '{{ch_db}}'} ]
           clickhouse_path_data: "{{dirs.clickhouse}}"
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
         retries: 3
@@ -377,7 +377,7 @@
             # - "{{dirs.band}}:/images/band_base_py:ro"
             - "{{dirs.user_images}}:/images/user:ro"
             - "/var/run/docker.sock:/var/run/docker.sock"
-      tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
+        tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
