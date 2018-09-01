@@ -416,6 +416,8 @@
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
     - block:
+      - docker_container: name=frontier state=absent
+
       - name: Running Front cointainer
         docker_container:
           name: front
