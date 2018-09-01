@@ -17,7 +17,7 @@
       tags: ["always"]
 
     - name: Creating dirs
-      file:
+      file: 
         state: directory
         path: "{{item}}"
       with_items: "{{important_dirs}}"

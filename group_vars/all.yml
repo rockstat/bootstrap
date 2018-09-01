@@ -152,7 +152,8 @@ docker_host_ip: "{{docker_net|net_gw}}"
 docker_netmask: "{{docker_net|ipaddr('netmask')}}"
 docker_net_net: "{{docker_net|ipaddr('network')}}"
 # default docker network
-docker_initnet_pattern: 172.17.*
+docker_defnet_pattern: 172.17.*
+docker_defnet_net: "{{docker_defnet_pattern|ip_p2n}}"
 # short name to access host and possible others
 docker_etc_hosts:
   host: "{{if_inner}}"
@@ -169,7 +170,7 @@ s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 # ########## Interfaces ##########
 if_outer: "{{ansible_default_ipv4.address}}"
 if_inner: "{{docker_host_ip}}"
-local_nets: [ "127.0.0.0/8", "{{s2s_vpn_net}}", "{{docker_net}}" ]
+local_nets: [ "127.0.0.0/8", "{{s2s_vpn_net}}", "{{docker_net}}", "{{docker_defnet_net}}" ]
 # ########## Firewall ##########
 disable_ipv6: true
 firewall_rules:
@@ -216,8 +217,8 @@ _chproxy_clusters_default:
       - { name: readonly, password: "" }
       - { name: default, password: "" }
 _chproxy_users_default:
-  - { to_user: 'readonly', name: 'readonly', password: ''}
-  - { to_user: 'default', name: 'default', password: ''}
+  - { to_user: 'readonly', name: 'readonly', password: 'readonly'}
+  - { to_user: 'default', name: 'default', password: 'default'}
 # ########## CH Common ##########
 _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
