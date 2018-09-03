@@ -58,6 +58,66 @@
           drd_mtu: '1400'
       tags: ['never', 'docker', 'docker-server', 'system', 'full_setup']
 
+    ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
+
+    - name: Starting Logspout logs streamer container
+      block:
+
+      - name: Running Logspout cointainer
+        docker_container:
+          name: logspout
+          hostname: logspout
+          image: "{{images.logspout}}"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "300m"
+          volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+          env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
+          ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
+          command: "{{endpoints[_logspout_target]}}"
+      vars:
+        endpoints:
+          loggly: "syslog+tcp://{{_loggly_hostname}}"
+          papertrail: "syslog+tls://{{_papertrail_hostname}}"
+        env:
+          common:
+            SYSLOG_HOSTNAME: "{{hostname}}"
+            TAIL: 100
+          loggly:
+            SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
+      when: "_logspout_enabled|default(0) == True"
+      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'pservice', 'docker-container', 'full_setup']
+
+    ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
+    - block:
+      - name: Preparing dashboard content
+        include_role:
+          name: dr.static-service
+        vars:
+          dr_name: dashboard
+          dr_dir: '{{dirs.dashboard}}'
+          dr_repo: "{{repos.dashboard}}"
+      tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
+
+
+    ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
+
+    - block:
+      - name: Running Splash content
+        file:
+          path: "{{dirs.splash}}"
+          state: directory
+        when: 'dr_dir is defined'
+
+      - name: Cloning splash screen repo
+        git:
+          repo: "{{repos.splash}}"
+          accept_hostkey: yes
+          dest: "{{dirs.splash}}"
+      tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
+
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
 
@@ -138,23 +198,6 @@
           # - "{{local_general.users}}"
       when: "setup_nginx == True"
       tags: ['never', 'nginx', 'system', 'full_setup']
-
-
-    ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
-
-    - block:
-      - name: Running Splash content
-        file:
-          path: "{{dirs.splash}}"
-          state: directory
-        when: 'dr_dir is defined'
-
-      - name: Cloning splash screen repo
-        git:
-          repo: "{{repos.splash}}"
-          accept_hostkey: yes
-          dest: "{{dirs.splash}}"
-      tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
@@ -245,107 +288,6 @@
           volumes: ["{{dirs.redis}}:/data"]
       tags: ['never', 'redis', 'docker', 'system', 'docker-container', 'full_setup']
 
-
-    ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
-
-    - name: Logspout with Loggly streaming
-      block:
-
-      - name: Running Logspout cointainer
-        docker_container:
-          name: logspout
-          hostname: logspout
-          image: "{{images.logspout}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
-          restart: yes
-          memory: "300m"
-          volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
-          env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
-          command: "{{endpoints[_logspout_target]}}"
-      vars:
-        endpoints:
-          loggly: "syslog+tcp://{{_loggly_hostname}}"
-          papertrail: "syslog+tls://{{_papertrail_hostname}}"
-        env:
-          common:
-            SYSLOG_HOSTNAME: "{{hostname}}"
-            TAIL: 100
-          loggly:
-            SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
-      when: "_logspout_enabled|default(0) == True"
-      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'pservice', 'docker-container', 'full_setup']
-
-
-    ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
-    - block:
-      - name: Running Anaconda cointainer
-        docker_container:
-          name: anaconda
-          hostname: anaconda
-          image: "{{images.anaconda}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
-          restart: yes
-          memory: "2g"
-          volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
-          ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
-          env: "{{ containers_env }}"
-          command: "/bin/bash -c \"{{cmd_parts|join('')}}\""
-      vars:
-        conda_list: "{{jup_with_conda_def + jup_with_conda}}"
-        pip_list: "{{jup_with_pip_def + jup_with_pip}}"
-        cmd_parts:
-          - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
-          - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
-          - " /opt/conda/bin/conda install jupyter -y --quiet"
-          - " && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-          - " --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
-      when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker', 'docker-container', 'full_setup']
-
-
-    ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
-    - block:
-      - name: Creating Grafana datadir
-        file:
-          state: directory
-          path: "{{dirs.grafana_data}}"
-          owner: 472 # grafana container ids
-          group: 472
-
-      - name: Running Grafana cointainer
-        docker_container:
-          name: grafana
-          hostname: grafana
-          image: "{{images.grafana}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
-          restart: yes
-          memory: "300m"
-          ports:
-            - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
-          volumes:
-            - '{{dirs.grafana_data}}:/var/lib/grafana'
-        tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
-
-
-
-    ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
-    - block:
-      - name: Preparing dashboard content
-        include_role:
-          name: dr.static-service
-        vars:
-          dr_name: dashboard
-          dr_dir: '{{dirs.dashboard}}'
-          dr_repo: "{{repos.dashboard}}"
-      tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
-
-
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
     - block:
       - docker_image:
@@ -378,40 +320,6 @@
             - "{{dirs.user_images}}:/images/user:ro"
             - "/var/run/docker.sock:/var/run/docker.sock"
         tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
-
-    ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
-    - block:
-
-      - name: Creating required directories
-        file: state=directory path={{item}} owner=473 group=473
-        with_items:
-          - "{{dirs.user_images}}"
-          - "{{dirs.workspace}}"
-
-      - name: Running Theia cointainer
-        docker_container:
-          name: theia
-          hostname: theia
-          image: "{{images.theia}}"
-          labels: "{{docker_band_lbls}}"
-          ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
-          env: "{{containers_env}}"
-          pull: yes
-          restart: yes
-          memory: "2g"
-          volumes:
-            - "{{dirs.workspace}}:{{workspace}}/:cached"
-            - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
-            - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
-            - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
-            - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
-      vars:
-        workspace: "/home/theia/project"
-      when: 'setup_theia == True'
-      tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
-
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
@@ -475,6 +383,7 @@
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
 
+
     - block:
       - name: Including Docker container role for Heavyload service
         docker_container:
@@ -496,6 +405,94 @@
         env:
           WEBHOOK: "http://front:{{ports.front.1}}/upload/notify"
       tags: ['heavyload', 'docker', 'pservice', 'docker-container', 'full_setup']
+
+
+    ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
+    - block:
+      - name: Running Anaconda cointainer
+        docker_container:
+          name: anaconda
+          hostname: anaconda
+          image: "{{images.anaconda}}"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "2g"
+          volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
+          ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
+          env: "{{ containers_env }}"
+          command: "/bin/bash -c \"{{cmd_parts|join('')}}\""
+      vars:
+        conda_list: "{{jup_with_conda_def + jup_with_conda}}"
+        pip_list: "{{jup_with_pip_def + jup_with_pip}}"
+        cmd_parts:
+          - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
+          - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
+          - " /opt/conda/bin/conda install jupyter -y --quiet"
+          - " && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
+          - " --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
+      when: 'setup_jupyter == True'
+      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker', 'docker-container', 'full_setup']
+
+
+    ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
+    - block:
+      - name: Creating Grafana datadir
+        file:
+          state: directory
+          path: "{{dirs.grafana_data}}"
+          owner: 472 # grafana container ids
+          group: 472
+
+      - name: Running Grafana cointainer
+        docker_container:
+          name: grafana
+          hostname: grafana
+          image: "{{images.grafana}}"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          memory: "300m"
+          ports:
+            - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
+          volumes:
+            - '{{dirs.grafana_data}}:/var/lib/grafana'
+        tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
+
+    ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
+    - block:
+
+      - name: Creating required directories
+        file: state=directory path={{item}} owner=473 group=473
+        with_items:
+          - "{{dirs.user_images}}"
+          - "{{dirs.workspace}}"
+
+      - name: Running Theia cointainer
+        docker_container:
+          name: theia
+          hostname: theia
+          image: "{{images.theia}}"
+          labels: "{{docker_band_lbls}}"
+          ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          env: "{{containers_env}}"
+          pull: yes
+          restart: yes
+          memory: "2g"
+          volumes:
+            - "{{dirs.workspace}}:{{workspace}}/:cached"
+            - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
+            - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
+            - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
+            - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
+      vars:
+        workspace: "/home/theia/project"
+      when: 'setup_theia == True'
+      tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
 
 
     - import_tasks: tasks/setup_vpn_server.yml
