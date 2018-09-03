@@ -67,8 +67,8 @@ _loggly_api_key: 10bbf2d8...
 #papertrail
 _papertrail_hostname: logs7.pape....
 #destination
-_logspout_target: "loggly"
-_logspout_enabled: no
+_logspout_target: none
+_logspout_enabled: yes
 # ########## SSL ##########
 # ssl definition for new wildcard role
 _ssl_certs:

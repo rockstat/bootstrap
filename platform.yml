@@ -76,7 +76,7 @@
           volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
           env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
           ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
-          command: "{{endpoints[_logspout_target]}}"
+          command: "{{endpoints[_logspout_target]|default(omit)}}"
       vars:
         endpoints:
           loggly: "syslog+tcp://{{_loggly_hostname}}"
