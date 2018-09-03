@@ -87,7 +87,7 @@
             TAIL: 100
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
-      when: "_logspout_enabled|default(0) == True"
+      when: "_logspout_enabled == True"
       tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'pservice', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
