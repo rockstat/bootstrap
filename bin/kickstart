@@ -10,7 +10,6 @@ KICKSTART=${BOOTSTRAP_BINDIR}/kickstart
 KICKSTART_CMD="curl -s https://raw.githubusercontent.com/rockstat/bootstrap/${BOOTSTRAP_BRANCH}/bin/kickstart | sudo -E bash -\n"
 BINALIAS=/usr/local/bin/rockstat
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
-TARGET_DIR=/srv/platform
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
 FACT_CONF=/etc/ansible/facts.d/config.fact
 
@@ -112,10 +111,10 @@ update_bootstrap() {
     # git checkout $BOOTSTRAP_BRANCH && git pull --rebase
   else
     print_status "Cloning repo $BOOTSTRAP_REPO"
-    mkdir -p $TARGET_DIR
-    cd $TARGET_DIR
+    mkdir -p $BOOTSTRAP_DIR
+    cd $BOOTSTRAP_DIR
     echo $(pwd)
-    git clone $BOOTSTRAP_REPO && git checkout $BOOTSTRAP_BRANCH
+    git clone $BOOTSTRAP_REPO . && git checkout $BOOTSTRAP_BRANCH
   fi
 }
 

@@ -67,7 +67,7 @@ First-time setup tool execution
 ```bash
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
 ```
-curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E bash -
+curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E BRANCH=dev bash -
 
 Next times availavale helpful short alias
 
