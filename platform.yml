@@ -66,7 +66,7 @@
       - name: Removing Logspout cointainer
         docker_container:
           name: logspout
-          state: asbsent
+          state: absent
 
 
       # - name: Running Logspout cointainer
@@ -101,6 +101,7 @@
           recreate: yes
           memory: "100m"
           env: "{{ containers_env }}"
+          volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
           ports:
             - "{{if_inner}}:{{ports.ebaloger_http.0}}:{{ports.ebaloger_http.1}}"
             - "{{if_inner}}:{{ports.ebaloger_udp.0}}:{{ports.ebaloger_udp.1}}"
@@ -117,7 +118,7 @@
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       when: "_logspout_enabled == True"
-      tags: ['never', 'logspout', 'logger', 'monitoring', 'docker', 'pservice', 'docker-container', 'full_setup']
+      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'docker', 'ppart', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
     - block:
@@ -287,6 +288,7 @@
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
           pull: yes
+          recreate: yes
           memory: "200m"
           ports: ["{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
           volumes: ["{{chproxy_config}}:/config.yml:ro"]
@@ -314,6 +316,7 @@
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
           pull: yes
+          recreate: yes
           memory: "300m"
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
@@ -342,6 +345,7 @@
           env: "{{ director_env|combine(containers_env, director_env_extra|default({})) }}"
           pull: yes
           restart: yes
+          recreate: yes
           memory: "300m"
           volumes:
             - "{{dirs.band_set}}:/images/band_set:ro"
@@ -371,6 +375,7 @@
           env: "{{env|combine(containers_env, front_env_extra|default({}) )}}"
           pull: yes
           restart: yes
+          recreate: yes
           memory: "300m"
           volumes:
             - "{{dirs.front_custom_config}}:/app/config/custom"
@@ -404,6 +409,7 @@
           env: "{{env|combine(containers_env)}}"
           pull: yes
           restart: yes
+          recreate: yes
           memory: "300m"
           volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
@@ -450,6 +456,7 @@
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
           pull: yes
+          recreate: yes
           memory: "2g"
           volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
@@ -487,6 +494,7 @@
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
           pull: yes
+          recreate: yes
           memory: "300m"
           ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
@@ -515,6 +523,7 @@
           env: "{{containers_env}}"
           pull: yes
           restart: yes
+          recreate: yes
           memory: "2g"
           volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
