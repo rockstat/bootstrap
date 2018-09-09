@@ -50,7 +50,7 @@ images_default:
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
   logspout: gliderlabs/logspout
-  ebaloger: rockstat/ebaloger
+  ebaloger: madiedinro/ebaloger
   anaconda: continuumio/anaconda3
   grafana: rockstat/grafana
   band: rockstat/band-base-py

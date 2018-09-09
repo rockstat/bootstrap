@@ -63,24 +63,30 @@
     - name: Starting Logspout logs streamer container
       block:
 
-      - name: Running Logspout cointainer
+      - name: Removing Logspout cointainer
         docker_container:
           name: logspout
-          hostname: logspout
-          image: "{{images.logspout}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
-          restart: yes
-          pull: yes
-          restart_policy: always
-          recreate: yes
-          memory: "300m"
-          volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
-          env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
-          ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
-          command: "raw+udp://ebaloger:{{ports.ebaloger_udp.1}} {{endpoints[_logspout_target]|default('')}}"
+          state: asbsent
 
+
+      # - name: Running Logspout cointainer
+      #   docker_container:
+      #     name: logspout
+      #     hostname: logspout
+      #     image: "{{images.logspout}}"
+      #     labels: "{{docker_band_lbls}}"
+      #     networks: [ { name: "{{docker_net_name}}" } ]
+      #     etc_hosts: "{{docker_etc_hosts}}"
+      #     restart: yes
+      #     pull: yes
+      #     restart_policy: always
+      #     recreate: yes
+      #     memory: "300m"
+      #     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+      #     env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
+      #     ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
+      #     command: "raw+udp://ebaloger:{{ports.ebaloger_udp.1}} {{endpoints[_logspout_target]|default('')}}"
+      
       - name: Running ebaloger cointainer
         docker_container:
           name: ebaloger
