@@ -3,7 +3,6 @@ playbook_version: 3.3.0
 # ########## local config ##########
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 # ########## Features ##########
-log_level: info
 setup_server: yes
 setup_nginx: yes
 _setup_ssl: yes
@@ -51,6 +50,7 @@ images_default:
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
   logspout: gliderlabs/logspout
+  ebaloger: rockstat/ebaloger
   anaconda: continuumio/anaconda3
   grafana: rockstat/grafana
   band: rockstat/band-base-py
@@ -120,19 +120,22 @@ ports:
   front: [10001, 8080]
   front_ws: [10002, 8082]
   heavyload: [10010, 8080]
+  httpdebug: [19992]
+  ebaloger_http: [8085, 8080]
+  ebaloger_udp: [5055, 8090]
   # tools
   logspout: [8088, 80]
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
   theia: [8887, 8000]
   netdata: [19999]
-  httpdebug: [19992]
   # servers
   http: [80]
   https: [443]
   openvpn: [8080, 1194]
   redis: [6379, 6379]
   s2svpn: [8079]
+  clickhouse_tcp: [9000]
   clickhouse: [8123]
   chproxy: [9090, 9090]
   chronograf: [18888]
@@ -223,18 +226,20 @@ _chproxy_users_default:
 _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Common Envs ##########
-containers_env:
+containers_env_overrides: {}
+containers_env_default:
   # **ATTENTION! You have to configure variables at Director's config too!**
   DOMAIN: "{{domain}}"
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
-  LOG_LEVEL: "{{log_level}}"
+  LOG_LEVEL: "info"
   JSON_LOGS: 1
   NETWORK: "{{docker_net_name}}"
   REDIS_DSN: "redis://redis:6379"
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
+containers_env: "{{containers_env_default|combine(containers_env_overrides)}}"
 director_env:
   PORT: "{{ports.director.1}}"
   IMAGES_PATH: "/images"
@@ -295,7 +300,7 @@ _nginx_dashboard:
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
   - location /api/ { proxy_pass http://udirector/; }
-  - location /logs { proxy_pass http://ulogspout; }
+  - location /logs { proxy_pass http://uebaloger; }
   - location / { try_files $uri $uri/index.html; }
 _nginx_grafana:
   - server_name grafana.{{domain}}
@@ -321,7 +326,7 @@ _nginx_upstreams:
   - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; keepalive 8; }'
   - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; keepalive 32; }'
   - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; keepalive 4; }'
-  - 'upstream ulogspout { server {{if_inner}}:{{ports.logspout.0}} weight=10; keepalive 4; }'
+  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}} weight=10; keepalive 4; }'
   - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; keepalive 4; }'
   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; keepalive 8; }'
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'

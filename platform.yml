@@ -72,11 +72,33 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
+          pull: yes
+          restart_policy: always
+          recreate: yes
           memory: "300m"
           volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
           env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
           ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
-          command: "{{endpoints[_logspout_target]|default(omit)}}"
+          command: "raw+udp://ebaloger:{{ports.ebaloger_udp.1}} {{endpoints[_logspout_target]|default('')}}"
+
+      - name: Running ebaloger cointainer
+        docker_container:
+          name: ebaloger
+          hostname: ebaloger
+          image: "{{images.ebaloger}}"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{docker_etc_hosts}}"
+          restart: yes
+          pull: yes
+          restart_policy: always
+          recreate: yes
+          memory: "100m"
+          env: "{{ containers_env }}"
+          ports:
+            - "{{if_inner}}:{{ports.ebaloger_http.0}}:{{ports.ebaloger_http.1}}"
+            - "{{if_inner}}:{{ports.ebaloger_udp.0}}:{{ports.ebaloger_udp.1}}"
+
       vars:
         endpoints:
           loggly: "syslog+tcp://{{_loggly_hostname}}"
@@ -84,6 +106,7 @@
         env:
           common:
             SYSLOG_HOSTNAME: "{{hostname}}"
+            RAW_FORMAT: "{% raw %}{ \"name\" : \"{{ .Container.Name }}\", \"id\" : \"{{ .Container.ID }}\", \"time\": \"{{ .Time.Format \"2006-01-02T15:04:05Z07:00\" }}\", \"source\" : \"{{ .Source }}\", \"data\": {{ toJSON .Data }}}{{`\n`}}{% endraw %}"
             TAIL: 100
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
@@ -257,6 +280,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
+          pull: yes
           memory: "200m"
           ports: ["{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
           volumes: ["{{chproxy_config}}:/config.yml:ro"]
@@ -283,6 +307,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
+          pull: yes
           memory: "300m"
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
@@ -418,6 +443,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
+          pull: yes
           memory: "2g"
           volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
@@ -454,6 +480,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{docker_etc_hosts}}"
           restart: yes
+          pull: yes
           memory: "300m"
           ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
