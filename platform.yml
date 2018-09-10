@@ -502,7 +502,7 @@
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
-        tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
+      tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
