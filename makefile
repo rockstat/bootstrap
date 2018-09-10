@@ -1,5 +1,4 @@
 BR := $(shell git branch | grep \* | cut -d ' ' -f2-)
-BRD := "sdfsd"
 patch:
 	bumpversion patch
 

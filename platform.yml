@@ -144,8 +144,9 @@
       - name: Cloning splash screen repo
         git:
           repo: "{{repos.splash}}"
-          accept_hostkey: yes
           dest: "{{dirs.splash}}"
+          accept_hostkey: yes
+          force: yes
       tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
 
 
@@ -332,6 +333,8 @@
         git:
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
+          accept_hostkey: yes
+          force: yes
 
       - name: Running Director cointainer
         docker_container:
@@ -350,11 +353,10 @@
           volumes:
             - "{{dirs.band_set}}:/images/band_set:ro"
             - "{{dirs.rockme_set}}:/images/rockme_set:ro"
-            - "{{dirs.director_data}}:/data" # containers configs
-            # - "{{dirs.band}}:/images/band_base_py:ro"
             - "{{dirs.user_images}}:/images/user:ro"
+            - "{{dirs.director_data}}:/data" # containers configs
             - "/var/run/docker.sock:/var/run/docker.sock"
-        tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
+      tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
@@ -530,7 +532,7 @@
             - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
-            - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
+            # - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
       vars:
         workspace: "/home/theia/project"
       when: 'setup_theia == True'

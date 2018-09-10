@@ -97,7 +97,7 @@ dirs:
   band_set: "{{images_dir}}/band_set"
   rockme_set: "{{images_dir}}/rockme_set"
   director_data: "{{data_dir}}/director_data"
-  user_images: "{{data_dir}}/images"
+  user_images: "{{images_dir}}/user"
   workspace: "{{data_dir}}/workspace"
   notebooks: "{{data_dir}}/notebooks"
   uploads: "{{data_dir}}/uploads"
