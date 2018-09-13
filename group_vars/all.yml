@@ -1,4 +1,4 @@
-playbook_version: 3.3.0
+playbook_version: 3.4.0
 # ########## google site verifications ##########
 # for example google65679391aa745584.html
 _google_webmaster: ""
