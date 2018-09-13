@@ -1,8 +1,8 @@
 BR := $(shell git branch | grep \* | cut -d ' ' -f2-)
-patch:
+bump-patch:
 	bumpversion patch
 
-minor:
+bump-minor:
 	bumpversion minor
 
 demo:
