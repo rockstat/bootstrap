@@ -379,7 +379,7 @@ menu() {
 
   case "$OPTION" in
     "1") update_reboot_dialog; run_upgrade_playbook ;;
-    "2") run_platform_playbook ssl ;;
+    "2") run_platform_playbook docker,ssl ;;
     "3") run_platform_playbook full_setup ;;
     "4") run_platform_playbook pservice,ppart ;;
     "11") request_password ;;

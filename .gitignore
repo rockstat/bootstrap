@@ -1,7 +1,7 @@
 inventory/*
 group_vars/*
 host_vars/*
-public_keys/*
+keys/*
 ovpn_keys/*
 __pycache__
 /.vscode

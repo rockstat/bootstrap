@@ -2,8 +2,6 @@
 - name: Installing platform
   hosts: rockstat
   become: yes
-  vars_files:
-    - vars/nginx.yml
   tasks:
 
     - debug: msg={{_local_config}}
@@ -20,8 +18,8 @@
       file: 
         state: directory
         path: "{{item}}"
-      with_items: "{{important_dirs}}"
-      tags: ["always"]
+      with_items: "{{create_dirs}}"
+      tags: ["never", "full_setup", "dirs"]
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
@@ -35,7 +33,7 @@
           drs_home_dir: "{{home_dir}}"
           drs_pub_key_file: '{{support_key_file}}'
           drs_disable_ipv6: "{{disable_ipv6}}"
-          drs_extra_hosts: {home: "{{if_inner}}"}
+          drs_extra_hosts: "{{etc_hosts}}"
       when: 'setup_server == True'
       tags: ['never', 'os', 'network', 'system', 'full_setup']
 
@@ -56,36 +54,17 @@
           drd_interface: '{{docker_interface}}'
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
-      tags: ['never', 'docker', 'docker-server', 'system', 'full_setup']
+      tags: ['never', 'system', 'docker', 'full_setup']
 
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
 
-    - name: Starting Logspout logs streamer container
+    - name: Starting Ebaloger logs streamer container
       block:
 
       - name: Removing Logspout cointainer
         docker_container:
           name: logspout
           state: absent
-
-
-      # - name: Running Logspout cointainer
-      #   docker_container:
-      #     name: logspout
-      #     hostname: logspout
-      #     image: "{{images.logspout}}"
-      #     labels: "{{docker_band_lbls}}"
-      #     networks: [ { name: "{{docker_net_name}}" } ]
-      #     etc_hosts: "{{docker_etc_hosts}}"
-      #     restart: yes
-      #     pull: yes
-      #     restart_policy: always
-      #     recreate: yes
-      #     memory: "300m"
-      #     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
-      #     env: "{{ {}|combine(env.common, env[_logspout_target]|default({})) }}"
-      #     ports: [ "{{if_inner}}:{{ports.logspout.0}}:{{ports.logspout.1}}" ]
-      #     command: "raw+udp://ebaloger:{{ports.ebaloger_udp.1}} {{endpoints[_logspout_target]|default('')}}"
       
       - name: Running ebaloger cointainer
         docker_container:
@@ -94,7 +73,7 @@
           image: "{{images.ebaloger}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           restart: yes
           pull: yes
           restart_policy: always
@@ -113,14 +92,14 @@
         env:
           common:
             SYSLOG_HOSTNAME: "{{hostname}}"
-            RAW_FORMAT: "{% raw %}{ \"name\" : \"{{ .Container.Name }}\", \"id\" : \"{{ .Container.ID }}\", \"time\": \"{{ .Time.Format \"2006-01-02T15:04:05Z07:00\" }}\", \"source\" : \"{{ .Source }}\", \"data\": {{ toJSON .Data }}}{{`\n`}}{% endraw %}"
             TAIL: 100
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       when: "_logspout_enabled == True"
-      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'docker', 'ppart', 'docker-container', 'full_setup']
+      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'ppart', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
+
     - block:
       - name: Preparing dashboard content
         include_role:
@@ -130,7 +109,6 @@
           dr_dir: '{{dirs.dashboard}}'
           dr_repo: "{{repos.dashboard}}"
       tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
-
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
@@ -147,6 +125,12 @@
           dest: "{{dirs.splash}}"
           accept_hostkey: yes
           force: yes
+
+      - template:
+          src: google-webmaster.j2
+          dest: "{{dirs.splash}}/{{_google_webmaster}}"
+        when: "_google_webmaster is defined and _google_webmaster != ''"
+      
       tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
 
 
@@ -162,49 +146,35 @@
           expo_expose_rules: '{{expose_rules|default([]) + host_expose_rules|default([]) + group_expose_rules|default([])}}'
       tags: ['never', 'firewall', 'network', 'system', 'full_setup']
 
-
-    ##### ##### ##### ##### #####    Lets encrypt Certbot    ##### ##### ##### ##### ##### 
-    - block:
-      - name: Including LetsEncrypt role
-        include_role:
-          name: dr.letsencrypt
-        vars:
-          letsencrypt_domains_groups: '{{domains_ssl}}'
-          letsencrypt_pause_services: ['nginx']
-      when: "_setup_ssl == True and not _setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'ssl-certbot']
-
-
-    ##### ##### ##### ##### #####    Lets encrypt WildCard    ##### ##### ##### ##### ##### 
+    ##### ##### ##### ##### #####    Lets encrypt - acme.sh    ##### ##### ##### ##### ##### 
 
     - block:
       - name: Including LetsEncrypt AcmeDNS role
         include_role:
           name: dr.letsencrypt.wildcard.auto
         vars:
-          _r_acmesh_config_dir: "{{dirs.acmesh}}/config"
-          _r_acmedns_config_dir: "{{dirs.acmedns}}/config"
-          _r_acmedns_data_dir: "{{dirs.acmedns}}/data"
-          _r_acmesh_host_cert_root: "{{_ssl_cert_dir}}"
-          _r_acmedns_host: "{{_acmedns_endpoint}}"
-          _r_acmedns_api: "http://{{_r_acmedns_host}}:19943"
-          _r_acmedns_ns1_ip: "{{_challenge_ns1|default('0.0.0.0')}}"
-          _r_acmedns_ns2_ip: "{{_challenge_ns2|default('0.0.0.0')}}"
-          _r_acmedns: "{{_acmedns_setup}}"
-          _r_domains: "{{_ssl_certs}}"
-      when: "_setup_ssl == True and _setup_ssl_wildcard | bool == True"
-      tags: ['never', 'ssl', 'ssl-wildcard']
+          _r_domain: "{{domain}}"
+          _r_subdomains: "{{subdomains}}"
+          _r_webroot: "{{dirs.well_known}}"
+          _r_force: yes
+          _r_wildcard: "{{_ssl_wildcard}}"
+          _r_check_addr: "{{if_inner}}:{{ports.http.0}}"
+          _r_bind_addr: "{{if_inner}}:{{ports.letsencrypt.0}}"
+          _r_cert_root: "{{dirs.certs}}"
 
-    - service:
-        name: nginx
-        state: restarted
-      failed_when: no
-      tags: ['never', 'ssl', 'ssl-wildcard']
+      - shell: nginx -t && nginx -s reload || /bin/true
+        register: _r_nginx_reload
+
+      - debug: msg={{_r_nginx_reload}}
+
+      when: "_setup_ssl == True"
+      tags: ['never', 'ssl']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
 
     - block:
+      - include_vars: vars/nginx.yml
       - name: Including Nginx role
         include_role:
           name: jdauphant.nginx
@@ -286,7 +256,7 @@
           image: "{{images.chproxy}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -299,7 +269,7 @@
         chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
         chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
         chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
-      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker', 'docker-container', 'full_setup']
+      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
@@ -314,16 +284,17 @@
           image: "{{images.redis}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           restart: yes
           pull: yes
           recreate: yes
           memory: "300m"
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
-      tags: ['never', 'redis', 'docker', 'system', 'docker-container', 'full_setup']
+      tags: ['never', 'redis', 'system', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
+
     - block:
       - docker_image:
           name: "{{images.band}}"
@@ -344,7 +315,7 @@
           labels: "{{docker_band_lbls}}"
           ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           env: "{{ director_env|combine(containers_env, director_env_extra|default({})) }}"
           pull: yes
           restart: yes
@@ -356,7 +327,7 @@
             - "{{dirs.user_images}}:/images/user:ro"
             - "{{dirs.director_data}}:/data" # containers configs
             - "/var/run/docker.sock:/var/run/docker.sock"
-      tags: ['band', 'ppart', 'docker', 'director', 'docker-container', 'full_setup']
+      tags: ['band', 'ppart', 'director', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
@@ -373,7 +344,7 @@
             - "{{if_inner}}:{{ports.front.0}}:{{ports.front.1}}"
             - "{{if_inner}}:{{ports.front_ws.0}}:{{ports.front_ws.1}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env, front_env_extra|default({}) )}}"
           pull: yes
           restart: yes
@@ -383,7 +354,7 @@
             - "{{dirs.front_custom_config}}:/app/config/custom"
       vars:
         env: {}
-      tags: ['front', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
+      tags: ['front', 'ppart', 'rockme', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    ClickHouse migrations    ##### ##### ##### ##### ##### 
@@ -407,7 +378,7 @@
           image: "{{images.chwriter}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env)}}"
           pull: yes
           restart: yes
@@ -418,7 +389,7 @@
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       vars:
         env: {}
-      tags: ['chwriter', 'ppart', 'rockme', 'docker', 'docker-container', 'full_setup']
+      tags: ['chwriter', 'ppart', 'rockme', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
 
@@ -431,7 +402,7 @@
           image: "{{images.heavyload}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env)}}"
           pull: yes
           restart: yes
@@ -443,7 +414,7 @@
       vars:
         env:
           WEBHOOK: "http://front:{{ports.front.1}}/upload/notify"
-      tags: ['heavyload', 'docker', 'pservice', 'docker-container', 'full_setup']
+      tags: ['heavyload', 'pservice', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
@@ -455,7 +426,7 @@
           image: "{{images.anaconda}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -474,7 +445,7 @@
           - " && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
           - " --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker', 'docker-container', 'full_setup']
+      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -493,7 +464,7 @@
           image: "{{images.grafana}}"
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -502,7 +473,7 @@
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
-      tags: ['never', 'grafana', 'pservice', 'docker', 'docker-container', 'full_setup']
+      tags: ['never', 'grafana', 'pservice', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
@@ -521,7 +492,7 @@
           labels: "{{docker_band_lbls}}"
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{docker_etc_hosts}}"
+          etc_hosts: "{{etc_hosts}}"
           env: "{{containers_env}}"
           pull: yes
           restart: yes
@@ -536,7 +507,7 @@
       vars:
         workspace: "/home/theia/project"
       when: 'setup_theia == True'
-      tags: ['theia', 'pservice', 'band', 'docker', 'docker-container', 'full_setup']
+      tags: ['theia', 'pservice', 'band', 'docker-container', 'full_setup']
 
 
     - import_tasks: tasks/setup_vpn_server.yml

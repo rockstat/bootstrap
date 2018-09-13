@@ -1,12 +1,14 @@
 playbook_version: 3.3.0
-
+# ########## google site verifications ##########
+# for example google65679391aa745584.html
+_google_webmaster: ""
 # ########## local config ##########
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 # ########## Features ##########
 setup_server: yes
 setup_nginx: yes
 _setup_ssl: yes
-_setup_ssl_wildcard: no
+_ssl_wildcard: no
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
@@ -23,11 +25,8 @@ main_user_password: default
 support_user: 'x011'
 remote_user: 'x011'
 #key for update manager to access server
-support_key_file: './public_keys/support.pub'
+support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
-# ########## AcmeDSN ##########
-_acmedns_endpoint: auth.0x011.xyz
-_acmedns_setup: no
 # ########## Repos ##########
 git_account: https://github.com/rockstat
 repos:
@@ -45,6 +44,17 @@ domains:
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
   httpdebug: 'httpdebug.{{domain}}'
+subdomains: "{{ domains.keys()|list }}"
+# ########## SSL ##########
+    # email: "{{contact_email}}"
+# domains for regular reques
+domains_ssl:
+  - email: '{{contact_email}}'
+    domains: "{{[domain] + domains.values()|list|unique}}"
+# _ssl_cert_dir: "/etc/letsencrypt/live"
+_ssl_cert_fullchain: fullchain.cer
+_ssl_cert_trust: cert.cer
+_ssl_cert_key: priv.key
 # ########## Images ##########
 images_default:
   chproxy: rockstat/chproxy
@@ -69,20 +79,6 @@ _papertrail_hostname: logs7.pape....
 #destination
 _logspout_target: none
 _logspout_enabled: yes
-# ########## SSL ##########
-# ssl definition for new wildcard role
-_ssl_certs:
-  - domain: "{{domain}}"
-    wildcard: yes
-    email: "{{contact_email}}"
-# domains for regular reques
-domains_ssl:
-  - email: '{{contact_email}}'
-    domains: "{{[domain] + domains.values()|list|unique}}"
-_ssl_cert_dir: "/etc/letsencrypt/live"
-_ssl_cert_fullchain: fullchain.pem
-_ssl_cert_trust: chain.pem
-_ssl_cert_key: privkey.pem
 # ########## dirs ##########
 home_dir: '/srv/platform'
 data_dir: '{{home_dir}}/data'
@@ -103,16 +99,17 @@ dirs:
   uploads: "{{data_dir}}/uploads"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
+  well_known: "{{home_dir}}/well_known"
   dashboard: "{{home_dir}}/dashboard"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
   acmedns: "{{home_dir}}/acmedns"
   acmesh: "{{home_dir}}/acmesh"
-  certificates: "{{_ssl_cert_dir}}"
+  certs: "{{data_dir}}/certs"
   clickhouse: "/srv/clickhouse"
   clickhouse_tmp: "/srv/clickhouse_tmp"
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
-important_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}"]
+create_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}", "{{dirs.well_known}}","{{dirs.certs}}"]
 # ########## ports ##########
 ports:
   # services
@@ -132,6 +129,7 @@ ports:
   # servers
   http: [80]
   https: [443]
+  letsencrypt: [8011, 80]
   openvpn: [8080, 1194]
   redis: [6379, 6379]
   s2svpn: [8079]
@@ -158,9 +156,6 @@ docker_net_net: "{{docker_net|ipaddr('network')}}"
 # default docker network
 docker_defnet_pattern: 172.17.*
 docker_defnet_net: "{{docker_defnet_pattern|ip_p2n}}"
-# short name to access host and possible others
-docker_etc_hosts:
-  host: "{{if_inner}}"
 # other params
 docker_band_lbls: {inband: system}
 # ########## Clients VPN ##########
@@ -175,6 +170,8 @@ s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 if_outer: "{{ansible_default_ipv4.address}}"
 if_inner: "{{docker_host_ip}}"
 local_nets: [ "127.0.0.0/8", "{{s2s_vpn_net}}", "{{docker_net}}", "{{docker_defnet_net}}" ]
+etc_hosts: # also used in docker containers
+  host: "{{if_inner}}"
 # ########## Firewall ##########
 disable_ipv6: true
 firewall_rules:
@@ -239,6 +236,7 @@ containers_env_default:
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
+
 containers_env: "{{containers_env_default|combine(containers_env_overrides)}}"
 director_env:
   PORT: "{{ports.director.1}}"
@@ -252,9 +250,9 @@ _nginx_front_extra: []
 _nginx_listen: 
   - "listen 443 ssl http2"
 _nginx_ssl:
-  - ssl_certificate_key     {{_ssl_cert_dir}}/{{domain}}/{{_ssl_cert_key}}
-  - ssl_certificate         {{_ssl_cert_dir}}/{{domain}}/{{_ssl_cert_fullchain}}
-  - ssl_trusted_certificate {{_ssl_cert_dir}}/{{domain}}/{{_ssl_cert_trust}}
+  - ssl_certificate_key     {{dirs.certs}}/{{domain}}/{{_ssl_cert_key}}
+  - ssl_certificate         {{dirs.certs}}/{{domain}}/{{_ssl_cert_fullchain}}
+  - ssl_trusted_certificate {{dirs.certs}}/{{domain}}/{{_ssl_cert_trust}}
 _nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
@@ -262,15 +260,19 @@ _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
 _nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"
+_nginx_le_challenge:
+  - "location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }"
 # specific configurations
 _nginx_forward_vh:
   - server_name {sd}.{{domain}}
+  - "{{_nginx_le_challenge}}"
   - location / { proxy_pass http://u{sd}; }
   - "{{_nginx_auth}}"
   - "{{_nginx_base_vh}}"
 _nginx_defvh_http:
   - server_name _http
   - listen 80 default_server
+  - "{{_nginx_le_challenge}}"
   - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
   - location / { return 301 https://$host$request_uri; }
 _nginx_defvh_https:
@@ -278,32 +280,34 @@ _nginx_defvh_https:
   - "{{_nginx_listen.0}} default_server"
   - "{{_nginx_ssl}}"
   - "root {{dirs.splash}}"
+  - "{{_nginx_le_challenge}}"
   - "location / { try_files $uri $uri/index.html; }"
-_nginx_uploader:
-  location /upload {
-    client_max_body_size 10m;
-    client_body_buffer_size 128K; 
-    limit_except POST { deny all; }
-    proxy_pass http://uheavyload; }
 _nginx_front:
   - server_name {{domain}}
   - "{{_nginx_base_vh}}"
   - "root {{dirs.splash}}"
+  - "{{_nginx_le_challenge}}"
   - location / { try_files $uri $uri/index.html @upstream; }
   - location @upstream { proxy_pass http://ufront; }
   - location /wss { proxy_pass http://ufront_ws; }
-  - "{{_nginx_uploader}}"
   - "{{_nginx_front_extra}}"
+  - location /upload {
+      client_max_body_size 10m;
+      client_body_buffer_size 128K; 
+      limit_except POST { deny all; }
+      proxy_pass http://uheavyload; }
 _nginx_dashboard:
   - server_name app.{{domain}}
   - "{{_nginx_base_vh}}"
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
+  - "{{_nginx_le_challenge}}"
   - location /api/ { proxy_pass http://udirector/; }
   - location /ws { proxy_pass http://uebaloger; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
   - server_name grafana.{{domain}}
+  - "{{_nginx_le_challenge}}"
   - location / { proxy_pass http://ugrafana; }
   - location /public/ { auth_basic off; proxy_pass http://ugrafana; }
   - "{{_nginx_auth}}"
@@ -331,6 +335,7 @@ _nginx_upstreams:
   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; keepalive 8; }'
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'
   - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}} weight=10; }'
+  - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
 
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
