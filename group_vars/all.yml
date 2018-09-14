@@ -125,6 +125,7 @@ ports:
   grafana: [3000, 3000]
   jupyter: [8888, 8888]
   theia: [8887, 8000]
+  theia_user: [8886, 8080]
   netdata: [19999]
   # servers
   http: [80]
@@ -158,6 +159,7 @@ docker_defnet_pattern: 172.17.*
 docker_defnet_net: "{{docker_defnet_pattern|ip_p2n}}"
 # other params
 docker_band_lbls: {inband: system}
+_restart_policy: unless-stopped
 # ########## Clients VPN ##########
 covpn_keys_dir: '{{home_dir}}/ovpn_keys'
 # ########## Server-server VPN ##########
@@ -223,8 +225,8 @@ _chproxy_users_default:
 _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Common Envs ##########
-containers_env_overrides: {}
-containers_env_default:
+containers_env_extra: {}
+_containers_env:
   # **ATTENTION! You have to configure variables at Director's config too!**
   DOMAIN: "{{domain}}"
   HOST_ADDR: "{{if_inner}}"
@@ -236,11 +238,13 @@ containers_env_default:
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
-
-containers_env: "{{containers_env_default|combine(containers_env_overrides)}}"
-director_env:
+containers_env: "{{_containers_env|combine(containers_env_extra)}}"
+_director_env:
   PORT: "{{ports.director.1}}"
   IMAGES_PATH: "/images"
+_theia_env:
+  PORT_THEIA: "{{ports.theia.1}}"
+  PORT_USER: "{{ports.theia_user.1}}"
 # ########## NGINX COMMONS ##########
 # configuration extra params
 _nginx_proxy_params_extra: []
@@ -314,6 +318,9 @@ _nginx_grafana:
   - "{{_nginx_base_vh}}"
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_hide_header Authorization
+_nginx_netdata:
+  - access_log off
+  - "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
 _nginx_sites:
   def_https: "{{_nginx_defvh_https|flatten }}"
   def_http: "{{_nginx_defvh_http|flatten }}"
@@ -322,7 +329,7 @@ _nginx_sites:
   grafana: "{{_nginx_grafana|flatten}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
-  netdata: "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
+  netdata: "{{_nginx_netdata|flatten}}"
   httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
 _nginx_upstreams:
   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}} weight=10; keepalive 32; }'

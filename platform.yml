@@ -74,9 +74,9 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
           restart: yes
           pull: yes
-          restart_policy: always
           recreate: yes
           memory: "100m"
           env: "{{ containers_env }}"
@@ -280,6 +280,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -308,6 +309,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -339,7 +341,8 @@
           ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{ director_env|combine(containers_env, director_env_extra|default({})) }}"
+          env: "{{ _director_env|combine(containers_env, director_env_extra|default({})) }}"
+          restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           recreate: yes
@@ -369,6 +372,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env, front_env_extra|default({}) )}}"
+          restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           recreate: yes
@@ -403,6 +407,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env)}}"
+          restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           recreate: yes
@@ -427,6 +432,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{env|combine(containers_env)}}"
+          restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           memory: "100m"
@@ -450,6 +456,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
           restart: yes
           pull: yes
           recreate: yes
@@ -488,8 +495,9 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          restart: yes
+          restart_policy: "{{_restart_policy}}"
           pull: yes
+          restart: yes
           recreate: yes
           memory: "300m"
           ports:
@@ -516,7 +524,8 @@
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{containers_env}}"
+          env: "{{ {}|combine(containers_env, _theia_env) }}"
+          restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           recreate: yes
