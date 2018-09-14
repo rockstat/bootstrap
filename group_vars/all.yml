@@ -43,7 +43,7 @@ domains:
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
-  httpdebug: 'httpdebug.{{domain}}'
+  http-debug: 'http_debug.{{domain}}'
 subdomains: "{{ domains.keys()|list }}"
 # ########## SSL ##########
     # email: "{{contact_email}}"
@@ -56,7 +56,7 @@ _ssl_cert_fullchain: fullchain.cer
 _ssl_cert_trust: cert.cer
 _ssl_cert_key: priv.key
 # ########## Images ##########
-images_default:
+_images:
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
   logspout: gliderlabs/logspout
@@ -69,7 +69,8 @@ images_default:
   front: rockstat/front
   chwriter: rockstat/chwriter
   heavyload: rockstat/heavyload
-images: "{{images_default|combine(images_custom|default({}))}}"
+  http_debug: rockstat/http_debug
+images: "{{_images|combine(images_extra|default({}))}}"
 # ########## Logs ##########
 #loggly
 _loggly_hostname: logs-01.loggly...
@@ -117,7 +118,7 @@ ports:
   front: [10001, 8080]
   front_ws: [10002, 8082]
   heavyload: [10010, 8080]
-  httpdebug: [19992]
+  http_debug: [11081,8080]
   ebaloger_http: [8085, 8080]
   ebaloger_udp: [5055, 8090]
   # tools
@@ -225,7 +226,6 @@ _chproxy_users_default:
 _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Common Envs ##########
-containers_env_extra: {}
 _containers_env:
   # **ATTENTION! You have to configure variables at Director's config too!**
   DOMAIN: "{{domain}}"
@@ -238,7 +238,7 @@ _containers_env:
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
-containers_env: "{{_containers_env|combine(containers_env_extra)}}"
+containers_env: "{{_containers_env|combine(containers_env_extra|default({}))}}"
 _director_env:
   PORT: "{{ports.director.1}}"
   IMAGES_PATH: "/images"
@@ -330,7 +330,7 @@ _nginx_sites:
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
-  httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
+  http_debug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','http_debug')|list}}"
 _nginx_upstreams:
   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}} weight=10; keepalive 32; }'
   - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}} weight=10; keepalive 128; }'
@@ -341,7 +341,7 @@ _nginx_upstreams:
   - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; keepalive 4; }'
   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; keepalive 8; }'
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'
-  - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}} weight=10; }'
+  - 'upstream uhttp_debug { server {{if_inner}}:{{ports.http_debug.0}} weight=10; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
 
 # ########## Other things ##########

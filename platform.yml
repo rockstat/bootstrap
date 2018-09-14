@@ -38,6 +38,9 @@
       tags: ['never', 'os', 'network', 'system', 'full_setup']
 
 
+
+
+
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
 
     - block:
@@ -554,4 +557,28 @@
     #     openvpnc_key: '{{s2s_vpn_key}}'
     #   when: s2s_vpn_connect is defined and s2s_vpn_connect == True and vpn_id is defined
     #   tags: ['s2s-ovpn-client', 's2s-ovpn']
+    - block:
+        - debug: msg="Binding http debug to {{_bind}}. Container state {{_state}}"
 
+        - name: HTTP debug service
+          docker_container:
+            name: http_debug
+            state: "{{_state}}"
+            hostname: ebaloger
+            image: "{{images.http_debug}}"
+            labels: "{{docker_band_lbls}}"
+            networks: [ { name: "{{docker_net_name}}" } ]
+            etc_hosts: "{{etc_hosts}}"
+            restart_policy: "{{_restart_policy}}"
+            restart: yes
+            pull: yes
+            recreate: yes
+            memory: "100m"
+            ports:
+              - "{{_bind}}"
+      vars:
+        _state: "{{ (http_debug_bind|default('') == 'absent')|ternary('absent', 'started') }}"
+        _bind_default: "{{if_inner}}:{{ports.http_debug.0}}:{{ports.http_debug.1}}"
+        _bind_dirty: "{{http_debug_bind|default(_bind_default)}}"
+        _bind: "{{ _bind_dirty if ':' in _bind_dirty else _bind_default }}"
+      tags: ['never', 'http_debug']
