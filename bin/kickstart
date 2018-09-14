@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=3.4.1
+VERSION=3.4.2
 PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=${BRANCH:-master}
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
