@@ -11,3 +11,7 @@ demo:
 to_master:
 	@echo $(BR)
 	git checkout master && git merge $(BR) && git checkout $(BR)
+
+push:
+	git push origin master
+	git push origin dev
