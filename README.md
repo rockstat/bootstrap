@@ -54,7 +54,7 @@ ssh root@yourdomain
 
 To connect you should use any terminal emulator with ssh support. For example [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) 
 
-### Setup / upgrade / reconfigure
+### Intial Setup
 
 You need to setup curl only once
 
@@ -62,23 +62,41 @@ You need to setup curl only once
 sudo apt -qqy update && sudo apt -qqy install curl
 ```
 
-First-time setup tool execution
+Then run:
 
 ```bash
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
 ```
+
+For **development** version
+
+```
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E BRANCH=dev bash -
-
-Next times availavale helpful short alias
-
-```
-rockstat
 ```
 
-## Configuration details
+ ### Upgrade / reconfigure installation
+
+Rockstat is on active development stage. Lookat at page [What's new](https://rock.st/docs/what-s-new). Take a latest version.
+
+To run setup tool just type `rockstat`
+
+## Overriding configuration
 
 Create configuration for your hosts group `groupvars/private.yml`
 You can override configuration by specifing alternative values.
+
+Configurations has a parts prepared for easy overriding/extending:
+
+##### images_extra
+
+```
+images_extra:
+  chproxy: myusername/chproxy
+  redis: redis:4-alpine
+```
+
+will override only thease two images
+
 
 ### IPv6
 

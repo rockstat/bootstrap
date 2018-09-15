@@ -467,16 +467,16 @@
           volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ containers_env }}"
-          command: "/bin/bash -c \"{{cmd_parts|join('')}}\""
+          command: "jupyter notebook {{notebook_args|join(' ')}}"
       vars:
-        conda_list: "{{jup_with_conda_def + jup_with_conda}}"
-        pip_list: "{{jup_with_pip_def + jup_with_pip}}"
+        notebook_args:
+          - "--notebook-dir=/opt/notebooks"
+          - "--ip='*' --port=8888"
+          - "--no-browser"
+          - "--allow-root"
+          - "--NotebookApp.token=''"
+          - "--NotebookApp.allow_origin='*'"
         cmd_parts:
-          - "{{conda_list|length > 0 and ('conda install -y ' + conda_list|join(' ') + ' && ') or ''}}"
-          - "{{pip_list|length > 0 and ('pip install ' + pip_list|join(' ') + ' && ') or ''}}"
-          - " /opt/conda/bin/conda install jupyter -y --quiet"
-          - " && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks"
-          - " --ip='*' --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.allow_origin='*'"
       when: 'setup_jupyter == True'
       tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full_setup']
 
@@ -582,3 +582,4 @@
         _bind_dirty: "{{http_debug_bind|default(_bind_default)}}"
         _bind: "{{ _bind_dirty if ':' in _bind_dirty else _bind_default }}"
       tags: ['never', 'http_debug']
+  

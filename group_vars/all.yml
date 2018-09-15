@@ -61,7 +61,7 @@ _images:
   redis: redis:4-alpine
   logspout: gliderlabs/logspout
   ebaloger: rockstat/ebaloger
-  anaconda: continuumio/anaconda3
+  anaconda: rockstat/anaconda
   grafana: rockstat/grafana
   band: rockstat/band-base-py
   director: rockstat/director
@@ -183,12 +183,9 @@ firewall_rules:
   - { to_port: '{{ports.https.0}}'}
   - { to_port: '{{ports.openvpn.0}}'}
 # ########## Jupyter/anaconda packages ##########
-# default
-jup_with_conda_def: ["ujson"]
-jup_with_pip_def: ["prodict", "arrow", "simplech", "asimplech"]
-# additional
-jup_with_conda: [""]
-jup_with_pip: [""]
+# install libs to python containers: anaconda and theia
+_dev_env_py_libs: ["msgpack", "ujson", "prodict", "arrow", "simplech", "asimplech"]
+dev_env_py_libs: "{{_dev_env_py_libs|combine(dev_env_py_libs_extra|default({})) }}"
 # todo: ability to specify additional packages for theia and others
 # ########## ClickHouse ##########  
 _clickhouse_profiles_custom:
@@ -330,7 +327,7 @@ _nginx_sites:
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
-  http_debug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','http_debug')|list}}"
+  http_debug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','http-debug')|list}}"
 _nginx_upstreams:
   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}} weight=10; keepalive 32; }'
   - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}} weight=10; keepalive 128; }'
