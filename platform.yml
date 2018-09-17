@@ -265,40 +265,6 @@
         delay: 3
       tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full_setup']
 
-
-    ##### ##### ##### ##### #####    Clickhouse Proxy    ##### ##### ##### ##### ##### 
-
-    - block:
-
-      - name: Rendering CHProxy config
-        template:
-          src: 'chproxy/config.yml.j2'
-          dest: '{{chproxy_config}}'
-
-      - name: Running Chproxy cointainer
-        docker_container:
-          name: chproxy
-          hostname: chproxy
-          image: "{{images.chproxy}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{etc_hosts}}"
-          restart_policy: "{{_restart_policy}}"
-          restart: yes
-          pull: yes
-          recreate: yes
-          memory: "200m"
-          ports: ["{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
-          volumes: ["{{chproxy_config}}:/config.yml:ro"]
-      vars:
-        chproxy_config: "{{etc_dir}}/chproxy.yml"
-        chproxy_defs: "{{_chproxy_defs}}"
-        chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
-        chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
-        chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
-      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full_setup']
-
-
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
 
     - name: Redis setup
@@ -396,6 +362,38 @@
     #       operate_host: "127.0.0.1"
     #       migrations_path: clickhouse_migrations
     #   tags: ['never', 'chmigrate']
+
+        ##### ##### ##### ##### #####    Clickhouse Proxy    ##### ##### ##### ##### ##### 
+
+    - block:
+
+      - name: Rendering CHProxy config
+        template:
+          src: 'chproxy/config.yml.j2'
+          dest: '{{chproxy_config}}'
+
+      - name: Running Chproxy cointainer
+        docker_container:
+          name: chproxy
+          hostname: chproxy
+          image: "{{images.chproxy}}"
+          labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
+          restart: yes
+          pull: yes
+          recreate: yes
+          memory: "200m"
+          ports: ["{{if_inner}}:{{ports.chproxy.0}}:{{ports.chproxy.1}}"]
+          volumes: ["{{chproxy_config}}:/config.yml:ro"]
+      vars:
+        chproxy_config: "{{etc_dir}}/chproxy.yml"
+        chproxy_defs: "{{_chproxy_defs}}"
+        chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
+        chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
+        chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
+      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full_setup']
 
 
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
@@ -527,7 +525,7 @@
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{ {}|combine(containers_env, _theia_env) }}"
+          env: "{{ _env|combine(containers_env, _theia_env) }}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -535,12 +533,16 @@
           memory: "2g"
           volumes:
             - "{{dirs.workspace}}:{{workspace}}/:cached"
-            - "{{dirs.user_images}}:{{workspace}}/my_images:cached"
+            - "{{dirs.user_images}}:{{user_images}}:cached"
             - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
             # - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
       vars:
         workspace: "/home/theia/project"
+        user_images: "{{workspace}}/my_images"
+        _env:
+          WORKSPACE_PATH: "{{workspace}}"
+          USER_IMAGES_PATH: "{{user_images}}"
       when: 'setup_theia == True'
       tags: ['theia', 'pservice', 'band', 'docker-container', 'full_setup']
 
