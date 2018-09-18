@@ -9,11 +9,11 @@ demo:
 	docker run -it --rm -v `pwd`:/playbook:ro ubuntu:16.04 bash
 
 up_master: 
-	@echo "On branch $(BR)"
+	@echo "on branch $(BR)"
 	
-	[ "$(BR)" != "dev" ] && echo "only dev can be used. you on $(BR)" && exit 1
-	[ ! -z "$(git status --porcelain)" ] && echo "directory not clean. commit changes first" && exit 1
-	git checkout master && git rebase dev && git push origin master && git checkout dev \
+	@[ "$(BR)" == "dev" ] && true || (echo "only dev can be used. you on $(BR)" && exit 1)
+	@[ ! -z "$(git status --porcelain)" ] || (echo "directory not clean. commit changes first" && exit 1)
+	@git checkout master && git rebase dev && git push origin master && git checkout dev \
 		&& echo "master rebased and pushed"
 
 to_master:
