@@ -24,4 +24,4 @@ h_test_rebuild:
 h_stage_rebuild:
 	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
-		-X POST https://api.hetzner.cloud/v1/servers/1114551/actions/rebuild | jq
+		-X POST https://api.hetzner.cloud/v1/servers/594645/actions/rebuild | jq
