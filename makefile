@@ -8,9 +8,17 @@ bump-minor:
 demo:
 	docker run -it --rm -v `pwd`:/playbook:ro ubuntu:16.04 bash
 
+up_master: 
+	@echo "On branch $(BR)"
+	
+	[ "$(BR)" != "dev" ] && echo "only dev can be used. you on $(BR)" && exit 1
+	[ ! -z "$(git status --porcelain)" ] && echo "directory not clean. commit changes first" && exit 1
+	git checkout master && git rebase dev && git push origin master && git checkout dev \
+		&& echo "master rebased and pushed"
+
 to_master:
 	@echo $(BR)
-	git checkout master && git merge $(BR) && git checkout $(BR)
+	git checkout master && git rebase $(BR) && git checkout $(BR)
 
 push:
 	git push origin master
