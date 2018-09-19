@@ -43,7 +43,7 @@ domains:
   jupyter: 'jupyter.{{domain}}'
   theia: 'theia.{{domain}}'
   netdata: 'netdata.{{domain}}'
-  http-debug: 'http_debug.{{domain}}'
+  httpdebug: 'httpdebug.{{domain}}'
 subdomains: "{{ domains.keys()|list }}"
 # ########## SSL ##########
     # email: "{{contact_email}}"
@@ -69,7 +69,7 @@ _images:
   front: rockstat/front
   chwriter: rockstat/chwriter
   heavyload: rockstat/heavyload
-  http_debug: rockstat/http_debug
+  httpdebug: rockstat/httpdebug
 images: "{{_images|combine(images_extra|default({}))}}"
 # ########## Logs ##########
 #loggly
@@ -118,7 +118,7 @@ ports:
   front: [10001, 8080]
   front_ws: [10002, 8082]
   heavyload: [10010, 8080]
-  http_debug: [11081,8080]
+  httpdebug: [8089,8080]
   ebaloger_http: [8085, 8080]
   ebaloger_udp: [5055, 8090]
   # tools
@@ -327,18 +327,18 @@ _nginx_sites:
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
-  http_debug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','http-debug')|list}}"
+  httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
 _nginx_upstreams:
-  - 'upstream ufront { server {{if_inner}}:{{ports.front.0}} weight=10; keepalive 32; }'
-  - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}} weight=10; keepalive 128; }'
-  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}} weight=10; keepalive 8; }'
-  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}} weight=10; keepalive 32; }'
-  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}} weight=10; keepalive 4; }'
-  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}} weight=10; keepalive 4; }'
-  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}} weight=10; keepalive 4; }'
-  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}} weight=10; keepalive 8; }'
-  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}} weight=10; keepalive 8; }'
-  - 'upstream uhttp_debug { server {{if_inner}}:{{ports.http_debug.0}} weight=10; }'
+  - 'upstream ufront { server {{if_inner}}:{{ports.front.0}}; }'
+  - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}};  }'
+  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}};  }'
+  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}};  }'
+  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}}; }'
+  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}};}'
+  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}}; }'
+  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}}; }'
+  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
+  - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}}; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
 
 # ########## Other things ##########
