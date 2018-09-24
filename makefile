@@ -28,15 +28,15 @@ hz_servers:
 	@echo "quering servers list"
 	@source .env && curl -s \
 		-H "Content-Type: application/json" \
-		-H "Authorization: Bearer $${HETZNER_API_KEY}" https://api.hetzner.cloud/v1/servers
-		| jq '.image, .id, .name, .status'
+		-H "Authorization: Bearer $${HETZNER_API_KEY}" https://api.hetzner.cloud/v1/servers \
+		| jq '.servers | .[] | {id: .id, name: .name, status: .status, image: .image.name}'
 
 hz_test_rebuild:
-	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
+	@source .env && curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
-		-X POST https://api.hetzner.cloud/v1/servers/$${HETZNET_TEST_SRV}/actions/rebuild | jq
+		-X POST "https://api.hetzner.cloud/v1/servers/$${HETZNER_TEST_SRV}/actions/rebuild" | jq
 
 hz_stage_rebuild:
-	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
+	source .env && curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
-		-X POST https://api.hetzner.cloud/v1/servers/$${HETZNET_STAGE_SRV}/actions/rebuild | jq
+		-X POST "https://api.hetzner.cloud/v1/servers/$${HETZNET_STAGE_SRV}/actions/rebuild" | jq
