@@ -4,3 +4,4 @@ cryptography==2.2.2
 validators
 passlib
 netaddr
+bumpversion
