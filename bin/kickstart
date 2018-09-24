@@ -15,7 +15,7 @@ FACT_CONF=/etc/ansible/facts.d/config.fact
 
 # state vars
 DOMAIN=""
-USERNAME=""
+REALNAME=""
 EMAIL=""
 ADMIN_PASSWORD=""
 DEF_HOSTALIAS="rstat"
@@ -232,8 +232,8 @@ request_email(){
   whiptailInput "EMAIL" "Email" "Email required for issuing letsencrypt SSL and GIT." 8 78
 }
 
-request_username(){
-  whiptailInput "USERNAME" "User name" "Provide your first and last name. Will be used in git configuration." 8 78
+request_realname(){
+  whiptailInput "REALNAME" "Real name" "Provide your first and last name. Will be used in git configuration." 8 78
 }
 
 request_password(){
@@ -271,7 +271,7 @@ load_config(){
     DOMAIN=$(awk -F "=" '/domain/ {print $2}' $FACT_CONF)
     EMAIL=$(awk -F "=" '/email/ {print $2}' $FACT_CONF)
     ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
-    USERNAME=$(awk -F "=" '/username/ {print $2}' $FACT_CONF)
+    REALNAME=$(awk -F "=" '/realname/ {print $2}' $FACT_CONF)
     HOSTALIAS=$(awk -F "=" '/hostalias/ {print $2}' $FACT_CONF)
     if [[ -z "$HOSTALIAS" ]]; then HOSTALIAS=$DEF_HOSTALIAS; fi
   fi
@@ -296,7 +296,7 @@ domain=${DOMAIN}
 email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
 hostalias=${HOSTALIAS}
-username=${USERNAME}
+realname=${REALNAME}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
@@ -328,7 +328,7 @@ initialize(){
   done
   while [ -z ${ADMIN_PASSWORD// } ]; do request_password
   done
-  while [ -z ${USERNAME// } ]; do request_username
+  while [ -z ${REALNAME// } ]; do request_realname
   done
   while [ -z ${HOSTALIAS// } ]; do request_hostalias
   done
@@ -369,7 +369,7 @@ menu() {
   "12" "    Change Domain '${DOMAIN}'" \
   "13" "    Change Short hostname '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
-  "15" "    Change Name '${USERNAME}'" \
+  "15" "    Change Name '${REALNAME}'" \
   "20" "    Apply new admin password" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
@@ -386,7 +386,7 @@ menu() {
     "12") request_domain ;;
     "13") request_hostalias ;;
     "14") request_email ;;
-    "15") request_username ;;
+    "15") request_realname ;;
     "20") run_platform_playbook nginx ;;
     "30") run_platform_playbook ovpn-server ;;
     "0") exit 1 ;;

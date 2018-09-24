@@ -40,21 +40,17 @@ yourdomain (or @)       A  1.2.3.4
 
 Required steps depends of 
 
-### Connect to server
+### Local setup on server
 
-#### On MacOS / Linux
+#### Connect to server
 
-Open Terminal app and type:
+Open Terminal application (On Windows know as `cmd`)  Type following connection command:
 
 ```bash
 ssh root@yourdomain
 ```
 
-#### Windows users
-
-To connect you should use any terminal emulator with ssh support. For example [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) 
-
-### Intial Setup
+#### Intials
 
 You need to setup curl only once
 
@@ -74,11 +70,16 @@ For **development** version
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E BRANCH=dev bash -
 ```
 
- ### Upgrade / reconfigure installation
+ #### Upgrade / reconfigure installation
 
 Rockstat is on active development stage. Lookat at page [What's new](https://rock.st/docs/what-s-new). Take a latest version.
 
 To run setup tool just type `rockstat`
+
+### Remote setup
+
+
+
 
 ## Overriding configuration
 

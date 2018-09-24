@@ -70,7 +70,7 @@ _images:
   chwriter: rockstat/chwriter
   heavyload: rockstat/heavyload
   httpdebug: rockstat/httpdebug
-images: "{{_images|combine(images_extra|default({}))}}"
+images: "{{_images|combine(_images_extra|default({}))}}"
 # ########## Logs ##########
 #loggly
 _loggly_hostname: logs-01.loggly...
@@ -124,9 +124,9 @@ ports:
   # tools
   logspout: [8088, 80]
   grafana: [3000, 3000]
-  jupyter: [8888, 8888]
+  jupyter: [8888, 8080]
   theia: [8887, 8000]
-  theia_user: [8886, 8080]
+  theia_dev: [8886, 8080]
   netdata: [19999]
   # servers
   http: [80]
@@ -222,26 +222,35 @@ _chproxy_users_default:
 # ########## CH Common ##########
 _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/{{ch_db}}"
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
-# ########## Common Envs ##########
+# ########## Services env ##########
 _containers_env:
-  # **ATTENTION! You have to configure variables at Director's config too!**
+  director:
+    PORT: "{{ports.director.1}}"
+    IMAGES_PATH: "/images"
+    #ENCODED_ENV will be set in playbook
+  theia:
+    PORT_THEIA: "{{ports.theia.1}}"
+    PORT_DEV: "{{ports.theia_dev.1}}"
+  heavyload:
+    WEBHOOK: "http://front:{{ports.front.1}}/upload/notify"
+# for user overrides
+_containers_env_extra: {}
+# ########## Common Envs ##########
+_common_env:
+  JSON_LOGS: 1
+  LOG_LEVEL: "info"
   DOMAIN: "{{domain}}"
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
-  LOG_LEVEL: "info"
-  JSON_LOGS: 1
   NETWORK: "{{docker_net_name}}"
   REDIS_DSN: "redis://redis:6379"
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
-containers_env: "{{_containers_env|combine(containers_env_extra|default({}))}}"
-_director_env:
-  PORT: "{{ports.director.1}}"
-  IMAGES_PATH: "/images"
-_theia_env:
-  PORT_THEIA: "{{ports.theia.1}}"
-  PORT_USER: "{{ports.theia_user.1}}"
+# for user overrides `_common_env_extra`
+common_env: "{{_common_env|combine(_common_env_extra|default({}))}}"
+container_env: "{{ {}|combine( common_env, _containers_env[service]|default({}), _containers_env_extra[service]|default({}) ) }}"
+
 # ########## NGINX COMMONS ##########
 # configuration extra params
 _nginx_proxy_params_extra: []

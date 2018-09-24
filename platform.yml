@@ -69,6 +69,8 @@
           name: logspout
           state: absent
       
+      - debug: msg="{{container_env}}"
+
       - name: Running ebaloger cointainer
         docker_container:
           name: ebaloger
@@ -82,13 +84,14 @@
           pull: yes
           recreate: yes
           memory: "100m"
-          env: "{{ containers_env }}"
+          env: "{{ container_env }}"
           volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
           ports:
             - "{{if_inner}}:{{ports.ebaloger_http.0}}:{{ports.ebaloger_http.1}}"
             - "{{if_inner}}:{{ports.ebaloger_udp.0}}:{{ports.ebaloger_udp.1}}"
 
       vars:
+        service: ebaloger
         endpoints:
           loggly: "syslog+tcp://{{_loggly_hostname}}"
           papertrail: "syslog+tls://{{_papertrail_hostname}}"
@@ -290,6 +293,8 @@
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
 
     - block:
+      - debug: msg="{{ container_env }}"
+
       - docker_image:
           name: "{{images.band}}"
           force: yes
@@ -310,7 +315,7 @@
           ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{ _director_env|combine(containers_env, director_env_extra|default({})) }}"
+          env: "{{ container_env|combine({'ENCODED_ENV': container_env|to_json }) }}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -322,6 +327,8 @@
             - "{{dirs.user_images}}:/images/user:ro"
             - "{{dirs.director_data}}:/data" # containers configs
             - "/var/run/docker.sock:/var/run/docker.sock"
+      vars:
+        service: director
       tags: ['band', 'ppart', 'director', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
@@ -340,7 +347,7 @@
             - "{{if_inner}}:{{ports.front_ws.0}}:{{ports.front_ws.1}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{env|combine(containers_env, front_env_extra|default({}) )}}"
+          env: "{{container_env}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -349,7 +356,7 @@
           volumes:
             - "{{dirs.front_custom_config}}:/app/config/custom"
       vars:
-        env: {}
+        service: "front"
       tags: ['front', 'ppart', 'rockme', 'docker-container', 'full_setup']
 
 
@@ -407,7 +414,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{env|combine(containers_env)}}"
+          env: "{{container_env}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -417,7 +424,7 @@
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       vars:
-        env: {}
+        service: chwriter
       tags: ['chwriter', 'ppart', 'rockme', 'docker-container', 'full_setup']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
@@ -432,7 +439,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{env|combine(containers_env)}}"
+          env: "{{container_env}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -442,8 +449,7 @@
           ports:
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
       vars:
-        env:
-          WEBHOOK: "http://front:{{ports.front.1}}/upload/notify"
+        service: heavyload
       tags: ['heavyload', 'pservice', 'docker-container', 'full_setup']
 
 
@@ -464,16 +470,9 @@
           memory: "2g"
           volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
-          env: "{{ containers_env }}"
-          command: "jupyter notebook {{notebook_args|join(' ')}}"
+          env: "{{ container_env }}"
       vars:
-        notebook_args:
-          - "--notebook-dir=/opt/notebooks"
-          - "--ip='*' --port=8888"
-          - "--no-browser"
-          - "--allow-root"
-          - "--NotebookApp.token=''"
-          - "--NotebookApp.allow_origin='*'"
+        service: anaconda
         cmd_parts:
       when: 'setup_jupyter == True'
       tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full_setup']
@@ -525,24 +524,20 @@
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
-          env: "{{ _env|combine(containers_env, _theia_env) }}"
+          env: "{{ container_env }}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
           recreate: yes
           memory: "2g"
           volumes:
-            - "{{dirs.workspace}}:{{workspace}}/:cached"
-            - "{{dirs.user_images}}:{{user_images}}:cached"
-            - "{{dirs.band_set}}:{{workspace}}/sources_ro/band_set:ro"
-            - "{{dirs.band_set}}/__skeletons:{{workspace}}/sources_ro/skeletons:ro"
+            - "{{dirs.workspace}}:/home/theia/project/:cached"
+            - "{{dirs.user_images}}:/home/theia/project/my_images:cached"
+            - "{{dirs.band_set}}:/home/theia/project/sources_ro/band_set:ro"
+            - "{{dirs.band_set}}/__skeletons:/home/theia/project/sources_ro/skeletons:ro"
             # - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
       vars:
-        workspace: "/home/theia/project"
-        user_images: "{{workspace}}/my_images"
-        _env:
-          WORKSPACE_PATH: "{{workspace}}"
-          USER_IMAGES_PATH: "{{user_images}}"
+        service: theia
       when: 'setup_theia == True'
       tags: ['theia', 'pservice', 'band', 'docker-container', 'full_setup']
 

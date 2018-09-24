@@ -24,16 +24,19 @@ push:
 	git push origin master
 	git push origin dev
 
+hz_servers:
+	@echo "quering servers list"
+	@source .env && curl -s \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $${HETZNER_API_KEY}" https://api.hetzner.cloud/v1/servers
+		| jq '.image, .id, .name, .status'
 
-h_servers:
-	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" https://api.hetzner.cloud/v1/servers | jq
-
-h_test_rebuild:
+hz_test_rebuild:
 	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
-		-X POST https://api.hetzner.cloud/v1/servers/1114551/actions/rebuild | jq
+		-X POST https://api.hetzner.cloud/v1/servers/$${HETZNET_TEST_SRV}/actions/rebuild | jq
 
-h_stage_rebuild:
+hz_stage_rebuild:
 	source .env && curl -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
-		-X POST https://api.hetzner.cloud/v1/servers/594645/actions/rebuild | jq
+		-X POST https://api.hetzner.cloud/v1/servers/$${HETZNET_STAGE_SRV}/actions/rebuild | jq
