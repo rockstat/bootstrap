@@ -13,8 +13,10 @@ setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
 # ########## Creds ##########
-person_name: Aldous Huxley
-contact_email: alex@ebalrefuckanal.de
+_random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
+_realname: "{{ realname|default(_local_config.realname|default('Aldous Huxley'))}}"
+_email: "{{ email|default(_local_config.email|default('alex@ebalrefuckanal.de'))}}"
+_admin_password: "{{admin_password|default(_local_config.admin_password|default(_random_pass))}}"
 #sysuser
 rsys_creds: [ "rsys", "" ]
 ruser_creds: [ "ruser", "" ]
@@ -24,6 +26,7 @@ main_user_password: default
 #system users
 support_user: 'x011'
 remote_user: 'x011'
+_setup_support: "{{setup_support|default(_local_config.setup_support|default(True))}}"
 #key for update manager to access server
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
@@ -35,22 +38,15 @@ repos:
   theia: "{{git_account}}/theia-ide-image.git"
   splash: "{{git_account}}/splash.git"
 # ########## Domains ##########
-domain: "{{tracker_domain|default(ansible_host)}}"
-domains:
-  app: 'app.{{domain}}'
-  web: 'web.{{domain}}'
-  grafana: 'grafana.{{domain}}'
-  jupyter: 'jupyter.{{domain}}'
-  theia: 'theia.{{domain}}'
-  netdata: 'netdata.{{domain}}'
-  httpdebug: 'httpdebug.{{domain}}'
-subdomains: "{{ domains.keys()|list }}"
+_domain: "{{_local_config.domain|default(ansible_host)}}"
+_subdomains: [app, web, grafana, jupyter, theia, netdata, httpdebug]
+_domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 # ########## SSL ##########
-    # email: "{{contact_email}}"
+    # email: "{{_email}}"
 # domains for regular reques
 domains_ssl:
-  - email: '{{contact_email}}'
-    domains: "{{[domain] + domains.values()|list|unique}}"
+  - email: '{{email}}'
+    domains: "{{[_domain] + _domains.values()|list|unique}}"
 # _ssl_cert_dir: "/etc/letsencrypt/live"
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert_trust: cert.cer
@@ -239,7 +235,7 @@ _containers_env_extra: {}
 _common_env:
   JSON_LOGS: 1
   LOG_LEVEL: "info"
-  DOMAIN: "{{domain}}"
+  DOMAIN: "{{_domain}}"
   HOST_ADDR: "{{if_inner}}"
   STATSD_HOST: "{{if_inner}}"
   NETWORK: "{{docker_net_name}}"
@@ -260,9 +256,9 @@ _nginx_front_extra: []
 _nginx_listen: 
   - "listen 443 ssl http2"
 _nginx_ssl:
-  - ssl_certificate_key     {{dirs.certs}}/{{domain}}/{{_ssl_cert_key}}
-  - ssl_certificate         {{dirs.certs}}/{{domain}}/{{_ssl_cert_fullchain}}
-  - ssl_trusted_certificate {{dirs.certs}}/{{domain}}/{{_ssl_cert_trust}}
+  - ssl_certificate_key     {{dirs.certs}}/{{_domain}}/{{_ssl_cert_key}}
+  - ssl_certificate         {{dirs.certs}}/{{_domain}}/{{_ssl_cert_fullchain}}
+  - ssl_trusted_certificate {{dirs.certs}}/{{_domain}}/{{_ssl_cert_trust}}
 _nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
@@ -274,7 +270,7 @@ _nginx_le_challenge:
   - "location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }"
 # specific configurations
 _nginx_forward_vh:
-  - server_name {sd}.{{domain}}
+  - server_name {sd}.{{_domain}}
   - "{{_nginx_le_challenge}}"
   - location / { proxy_pass http://u{sd}; }
   - "{{_nginx_auth}}"
@@ -293,7 +289,7 @@ _nginx_defvh_https:
   - "{{_nginx_le_challenge}}"
   - "location / { try_files $uri $uri/index.html; }"
 _nginx_front:
-  - server_name {{domain}}
+  - server_name {{_domain}}
   - "{{_nginx_base_vh}}"
   - "root {{dirs.splash}}"
   - "{{_nginx_le_challenge}}"
@@ -307,7 +303,7 @@ _nginx_front:
       limit_except POST { deny all; }
       proxy_pass http://uheavyload; }
 _nginx_dashboard:
-  - server_name app.{{domain}}
+  - server_name app.{{_domain}}
   - "{{_nginx_base_vh}}"
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
@@ -316,7 +312,7 @@ _nginx_dashboard:
   - location /ws { proxy_pass http://uebaloger; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
-  - server_name grafana.{{domain}}
+  - server_name grafana.{{_domain}}
   - "{{_nginx_le_challenge}}"
   - location / { proxy_pass http://ugrafana; }
   - location /public/ { auth_basic off; proxy_pass http://ugrafana; }
@@ -353,5 +349,5 @@ _nginx_upstreams:
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
 # ########## Mailer config ##########
-mailer_subj_key: "Ваши ключи OpenVPN ({{ domain }}) v{{ playbook_version }}"
-mailer_subj_snip: "Сниппет для сайта ({{ domain }}) v{{ playbook_version }}"
+mailer_subj_key: "Ваши ключи OpenVPN ({{ _domain }}) v{{ playbook_version }}"
+mailer_subj_snip: "Сниппет для сайта ({{ _domain }}) v{{ playbook_version }}"

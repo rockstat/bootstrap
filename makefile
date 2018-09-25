@@ -2,6 +2,9 @@ BR := $(shell git branch | grep \* | cut -d ' ' -f2-)
 bump-patch:
 	bumpversion patch
 
+password:
+	openssl passwd -apr1
+
 bump-minor:
 	bumpversion minor
 

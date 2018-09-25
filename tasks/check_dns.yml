@@ -1,0 +1,13 @@
+- name: Detecting public IP
+  uri: url=https://api.ipify.org?format=json return_content=yes body_format=json
+  register: ipify_result
+
+- debug:
+    msg: "Detect result {{ipify_result.json}}"
+
+- name: Checking DNS
+  command: "dig {{item}} +short"
+  register: domain_check_result
+  changed_when: False
+  failed_when: "ipify_result.json.ip not in domain_check_result.stdout"
+  with_items: "{{check_domains}}"

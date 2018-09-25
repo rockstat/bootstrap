@@ -78,6 +78,23 @@ To run setup tool just type `rockstat`
 
 ### Remote setup
 
+configure inventory
+
+```
+# ...
+test ansible_host=test.rstat.org realname=User email=hello@rstat.org
+```
+Generate password using `make password`. Execute playbook
+
+```
+ AHOST=test
+ APASS='$apr1$G2B2.GYy$QiBhuOZeRC03moZTPsB561'
+ansible-playbook platform.yml --limit=$AHOST --tags=ssl,full_setup -e admin_password=$APASS
+```
+## Params
+
+-e ssl_force=1
+#### force ssl
 
 
 
@@ -88,12 +105,26 @@ You can override configuration by specifing alternative values.
 
 Configurations has a parts prepared for easy overriding/extending:
 
-##### images_extra
+#### images_extra
 
-```
-images_extra:
+```yaml
+_images_extra:
   chproxy: myusername/chproxy
   redis: redis:4-alpine
+```
+
+#### Custom env
+
+```yaml
+_containers_env_extra:
+  director:
+    PORT: 1899
+```
+
+#### Disable support access
+
+```yaml
+_setup_support: no
 ```
 
 will override only thease two images

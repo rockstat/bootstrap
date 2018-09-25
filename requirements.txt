@@ -1,7 +1,6 @@
 msgpack
 ansible
-cryptography==2.2.2
-validators
+cryptography
 passlib
 netaddr
 bumpversion

@@ -4,8 +4,28 @@
   become: yes
   tasks:
 
-    - debug: msg={{_local_config}}
-      tags: ["always"]
+    # - debug: msg={{_local_config}}
+    #   tags: ["always"]
+    
+    # - debug:
+    #     msg: 
+    #       email: "{{_email}}"
+    #       realname: "{{_realname}}"
+    #       domain: "{{_domain}}"
+    #       admin_password: "{{_admin_password}}"
+    #   tags: ['always']
+
+      ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
+
+
+    - block:
+        - include_tasks: tasks/check_dns.yml
+      vars:
+        check_domains: "{{_domains + [_domain]}}"
+      tags: ['never', 'ssl', 'full_setup']
+
+      ##### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
+
 
     - name: Checking python interpreter
       assert:
@@ -34,11 +54,9 @@
           drs_pub_key_file: '{{support_key_file}}'
           drs_disable_ipv6: "{{disable_ipv6}}"
           drs_extra_hosts: "{{etc_hosts}}"
+          r_authorized_key_remove: "{{ not _setup_support }}"
       when: 'setup_server == True'
       tags: ['never', 'os', 'network', 'system', 'full_setup']
-
-
-
 
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
@@ -178,10 +196,10 @@
           include_role:
             name: dr.letsencrypt.wildcard.auto
           vars:
-            _r_domain: "{{domain}}"
-            _r_subdomains: "{{subdomains}}"
+            _r_domain: "{{_domain}}"
+            _r_subdomains: "{{_subdomains}}"
             _r_webroot: "{{dirs.well_known}}"
-            _r_force: yes
+            _r_force: "{{ssl_force|default(False)}}"
             _r_wildcard: "{{_ssl_wildcard}}"
             _r_docker_networks: [ { name: "{{docker_net_name}}" } ]
             _r_docker_labels: "{{docker_band_lbls}}"
@@ -195,9 +213,9 @@
         - debug: msg={{_r_nginx_reload}}
 
       vars:
-        oldloc: "/etc/letsencrypt/live/{{domain}}"
+        oldloc: "/etc/letsencrypt/live/{{_domain}}"
       when: "_setup_ssl == True"
-      tags: ['never', 'ssl']
+      tags: ['never', 'full_setup', 'system', 'ssl']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
@@ -224,7 +242,7 @@
         # local_config: "{{ansible_local.config|default({})}}"
         # local_general: "{{local_config.general|default({})}}"
         common_users:
-          - "admin:{{_local_config.admin_password}}"
+          - "admin:{{_admin_password}}"
           # - "{{local_general.users}}"
       when: "setup_nginx == True"
       tags: ['never', 'nginx', 'system', 'full_setup']
