@@ -20,6 +20,10 @@ EMAIL=""
 ADMIN_PASSWORD=""
 DEF_HOSTALIAS="rstat"
 HOSTALIAS="$DEF_HOSTALIAS"
+ENABLE_SUPPORT_DEF="1"
+ENABLE_SUPPORT="$ENABLE_SUPPORT_DEF"
+SSL_CHALLENGE_DEF="http"
+SSL_CHALLENGE="$SSL_CHALLENGE_DEF"
 INSTALLED=""
 
 # setup state vars
@@ -244,6 +248,9 @@ update_reboot_dialog(){
   show_dialog "System upgrade" "After upgrade complete server will be rebooted and you need to connect agant to continue."
 }
 
+greate_success_dialog(){
+  show_dialog "Execution completed" "Greate success!"
+}
 
 ################################################################################
 ## Actions
@@ -258,11 +265,24 @@ run_platform_playbook() { # (tags, custom)
   print_status "Starting ansible"
   ansible-playbook platform.yml --connection=local --tags=${1} $ANS_PY ${2}
   if [ $? -eq 0 ]; then print_status "Done"; else print_error "FAILED"; exit 1; fi
+  greate_success_dialog
 }
 
 run_upgrade_playbook() {
   print_status "Starting ansible"
   ansible-playbook os_upgrade.yml --connection=local $ANS_PY && exit 0
+  if [ $? -eq 0 ]; then print_status "Done"; else print_error "FAILED"; exit 1; fi
+  # server shold be go to reboot
+}
+
+switch_support_value(){
+  ENABLE_SUPPORT=$([ "$ENABLE_SUPPORT" == "1" ] && echo "0" || echo "1")
+  save_config
+}
+
+switch_ssl_challenge(){
+  SSL_CHALLENGE=$([ "$SSL_CHALLENGE" == "dns" ] && echo "http" || echo "dns")
+  save_config
 }
 
 ################################################################################
@@ -277,7 +297,11 @@ load_config(){
     ADMIN_PASSWORD=$(awk -F "=" '/admin_password/ {print $2}' $FACT_CONF)
     FULLNAME=$(awk -F "=" '/fullname/ {print $2}' $FACT_CONF)
     HOSTALIAS=$(awk -F "=" '/hostalias/ {print $2}' $FACT_CONF)
+    ENABLE_SUPPORT=$(awk -F "=" '/enable_support/ {print $2}' $FACT_CONF)
+    SSL_CHALLENGE=$(awk -F "=" '/ssl_challenge/ {print $2}' $FACT_CONF)
     if [[ -z "$HOSTALIAS" ]]; then HOSTALIAS=$DEF_HOSTALIAS; fi
+    if [[ -z "$ENABLE_SUPPORT" ]]; then ENABLE_SUPPORT=$ENABLE_SUPPORT_DEF; fi
+    if [[ -z "$SSL_CHALLENGE" ]]; then SSL_CHALLENGE=$SSL_CHALLENGE_DEF; fi
   fi
 }
 
@@ -301,6 +325,8 @@ email=${EMAIL}
 admin_password=${ADMIN_PASSWORD}
 hostalias=${HOSTALIAS}
 fullname=${FULLNAME}
+enable_support=${ENABLE_SUPPORT}
+ssl_challenge=${SSL_CHALLENGE}
 installed=${INSTALLED}""" > $FACT_CONF
 }
 
@@ -363,18 +389,26 @@ HEREDOC
 
 menu() {
   # --menu <text> <height> <width> <listheight>
+  SUPPORT_STATE=$([ "$ENABLE_SUPPORT" == "1" ] && echo "enabled" || echo "disabled")
+  SSL_CHALLENGE_STATE=$([ "$SSL_CHALLENGE" == "dns" ] && echo  || echo )
+  case "$SSL_CHALLENGE" in
+    "dns") SSL_CHALLENGE_STATE="DNS (wildcard)" ;;
+    "http") SSL_CHALLENGE_STATE="HTTP" ;;
+  esac
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 14 \
   "1"  "    Upgrade OS" \
   "3"  "    Full Install/Upgrade" \
   "4"  "    Platform Upgrade" \
-  "11" "    Change Admin Password" \
-  "12" "    Change Domain '${DOMAIN}'" \
+  "11" "    Change admin Password" \
+  "12" "    Change domain '${DOMAIN}'" \
   "13" "    Change host alias '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
   "15" "    Change full name '${FULLNAME}'" \
-  "20" "    Apply new admin password" \
+  "20" "    Apply admin password to webserver" \
   "30" "    Setup OpenVPN server" \
-  "31" "    Force SSL request" \
+  "31" "    Request SSL certificate with force option" \
+  "32" "    Support key state: ${SUPPORT_STATE}" \
+  "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
@@ -393,6 +427,8 @@ menu() {
     "20") run_platform_playbook nginx ;;
     "30") run_platform_playbook ovpn-server ;;
     "31") run_platform_playbook ssl $ANS_FORCE_SSL ;;
+    "32") switch_support_value ;;
+    "33") switch_ssl_challenge ;;
     "0") exit 1 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac

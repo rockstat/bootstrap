@@ -7,13 +7,15 @@
     # - debug: msg={{_local_config}}
     #   tags: ["always"]
     
-    # - debug:
-    #     msg: 
-    #       email: "{{_email}}"
-    #       realname: "{{_realname}}"
-    #       domain: "{{_domain}}"
-    #       admin_password: "{{_admin_password}}"
-    #   tags: ['always']
+    - debug:
+        msg: 
+          email: "{{_email}}"
+          realname: "{{_fullname}}"
+          domain: "{{_domain}}"
+          admin_password: "{{_admin_password}}"
+          enable_support: "{{_enable_support}}"
+          ssl_wildcard: "{{_ssl_wildcard}}"
+      tags: ['always']
 
       ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
 
@@ -54,7 +56,7 @@
           drs_pub_key_file: '{{support_key_file}}'
           drs_disable_ipv6: "{{disable_ipv6}}"
           drs_extra_hosts: "{{etc_hosts}}"
-          r_authorized_key_remove: "{{ not _setup_support }}"
+          r_authorized_key_remove: "{{ not _enable_support }}"
       when: 'setup_server == True'
       tags: ['never', 'os', 'network', 'system', 'full_setup']
 

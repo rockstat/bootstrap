@@ -8,15 +8,17 @@ _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 setup_server: yes
 setup_nginx: yes
 _setup_ssl: yes
-_ssl_wildcard: no
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
-# ########## Creds ##########
+# ########## Configration ##########
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
-_realname: "{{ realname|default(_local_config.realname|default('Aldous Huxley'))}}"
+_fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
 _email: "{{ email|default(_local_config.email|default('alex@ebalrefuckanal.de'))}}"
 _admin_password: "{{admin_password|default(_local_config.admin_password|default(_random_pass))}}"
+_enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
+_dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
+_ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 #sysuser
 rsys_creds: [ "rsys", "" ]
 ruser_creds: [ "ruser", "" ]
@@ -26,7 +28,6 @@ main_user_password: default
 #system users
 support_user: 'x011'
 remote_user: 'x011'
-_setup_support: "{{setup_support|default(_local_config.setup_support|default(True))}}"
 #key for update manager to access server
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
@@ -240,6 +241,8 @@ _common_env:
   STATSD_HOST: "{{if_inner}}"
   NETWORK: "{{docker_net_name}}"
   REDIS_DSN: "redis://redis:6379"
+  FULLNAME: "{{_fullname}}"
+  EMAIL: "{{_email}}"
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"

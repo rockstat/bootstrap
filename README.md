@@ -113,6 +113,8 @@ _images_extra:
   redis: redis:4-alpine
 ```
 
+will override only thease two images
+
 #### Custom env
 
 ```yaml
@@ -124,11 +126,8 @@ _containers_env_extra:
 #### Disable support access
 
 ```yaml
-_setup_support: no
+enable_support: no
 ```
-
-will override only thease two images
-
 
 ### IPv6
 
