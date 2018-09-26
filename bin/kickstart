@@ -252,6 +252,10 @@ greate_success_dialog(){
   show_dialog "Execution completed" "Greate success!"
 }
 
+run_full_setup_to_apply_dialog(){
+  show_dialog "Applying changes" "Run full install/upgrade to apply changes"
+}
+
 ################################################################################
 ## Actions
 ################################################################################
@@ -278,11 +282,13 @@ run_upgrade_playbook() {
 switch_support_value(){
   ENABLE_SUPPORT=$([ "$ENABLE_SUPPORT" == "1" ] && echo "0" || echo "1")
   save_config
+  run_full_setup_to_apply_dialog
 }
 
 switch_ssl_challenge(){
   SSL_CHALLENGE=$([ "$SSL_CHALLENGE" == "dns" ] && echo "http" || echo "dns")
   save_config
+  run_full_setup_to_apply_dialog
 }
 
 ################################################################################
@@ -407,7 +413,7 @@ menu() {
   "20" "    Apply admin password to webserver" \
   "30" "    Setup OpenVPN server" \
   "31" "    Request SSL certificate with force option" \
-  "32" "    Support key state: ${SUPPORT_STATE}" \
+  "32" "    Update system and support access: ${SUPPORT_STATE}" \
   "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
   "0"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
