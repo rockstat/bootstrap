@@ -1,5 +1,6 @@
 # playbook version fill automatically
 playbook_version: 3.6.0
+branch: master
 # ########## google site verifications file name ##########
 _google_webmaster: "" # like google65679391aa745584.html
 # ########## Features ##########

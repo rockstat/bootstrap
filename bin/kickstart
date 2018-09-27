@@ -262,12 +262,13 @@ run_full_setup_to_apply_dialog(){
 
 ANS_PY="-e ansible_python_interpreter=/usr/bin/python3"
 ANS_FORCE_SSL="-e ansible_python_interpreter=/usr/bin/python3"
+ANS_BRANCH="-e branch=${BOOTSTRAP_BRANCH}"
 
 
 run_platform_playbook() { # (tags, custom)
   setup_playbook
   print_status "Starting ansible"
-  ansible-playbook platform.yml --connection=local --tags=${1} $ANS_PY ${2}
+  ansible-playbook platform.yml --connection=local --tags=${1} $ANS_PY $ANS_BRANCH ${2}
   if [ $? -eq 0 ]; then print_status "Done"; else print_error "FAILED"; exit 1; fi
   greate_success_dialog
 }
