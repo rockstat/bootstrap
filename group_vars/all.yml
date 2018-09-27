@@ -101,7 +101,10 @@ dirs:
   clickhouse_tmp: "/srv/clickhouse_tmp"
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
-create_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}", "{{dirs.well_known}}","{{dirs.certs}}"]
+create_dirs:
+  - ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}", ]
+  - ["{{dirs.well_known}}","{{dirs.certs}}", "{{dirs.user_images}}"]
+  - ["{{dirs.workspace}}"]
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert_trust: cert.cer

@@ -40,7 +40,7 @@
       file: 
         state: directory
         path: "{{item}}"
-      with_items: "{{create_dirs}}"
+      with_items: "{{create_dirs|flatten}}"
       tags: ["never", "full", "dirs"]
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
@@ -89,8 +89,6 @@
           name: logspout
           state: absent
       
-      - debug: msg="{{container_env}}"
-
       - name: Running ebaloger cointainer
         docker_container:
           name: ebaloger
@@ -312,7 +310,6 @@
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
 
     - block:
-      - debug: msg="{{ container_env }}"
 
       - docker_image:
           name: "{{images.band}}"
@@ -527,12 +524,6 @@
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
-
-      - name: Creating required directories
-        file: state=directory path={{item}} owner=473 group=473
-        with_items:
-          - "{{dirs.user_images}}"
-          - "{{dirs.workspace}}"
 
       - name: Running Theia cointainer
         docker_container:
