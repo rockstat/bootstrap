@@ -159,7 +159,8 @@ docker_net_net: "{{docker_net|ipaddr('network')}}"
 docker_defnet_pattern: 172.17.*
 docker_defnet_net: "{{docker_defnet_pattern|ip_p2n}}"
 # other params
-docker_band_lbls: {inband: system}
+docker_band_lbls: { inband: system }
+_label_band_managed: { role: managed }
 _restart_policy: unless-stopped
 # ########## Clients VPN ##########
 covpn_keys_dir: '{{home_dir}}/ovpn_keys'
@@ -228,6 +229,7 @@ _containers_env:
     PORT: "{{ports.director.1}}"
     IMAGES_PATH: "/images"
     INITIAL_STARTUP: "{{(_initial_startup + _initial_startup_extra|default([]))|to_json}}"
+    BIND_HOST_ADDR: "{{ if_inner }}"
   theia:
     PORT_THEIA: "{{ports.theia.1}}"
     PORT_DEV: "{{ports.theia_dev.1}}"
@@ -293,7 +295,7 @@ _nginx_defvh_https:
   - "{{_nginx_ssl}}"
   - "root {{dirs.splash}}"
   - "{{_nginx_le_challenge}}"
-  - "location / { try_files $uri $uri/index.html; }"
+  - "location / { /index.html; }"
 _nginx_front:
   - server_name {{_domain}}
   - "{{_nginx_base_vh}}"
@@ -342,7 +344,7 @@ _nginx_upstreams:
   - 'upstream udirector { server {{if_inner}}:{{ports.director.0}};  }'
   - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}};  }'
   - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}}; }'
-  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}};}'
+  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}};}' # used at dashboard
   - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}}; }'
   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}}; }'
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'

@@ -49,5 +49,13 @@ test_rebuild:
 	sleep 30
 	ansible-playbook os_init.yml --limit=test
 	sleep 5
+	make test_full
+
+
+test_full:
 	ansible-playbook platform.yml --limit=test --tags=full -e branch=dev
+
+
+test_platform:
+	ansible-playbook platform.yml --limit=test --tags=platform -e branch=dev
 
