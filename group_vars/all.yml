@@ -57,7 +57,7 @@ _images:
   anaconda: rockstat/anaconda
   grafana: rockstat/grafana
   band: rockstat/band-base-py
-  director: rockstat/director
+  director: "rockstat/{{branch}}"
   theia: rockstat/theia-ide
   front: rockstat/front
   chwriter: rockstat/chwriter
