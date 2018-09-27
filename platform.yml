@@ -24,7 +24,7 @@
         - include_tasks: tasks/check_dns.yml
       vars:
         check_domains: "{{_domains + [_domain]}}"
-      tags: ['never', 'ssl', 'full_setup']
+      tags: ['never', 'ssl', 'full']
 
       ##### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
@@ -41,7 +41,7 @@
         state: directory
         path: "{{item}}"
       with_items: "{{create_dirs}}"
-      tags: ["never", "full_setup", "dirs"]
+      tags: ["never", "full", "dirs"]
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
@@ -58,7 +58,7 @@
           drs_extra_hosts: "{{etc_hosts}}"
           r_authorized_key_remove: "{{ not _enable_support }}"
       when: 'setup_server == True'
-      tags: ['never', 'os', 'network', 'system', 'full_setup']
+      tags: ['never', 'os', 'network', 'system', 'full']
 
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
@@ -77,7 +77,7 @@
           drd_interface: '{{docker_interface}}'
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
-      tags: ['never', 'system', 'docker', 'full_setup']
+      tags: ['never', 'system', 'docker', 'full']
 
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
 
@@ -109,7 +109,6 @@
           ports:
             - "{{if_inner}}:{{ports.ebaloger_http.0}}:{{ports.ebaloger_http.1}}"
             - "{{if_inner}}:{{ports.ebaloger_udp.0}}:{{ports.ebaloger_udp.1}}"
-
       vars:
         service: ebaloger
         endpoints:
@@ -122,7 +121,7 @@
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       when: "_logspout_enabled == True"
-      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'ppart', 'docker-container', 'full_setup']
+      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'ppart', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
 
@@ -134,7 +133,7 @@
           dr_name: dashboard
           dr_dir: '{{dirs.dashboard}}'
           dr_repo: "{{repos.dashboard}}"
-      tags: ['dashboard', 'ppart', 'band', 'static', 'full_setup']
+      tags: ['dashboard', 'ppart', 'band', 'static', 'full']
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
@@ -157,7 +156,7 @@
           dest: "{{dirs.splash}}/{{_google_webmaster}}"
         when: "_google_webmaster is defined and _google_webmaster != ''"
       
-      tags: ['splash', 'ppart', 'band', 'static', 'full_setup']
+      tags: ['splash', 'ppart', 'band', 'static', 'full']
 
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
@@ -170,7 +169,7 @@
           expo_reset_ufw: true
           expo_rules: '{{firewall_rules|flatten + host_firewall_rules|default([]) + group_firewall_rules|default([])}}'
           expo_expose_rules: '{{expose_rules|default([]) + host_expose_rules|default([]) + group_expose_rules|default([])}}'
-      tags: ['never', 'firewall', 'network', 'system', 'full_setup']
+      tags: ['never', 'firewall', 'network', 'system', 'full']
 
     ##### ##### ##### ##### #####    Lets encrypt - acme.sh    ##### ##### ##### ##### ##### 
 
@@ -217,7 +216,7 @@
       vars:
         oldloc: "/etc/letsencrypt/live/{{_domain}}"
       when: "_setup_ssl == True"
-      tags: ['never', 'full_setup', 'system', 'ssl']
+      tags: ['never', 'full', 'system', 'ssl']
 
 
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
@@ -247,7 +246,7 @@
           - "admin:{{_admin_password}}"
           # - "{{local_general.users}}"
       when: "setup_nginx == True"
-      tags: ['never', 'nginx', 'system', 'full_setup']
+      tags: ['never', 'nginx', 'system', 'full']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
@@ -266,7 +265,7 @@
           drn_stream: '{{netdata_stream_config|default({})}}'
           drn_backend: '{{netdata_backend_config|default({})}}'
           drn_bind_to: "{{if_inner}}"
-      tags: ['never', 'netdata', 'system', 'full_setup']
+      tags: ['never', 'netdata', 'system', 'full']
 
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
@@ -286,7 +285,7 @@
           clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
         retries: 3
         delay: 3
-      tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full_setup']
+      tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full']
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
 
@@ -308,7 +307,7 @@
           memory: "300m"
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
-      tags: ['never', 'redis', 'system', 'docker-container', 'full_setup']
+      tags: ['never', 'redis', 'system', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
 
@@ -349,7 +348,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
         service: director
-      tags: ['band', 'ppart', 'director', 'docker-container', 'full_setup']
+      tags: ['band', 'ppart', 'director', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
@@ -377,7 +376,7 @@
             - "{{dirs.front_custom_config}}:/app/config/custom"
       vars:
         service: "front"
-      tags: ['front', 'ppart', 'rockme', 'docker-container', 'full_setup']
+      tags: ['front', 'ppart', 'rockme', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    ClickHouse migrations    ##### ##### ##### ##### ##### 
@@ -420,7 +419,7 @@
         chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
         chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
         chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
-      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full_setup']
+      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
@@ -445,7 +444,7 @@
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       vars:
         service: chwriter
-      tags: ['chwriter', 'ppart', 'rockme', 'docker-container', 'full_setup']
+      tags: ['chwriter', 'ppart', 'rockme', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
 
@@ -470,7 +469,7 @@
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
       vars:
         service: heavyload
-      tags: ['heavyload', 'pservice', 'docker-container', 'full_setup']
+      tags: ['heavyload', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
@@ -495,7 +494,7 @@
         service: anaconda
         cmd_parts:
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full_setup']
+      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -524,7 +523,7 @@
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
-      tags: ['never', 'grafana', 'pservice', 'docker-container', 'full_setup']
+      tags: ['never', 'grafana', 'pservice', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
@@ -559,7 +558,7 @@
       vars:
         service: theia
       when: 'setup_theia == True'
-      tags: ['theia', 'pservice', 'band', 'docker-container', 'full_setup']
+      tags: ['theia', 'pservice', 'band', 'docker-container', 'full']
 
 
     - import_tasks: tasks/setup_vpn_server.yml

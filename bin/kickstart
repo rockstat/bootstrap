@@ -423,7 +423,7 @@ menu() {
 
   case "$OPTION" in
     "1") update_reboot_dialog; run_upgrade_playbook ;;
-    "3") run_platform_playbook full_setup ;;
+    "3") run_platform_playbook full ;;
     "4") run_platform_playbook pservice,ppart ;;
     "11") request_password ;;
     "12") request_domain ;;

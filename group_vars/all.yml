@@ -1,9 +1,7 @@
+# playbook version fill automatically
 playbook_version: 3.6.0
-# ########## google site verifications ##########
-# for example google65679391aa745584.html
-_google_webmaster: ""
-# ########## local config ##########
-_local_config: "{{(ansible_local.config|default({})).general|default({})}}"
+# ########## google site verifications file name ##########
+_google_webmaster: "" # like google65679391aa745584.html
 # ########## Features ##########
 setup_server: yes
 setup_nginx: yes
@@ -11,21 +9,15 @@ _setup_ssl: yes
 setup_jupyter: yes
 setup_theia: yes
 metrics_server: no
-# ########## Configration ##########
-_random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
-_fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
-_email: "{{ email|default(_local_config.email|default('alex@ebalrefuckanal.de'))}}"
-_admin_password: "{{admin_password|default(_local_config.admin_password|default(_random_pass))}}"
-_enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
-_dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
-_ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
-#sysuser
+# will runned by director at first start
+_initial_startup: [mmgeo, sxgeo, uaparser]
+# sysuser
 rsys_creds: [ "rsys", "" ]
 ruser_creds: [ "ruser", "" ]
-#main user. (temp)
+# main user. (temp)
 main_user: default
 main_user_password: default
-#system users
+# system users
 support_user: 'x011'
 remote_user: 'x011'
 #key for update manager to access server
@@ -38,20 +30,23 @@ repos:
   dashboard: "{{git_account}}/dashboard.git"
   theia: "{{git_account}}/theia-ide-image.git"
   splash: "{{git_account}}/splash.git"
+# ########## emitting configuration ##########
+_local_config: "{{(ansible_local.config|default({})).general|default({})}}"
+_random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
+_fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
+_email: "{{ email|default(_local_config.email|default('alex@ebalrefuckanal.de'))}}"
+_admin_password: "{{admin_password|default(_local_config.admin_password|default(_random_pass))}}"
+_enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
+_dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
+_ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
 _subdomains: [app, web, grafana, jupyter, theia, netdata, httpdebug]
 _domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 # ########## SSL ##########
-    # email: "{{_email}}"
-# domains for regular reques
 domains_ssl:
   - email: '{{email}}'
     domains: "{{[_domain] + _domains.values()|list|unique}}"
-# _ssl_cert_dir: "/etc/letsencrypt/live"
-_ssl_cert_fullchain: fullchain.cer
-_ssl_cert_trust: cert.cer
-_ssl_cert_key: priv.key
 # ########## Images ##########
 _images:
   chproxy: rockstat/chproxy
@@ -69,12 +64,9 @@ _images:
   httpdebug: rockstat/httpdebug
 images: "{{_images|combine(_images_extra|default({}))}}"
 # ########## Logs ##########
-#loggly
 _loggly_hostname: logs-01.loggly...
 _loggly_api_key: 10bbf2d8...
-#papertrail
 _papertrail_hostname: logs7.pape....
-#destination
 _logspout_target: none
 _logspout_enabled: yes
 # ########## dirs ##########
@@ -108,6 +100,10 @@ dirs:
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
 create_dirs: ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}", "{{dirs.well_known}}","{{dirs.certs}}"]
+# ssl files
+_ssl_cert_fullchain: fullchain.cer
+_ssl_cert_trust: cert.cer
+_ssl_cert_key: priv.key
 # ########## ports ##########
 ports:
   # services
@@ -181,9 +177,8 @@ firewall_rules:
   - { to_port: '{{ports.openvpn.0}}'}
 # ########## Jupyter/anaconda packages ##########
 # install libs to python containers: anaconda and theia
-_dev_env_py_libs: ["msgpack", "ujson", "prodict", "arrow", "simplech", "asimplech"]
-dev_env_py_libs: "{{_dev_env_py_libs|combine(dev_env_py_libs_extra|default({})) }}"
-# todo: ability to specify additional packages for theia and others
+_dev_py_libs: ["msgpack", "ujson", "prodict", "arrow", "simplech", "asimplech"]
+dev_py_libs: "{{_dev_env_py_libs|combine(_dev_py_libs_extra|default({})) }}"
 # ########## ClickHouse ##########  
 _clickhouse_profiles_custom:
   sys_prof: { max_memory_usage: 3000000000, use_uncompressed_cache: 0, load_balancing: random } 
@@ -222,9 +217,10 @@ _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Services env ##########
 _containers_env:
   director:
+    #ENCODED_ENV will be set in playbook
     PORT: "{{ports.director.1}}"
     IMAGES_PATH: "/images"
-    #ENCODED_ENV will be set in playbook
+    INITIAL_STARTUP: "{{(_initial_startup + _initial_startup_extra|default([]))|to_json}}"
   theia:
     PORT_THEIA: "{{ports.theia.1}}"
     PORT_DEV: "{{ports.theia_dev.1}}"

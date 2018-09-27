@@ -89,7 +89,7 @@ Generate password using `make password`. Execute playbook
 ```
  AHOST=test
  APASS='$apr1$G2B2.GYy$QiBhuOZeRC03moZTPsB561'
-ansible-playbook platform.yml --limit=$AHOST --tags=ssl,full_setup -e admin_password=$APASS
+ansible-playbook platform.yml --limit=$AHOST --tags=ssl,full -e admin_password=$APASS
 ```
 ## Params
 
