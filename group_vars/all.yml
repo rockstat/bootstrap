@@ -40,6 +40,7 @@ _admin_password: "{{admin_password|default(_local_config.admin_password|default(
 _enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
 _dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
 _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
+_tag: "{{ branch == 'master' && 'latest' || branch }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
 _subdomains: [app, web, grafana, jupyter, theia, netdata, httpdebug]
@@ -57,7 +58,7 @@ _images:
   anaconda: rockstat/anaconda
   grafana: rockstat/grafana
   band: rockstat/band-base-py
-  director: "rockstat/{{branch}}"
+  director: "rockstat/director:{{_tag}}"
   theia: rockstat/theia-ide
   front: rockstat/front
   chwriter: rockstat/chwriter
