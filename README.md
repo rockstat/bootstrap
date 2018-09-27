@@ -93,10 +93,7 @@ ansible-playbook platform.yml --limit=$AHOST --tags=ssl,full -e admin_password=$
 ```
 ## Params
 
--e ssl_force=1
-#### force ssl
-
-
+To force SSL `-e ssl_force=1`
 
 ## Overriding configuration
 

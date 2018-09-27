@@ -43,7 +43,7 @@ _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 _tag: "{{ branch == 'master' and 'latest' or branch }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
-_subdomains: [app, web, grafana, jupyter, theia, netdata, httpdebug]
+_subdomains: [app, web, grafana, jupyter, theia, netdata, demo]
 _domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 # ########## SSL ##########
 domains_ssl:
@@ -51,19 +51,20 @@ domains_ssl:
     domains: "{{[_domain] + _domains.values()|list|unique}}"
 # ########## Images ##########
 _images:
-  chproxy: rockstat/chproxy
-  redis: redis:4-alpine
-  logspout: gliderlabs/logspout
-  ebaloger: rockstat/ebaloger
-  anaconda: rockstat/anaconda
-  grafana: rockstat/grafana
   band: rockstat/band-base-py
   director: "rockstat/director:{{_tag}}"
+  front: "rockstat/front:{{_tag}}"
+  chwriter: "rockstat/chwriter:{{_tag}}"
+  ebaloger: rockstat/ebaloger
   theia: rockstat/theia-ide
-  front: rockstat/front
-  chwriter: rockstat/chwriter
   heavyload: rockstat/heavyload
+  anaconda: rockstat/anaconda
   httpdebug: rockstat/httpdebug
+  logspout: gliderlabs/logspout
+  chproxy: rockstat/chproxy
+  redis: redis:4-alpine
+  grafana: rockstat/grafana
+  fakeshop: madiedinro/fake-shop
 images: "{{_images|combine(_images_extra|default({}))}}"
 # ########## Logs ##########
 _loggly_hostname: logs-01.loggly...
@@ -126,6 +127,7 @@ ports:
   theia: [8887, 8000]
   theia_dev: [8886, 8080]
   netdata: [19999]
+  fakeshop: [8087, 8080]
   # servers
   http: [80]
   https: [443]
@@ -316,12 +318,8 @@ _nginx_dashboard:
   - location /ws { proxy_pass http://uebaloger; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
-  - server_name grafana.{{_domain}}
-  - "{{_nginx_le_challenge}}"
-  - location / { proxy_pass http://ugrafana; }
-  - location /public/ { auth_basic off; proxy_pass http://ugrafana; }
-  - "{{_nginx_auth}}"
-  - "{{_nginx_base_vh}}"
+  - "{{_nginx_forward_vh}}"
+  - location /public/ { auth_basic off; proxy_pass http://u{sd}; }
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_hide_header Authorization
 _nginx_netdata:
@@ -332,8 +330,9 @@ _nginx_sites:
   def_http: "{{_nginx_defvh_http|flatten }}"
   front: "{{_nginx_front|flatten }}"
   dashboard: "{{_nginx_dashboard|flatten }}"
-  grafana: "{{_nginx_grafana|flatten}}"
+  grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
+  demo: "{{_nginx_forward_vh|flatten|map('replace','{sd}','demo')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
   httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
@@ -349,6 +348,7 @@ _nginx_upstreams:
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
   - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}}; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
+  - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
 
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"

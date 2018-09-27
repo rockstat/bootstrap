@@ -41,7 +41,7 @@
         state: directory
         path: "{{item}}"
       with_items: "{{create_dirs|flatten}}"
-      tags: ["never", "full", "dirs"]
+      tags: ["never", "full", "platform", "dirs"]
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
@@ -119,42 +119,35 @@
           loggly:
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       when: "_logspout_enabled == True"
-      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'ppart', 'docker-container', 'full']
+      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'platform', 'ppart', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
 
-    - block:
-      - name: Preparing dashboard content
-        include_role:
-          name: dr.static-service
-        vars:
-          dr_name: dashboard
-          dr_dir: '{{dirs.dashboard}}'
-          dr_repo: "{{repos.dashboard}}"
-      tags: ['dashboard', 'ppart', 'band', 'static', 'full']
+    - name: Cloning dashboard content
+      git:
+        repo: '{{repos.dashboard}}'
+        version: HEAD
+        force: yes
+        accept_hostkey: yes
+        dest: '{{dirs.dashboard}}'
+      tags: ['dashboard', 'platform', 'ppart', 'band', 'static', 'full']
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Running Splash content
-        file:
-          path: "{{dirs.splash}}"
-          state: directory
-        when: 'dr_dir is defined'
-
       - name: Cloning splash screen repo
         git:
           repo: "{{repos.splash}}"
           dest: "{{dirs.splash}}"
           accept_hostkey: yes
           force: yes
-
+        
       - template:
           src: google-webmaster.j2
           dest: "{{dirs.splash}}/{{_google_webmaster}}"
         when: "_google_webmaster is defined and _google_webmaster != ''"
       
-      tags: ['splash', 'ppart', 'band', 'static', 'full']
+      tags: ['splash', 'platform', 'ppart', 'band', 'static', 'full']
 
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
@@ -198,7 +191,7 @@
             _r_domain: "{{_domain}}"
             _r_subdomains: "{{_subdomains}}"
             _r_webroot: "{{dirs.well_known}}"
-            _r_force: "{{ssl_force|default(False)}}"
+            _r_force: "{{ssl_force|default(False)|bool}}"
             _r_wildcard: "{{_ssl_wildcard}}"
             _r_docker_networks: [ { name: "{{docker_net_name}}" } ]
             _r_docker_labels: "{{docker_band_lbls}}"
@@ -345,7 +338,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
         service: director
-      tags: ['band', 'ppart', 'director', 'docker-container', 'full']
+      tags: ['band', 'platform', 'ppart', 'director', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
 
@@ -373,7 +366,7 @@
             - "{{dirs.front_custom_config}}:/app/config/custom"
       vars:
         service: "front"
-      tags: ['front', 'ppart', 'rockme', 'docker-container', 'full']
+      tags: ['front', 'platform', 'ppart', 'rockme', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    ClickHouse migrations    ##### ##### ##### ##### ##### 
@@ -416,7 +409,7 @@
         chproxy_allowed_networks: "{{_chproxy_allowed_networks_default + _chproxy_allowed_networks|default([])}}"
         chproxy_clusters: "{{_chproxy_clusters_default + _chproxy_clusters|default([])}}"
         chproxy_users: "{{_chproxy_users_default + _chproxy_users|default([])}}"
-      tags: ['never', 'clickhouse-proxy', 'chproxy', 'pservice', 'docker-container', 'full']
+      tags: ['never', 'clickhouse-proxy', 'chproxy', 'platform', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
@@ -441,7 +434,7 @@
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       vars:
         service: chwriter
-      tags: ['chwriter', 'ppart', 'rockme', 'docker-container', 'full']
+      tags: ['chwriter', 'platform', 'ppart', 'rockme', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
 
@@ -466,7 +459,7 @@
             - "{{if_inner}}:{{ports.heavyload.0}}:{{ports.heavyload.1}}"
       vars:
         service: heavyload
-      tags: ['heavyload', 'pservice', 'docker-container', 'full']
+      tags: ['heavyload', 'platform', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
@@ -491,7 +484,7 @@
         service: anaconda
         cmd_parts:
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'jupyter', 'pservice', 'docker-container', 'full']
+      tags: ['never', 'anaconda', 'jupyter', 'platform', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -520,7 +513,7 @@
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
-      tags: ['never', 'grafana', 'pservice', 'docker-container', 'full']
+      tags: ['never', 'grafana', 'platform', 'pservice', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
@@ -549,7 +542,7 @@
       vars:
         service: theia
       when: 'setup_theia == True'
-      tags: ['theia', 'pservice', 'band', 'docker-container', 'full']
+      tags: ['theia', 'platform', 'pservice', 'band', 'docker-container', 'full']
 
 
     - import_tasks: tasks/setup_vpn_server.yml
@@ -594,3 +587,21 @@
         _bind: "{{ _bind_dirty if ':' in _bind_dirty else _bind_default }}"
       tags: ['never', 'httpdebug']
   
+
+    - block:
+      - name: Pulling and starting Fake-Shop
+        docker_container:
+          name: "{{service}}"
+          hostname: "{{service}}"
+          image: "{{images[service]}}"
+          labels: "{{docker_band_lbls}}"
+          env: "{{container_env}}"
+          restart_policy: "{{_restart_policy}}"
+          pull: yes
+          restart: yes
+          memory: "50m"
+          ports:
+            - "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}"
+      vars:
+        service: fakeshop
+      tags: ['fakeshop', 'platform', 'pservice', 'docker-container', 'full']
