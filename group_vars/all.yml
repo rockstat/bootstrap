@@ -295,7 +295,7 @@ _nginx_defvh_https:
   - "{{_nginx_ssl}}"
   - "root {{dirs.splash}}"
   - "{{_nginx_le_challenge}}"
-  - "location / { /index.html; }"
+  - "location / { try_files $uri /index.html; }"
 _nginx_front:
   - server_name {{_domain}}
   - "{{_nginx_base_vh}}"

@@ -46,7 +46,7 @@ hz_stage_rebuild:
 
 test_rebuild:
 	make hz_test_rebuild
-	sleep 30
+	sleep 50
 	ansible-playbook os_init.yml --limit=test
 	sleep 5
 	make test_full
