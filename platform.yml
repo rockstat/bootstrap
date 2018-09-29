@@ -334,7 +334,7 @@
           recreate: yes
           memory: "300m"
           volumes:
-            - "{{dirs.band_set}}:/images/band_set:ro"
+            - "{{dirs.band_set}}:/images/band_set:cached"
             - "{{dirs.rockme_set}}:/images/rockme_set:ro"
             - "{{dirs.user_images}}:/images/user:ro"
             - "{{dirs.director_data}}:/data" # containers configs
