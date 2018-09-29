@@ -35,7 +35,7 @@ repos:
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
 _fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
-_email: "{{ email|default(_local_config.email|default('alex@ebalrefuckanal.de'))}}"
+_email: "{{ email|default(_local_config.email|default('hello@example.com'))}}"
 _admin_password: "{{admin_password|default(_local_config.admin_password|default(_random_pass))}}"
 _enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
 _dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
@@ -51,7 +51,7 @@ domains_ssl:
     domains: "{{[_domain] + _domains.values()|list|unique}}"
 # ########## Images ##########
 _images:
-  band: rockstat/band-base-py
+  band: "rockstat/band-base-py:{{_tag}}"
   director: "rockstat/director:{{_tag}}"
   front: "rockstat/front:{{_tag}}"
   chwriter: "rockstat/chwriter:{{_tag}}"
@@ -230,6 +230,7 @@ _containers_env:
     IMAGES_PATH: "/images"
     INITIAL_STARTUP: "{{(_initial_startup + _initial_startup_extra|default([]))|to_json}}"
     BIND_HOST_ADDR: "{{ if_inner }}"
+    BAND_PY_IMAGE: "{{_images.band}}"
   theia:
     PORT_THEIA: "{{ports.theia.1}}"
     PORT_DEV: "{{ports.theia_dev.1}}"
