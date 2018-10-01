@@ -385,10 +385,7 @@ while [ "$INSTALLED" != "$VERSION" ]; do setup_platform
 done
 
 
-MENU_TEXT=$(cat <<'HEREDOC'
-Choose an option:
-HEREDOC
-)
+MENU_TEXT="\nChoose an option:\n"
 
 menu() {
   # --menu <text> <height> <width> <listheight>
