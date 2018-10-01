@@ -111,14 +111,14 @@ update_bootstrap() {
   if [[ -d "$BOOTSTRAP_DIR" ]]; then
     print_status "Updating repo $BOOTSTRAP_REPO"
     cd $BOOTSTRAP_DIR
-    git fetch --all && git reset --hard "origin/$BOOTSTRAP_BRANCH"
+    git fetch --all && git reset --hard "origin/$BOOTSTRAP_BRANCH" && print_ok
     # git checkout $BOOTSTRAP_BRANCH && git pull --rebase
   else
     print_status "Cloning repo $BOOTSTRAP_REPO"
     mkdir -p $BOOTSTRAP_DIR
     cd $BOOTSTRAP_DIR
     echo $(pwd)
-    git clone $BOOTSTRAP_REPO . && git checkout $BOOTSTRAP_BRANCH
+    git clone $BOOTSTRAP_REPO . && git checkout $BOOTSTRAP_BRANCH && print_ok
   fi
 }
 
@@ -129,6 +129,7 @@ setup_langvars() {
   export LC_ALL=en_US.UTF-8
   export LANGUAGE=en_US.UTF-8
   export LC_TYPE=en_US.UTF-8
+  print_ok
 }
 
 setup_locale() {
@@ -144,30 +145,32 @@ setup_locale() {
 update_apt_repo(){
   print_status "Updating packages registry"
   apt-get -yqq update \
-  && print_ok
+    && print_ok
 }
 
 setup_system_packages() {
   print_status "Installing requirements"
   apt-get -yqq install apt-utils > $INSTALL_LOG \
-  && apt-get -yqq install dialog whiptail nano \
-    curl git locales \
-    python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
-    build-essential libffi-dev ca-certificates zlib1g-dev libssl-dev openssl > $INSTALL_LOG \
-  && print_ok
+    && apt-get -yqq install dialog whiptail nano \
+      curl git locales \
+      python3 python3-dev python3-pip python3-netaddr python3-setuptools python3-requests \
+      build-essential libffi-dev ca-certificates zlib1g-dev libssl-dev openssl > $INSTALL_LOG \
+    && print_ok
 }
 
 setup_python_packages() {
   print_status "Installing required python packages"
   pip3 -q install wheel \
-  && pip3 -q install -r $BOOTSTRAP_DIR/requirements.txt -U \
-  && print_ok
+    && pip3 -q install -r $BOOTSTRAP_DIR/requirements.txt -U \
+    && print_ok
 }
 
 setup_runner() {
+  print_status "Installing/Updating rockstat shortcut"
   rm -f $BINALIAS \
-  && echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS \
-  && chmod +x $BINALIAS
+    && echo -e "#!/usr/bin/env bash\n${KICKSTART_CMD}\n" > $BINALIAS \
+    && chmod +x $BINALIAS \
+    && print_ok
 }
 
 setup_playbook() {
@@ -383,8 +386,7 @@ done
 
 
 MENU_TEXT=$(cat <<'HEREDOC'
-Choose option:
---------------------------------------------------------
+Choose an option:
 HEREDOC
 )
 
@@ -396,7 +398,7 @@ menu() {
     "dns") SSL_CHALLENGE_STATE="DNS (wildcard)" ;;
     "http") SSL_CHALLENGE_STATE="HTTP" ;;
   esac
-  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 14 \
+  OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 18 \
   "01" "    Upgrade OS" \
   "03" "    Full Install/Upgrade" \
   "04" "    Platform Upgrade" \
