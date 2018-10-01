@@ -164,24 +164,6 @@
     ##### ##### ##### ##### #####    Lets encrypt - acme.sh    ##### ##### ##### ##### ##### 
 
     - block:
-        ### Migration to new location
-        - find:
-            paths: "{{dirs.certs}}"
-            file_type: any
-          register: new_certs_list
-
-        - block:
-            - copy:
-                remote_src: yes
-                src: "{{item.0}}"
-                dest: "{{item.1}}"
-              loop:
-                - ["{{oldloc}}/privkey.pem", "{{dirs.certs}}{{_ssl_cert_key}}"]
-                - ["{{oldloc}}/fullchain.pem", "{{dirs.certs}}{{_ssl_cert_fullchain}}"]
-                - ["{{oldloc}}/cert.pem", "{{dirs.certs}}{{_ssl_cert_trust}}"]
-              failed_when: False
-
-          when: "new_certs_list.examined == 0"
           
         - name: Including LetsEncrypt AcmeDNS role
           include_role:
@@ -197,17 +179,17 @@
             _r_check_addr: "{{if_inner}}:{{ports.http.0}}"
             _r_bind_addr: "{{if_inner}}:{{ports.letsencrypt.0}}"
             _r_cert_root: "{{dirs.certs}}"
+          retries: 3
+          delay: 10
 
         - shell: nginx -t && nginx -s reload || /bin/true
-          register: _r_nginx_reload
-
-        - debug: msg={{_r_nginx_reload}}
 
       vars:
         oldloc: "/etc/letsencrypt/live/{{_domain}}"
         labels:
           band.service.title: "SSL Renewer"
           band.service.def_position: "0x6"
+
 
       when: "_setup_ssl == True"
       tags: ['never', 'full', 'system', 'ssl']
@@ -315,6 +297,7 @@
         git:
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
+          version: "{{branch}}"
           accept_hostkey: yes
           force: yes
 
