@@ -565,10 +565,10 @@
             ports:
               - "{{_bind}}"
       vars:
-        _state: "{{ (httpdebug_bind|default('') == 'absent')|ternary('absent', 'started') }}"
+        _state: "{{ (bind|default('') == 'absent')|ternary('absent', 'started') }}"
         _bind_default: "{{if_inner}}:{{ports.httpdebug.0}}:{{ports.httpdebug.1}}"
-        _bind_dirty: "{{httpdebug_bind|default(_bind_default)}}"
-        _bind: "{{ _bind_dirty if ':' in _bind_dirty else _bind_default }}"
+        _bind_dirty: "{{bind|default(_bind_default)}}"
+        _bind: "{{ _bind_dirty + ':' + ports.httpdebug.1|string if ':' in _bind_dirty else _bind_default }}"
       tags: ['never', 'httpdebug']
   
 
@@ -588,4 +588,4 @@
             - "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}"
       vars:
         service: fakeshop
-      tags: ['fakeshop', 'platform', 'pservice', 'docker-container', 'full']
+      tags: ['never', 'fakeshop']

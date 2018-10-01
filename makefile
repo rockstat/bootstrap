@@ -43,17 +43,29 @@ hz_stage_rebuild:
 	source .env && curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
 		-d '{"image": "ubuntu-16.04"}' \
 		-X POST "https://api.hetzner.cloud/v1/servers/$${HETZNET_STAGE_SRV}/actions/rebuild" | jq
+	sleep 60
 
 test_rebuild:
 	make hz_test_rebuild
 	ansible-playbook os_init.yml --limit=test -e wait_server=1
 	ansible-playbook platform.yml --limit=test --tags=full -e branch=dev
 
+playbook_stage_init:
+	ansible-playbook os_init.yml --limit=stage -e wait_server=1
 
-test_full:
+playbook_stage_full:
+	ansible-playbook platform.yml --limit=stage --tags=full
+
+stage_rebuild: hz_stage_rebuild playbook_stage_init playbook_stage_full
+
+
+playbook_test_init:
+	ansible-playbook os_init.yml --limit=test -e wait_server=1
+
+playbook_test_full:
 	ansible-playbook platform.yml --limit=test --tags=full -e branch=dev
 
-
-test_platform:
+playbook_test_platform:
 	ansible-playbook platform.yml --limit=test --tags=platform -e branch=dev
 
+test_rebuild: hz_test_rebuild playbook_test_init playbook_test_full

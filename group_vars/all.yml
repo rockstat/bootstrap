@@ -108,7 +108,7 @@ create_dirs:
   - ["{{dirs.workspace}}"]
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
-_ssl_cert_trust: cert.cer
+_ssl_cert: cert.cer
 _ssl_cert_key: priv.key
 # ########## ports ##########
 ports:
@@ -267,7 +267,7 @@ _nginx_listen:
 _nginx_ssl:
   - ssl_certificate_key     {{dirs.certs}}/{{_domain}}/{{_ssl_cert_key}}
   - ssl_certificate         {{dirs.certs}}/{{_domain}}/{{_ssl_cert_fullchain}}
-  - ssl_trusted_certificate {{dirs.certs}}/{{_domain}}/{{_ssl_cert_trust}}
+  - ssl_trusted_certificate {{dirs.certs}}/{{_domain}}/{{_ssl_cert}}
 _nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off

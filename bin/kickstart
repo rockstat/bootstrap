@@ -383,13 +383,7 @@ done
 
 
 MENU_TEXT=$(cat <<'HEREDOC'
-Choose your option:
---------------------------------------------------------
-- New installation:       sequentially 1, 3
-- Upgrade system and 
-  platform:               option 3
-- Upgrade platform:       option 4
-- Change admin password:  sequentially 11, 14 or 11, 3
+Choose option:
 --------------------------------------------------------
 HEREDOC
 )
@@ -403,9 +397,9 @@ menu() {
     "http") SSL_CHALLENGE_STATE="HTTP" ;;
   esac
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 14 \
-  "1"  "    Upgrade OS" \
-  "3"  "    Full Install/Upgrade" \
-  "4"  "    Platform Upgrade" \
+  "01" "    Upgrade OS" \
+  "03" "    Full Install/Upgrade" \
+  "04" "    Platform Upgrade" \
   "11" "    Change admin Password" \
   "12" "    Change domain '${DOMAIN}'" \
   "13" "    Change host alias '${HOSTALIAS}'" \
@@ -413,19 +407,20 @@ menu() {
   "15" "    Change full name '${FULLNAME}'" \
   "20" "    Apply admin password to webserver" \
   "30" "    Setup OpenVPN server" \
+  "34" "    Setup Demo-site" \
   "31" "    Request SSL certificate with force option" \
   "32" "    $SUPPORT_STATE remote upgrade and support access" \
   "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
-  "0"  "    Exit"  3>&1 1>&2 2>&3)
+  "00"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
   [[ "$EXITCODE" = 255 ]] && break;
   # echo "exitcode: $EXITCODE"
 
   case "$OPTION" in
-    "1") update_reboot_dialog; run_upgrade_playbook ;;
-    "3") run_platform_playbook full ;;
-    "4") run_platform_playbook pservice,ppart ;;
+    "01") update_reboot_dialog; run_upgrade_playbook ;;
+    "03") run_platform_playbook full ;;
+    "04") run_platform_playbook pservice,ppart ;;
     "11") request_password ;;
     "12") request_domain ;;
     "13") request_hostalias ;;
@@ -436,7 +431,8 @@ menu() {
     "31") run_platform_playbook ssl $ANS_FORCE_SSL ;;
     "32") switch_support_value ;;
     "33") switch_ssl_challenge ;;
-    "0") exit 1 ;;
+    "34") run_platform_playbook fakeshop ;;
+    "00") exit 0 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac
   # sleep 0.5
