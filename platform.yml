@@ -316,9 +316,9 @@
           recreate: yes
           memory: "300m"
           volumes:
-            - "{{dirs.band_set}}:/images/band_set:cached"
-            - "{{dirs.rockme_set}}:/images/rockme_set:cached"
-            - "{{dirs.user_images}}:/images/user:cached"
+            - "{{dirs.band_set}}:/images/band_set"
+            - "{{dirs.rockme_set}}:/images/rockme_set"
+            - "{{dirs.user_images}}:/images/user"
             - "{{dirs.director_data}}:/data" # containers configs
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
