@@ -177,7 +177,7 @@ local_nets: [ "127.0.0.0/8", "{{s2s_vpn_net}}", "{{docker_net}}", "{{docker_defn
 etc_hosts: # also used in docker containers
   host: "{{if_inner}}"
 # ########## Firewall ##########
-disable_ipv6: true
+disable_ipv6: false
 firewall_rules:
   - { from_ip: '{{docker_net}}'}
   - { to_port: '{{ports.http.0}}'}
