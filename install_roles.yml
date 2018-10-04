@@ -27,7 +27,7 @@
   version: master
   name: dr.chronograf
 
-- src: https://github.com/AlexeySetevoi/ansible-clickhouse
+- src: https://github.com/madiedinro/ansible-clickhouse
   version: master
   name: AlexeySetevoi.clickhouse
 

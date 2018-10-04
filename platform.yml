@@ -249,8 +249,8 @@
         include_role:
           name: AlexeySetevoi.clickhouse
         vars:
-          clickhouse_listen_host_default: ['127.0.0.1', "{{if_inner}}"]
-          clickhouse_networks_default: ['127.0.0.1', "{{docker_net}}"]
+          clickhouse_listen_host_default: ["127.0.0.1", "::1", "{{if_inner}}"]
+          clickhouse_networks_default: ["127.0.0.1", "::1", "{{docker_net}}"]
           clickhouse_profiles_custom: "{{_clickhouse_profiles_custom}}"
           clickhouse_users_custom: "{{_clickhouse_users_custom}}"
           clickhouse_logger: "{{_clickhouse_logger}}"
