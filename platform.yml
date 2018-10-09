@@ -40,7 +40,9 @@
       file: 
         state: directory
         path: "{{item}}"
-      with_items: "{{create_dirs|flatten}}"
+        owner: "{{_uid}}"
+        group: "{{_gid}}"
+      with_items: "{{ create_dirs|flatten }}"
       tags: ["never", "full", "platform", "dirs"]
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
@@ -519,12 +521,13 @@
           recreate: yes
           memory: "2g"
           volumes:
-            - "{{dirs.workspace}}:/home/theia/project/:cached"
-            - "{{dirs.user_images}}:/home/theia/project/my_images:cached"
-            - "{{dirs.band_set}}:/home/theia/project/sources_ro/band_set:ro"
-            - "{{dirs.band_set}}/__skeletons:/home/theia/project/sources_ro/skeletons:ro"
-            # - "{{dirs.rockme_set}}:{{workspace}}/sources_ro/rockme_set:ro"
+            - "{{dirs.workspace}}:{{base_dir}}/:cached"
+            - "{{dirs.user_images}}:{{base_dir}}/my_images:cached"
+            - "{{dirs.public}}:{{base_dir}}/public:cached"
+            - "{{dirs.band_set}}:{{base_dir}}/sources_ro/band_set:ro"
+            - "{{dirs.band_set}}/__skeletons:{{base_dir}}/sources_ro/skeletons:ro"
       vars:
+        base_dir: /home/theia/project
         service: theia
       when: 'setup_theia == True'
       tags: ['theia', 'platform', 'pservice', 'band', 'docker-container', 'full']

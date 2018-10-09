@@ -20,7 +20,9 @@ main_user: default
 main_user_password: default
 # system users
 support_user: 'x011'
-remote_user: 'x011'
+_uid: 472
+_gid: 472
+remote_user: "{{ support_user }}"
 #key for update manager to access server
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
@@ -92,6 +94,7 @@ dirs:
   uploads: "{{data_dir}}/uploads"
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
+  public: "{{data_dir}}/public"
   well_known: "{{home_dir}}/well_known"
   dashboard: "{{home_dir}}/dashboard"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
@@ -103,9 +106,9 @@ dirs:
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
 create_dirs:
-  - ["{{images_dir}}", "{{build_dir}}", "{{data_dir}}", "{{etc_dir}}", ]
-  - ["{{dirs.well_known}}","{{dirs.certs}}", "{{dirs.user_images}}"]
-  - ["{{dirs.workspace}}"]
+  - ["{{ images_dir }}", "{{ build_dir }}", "{{ data_dir }}", "{{ etc_dir }}", ]
+  - ["{{ dirs.well_known }}","{{ dirs.certs }}", "{{ dirs.user_images }}"]
+  - ["{{ dirs.workspace }}", "{{ dirs.public }}", "{{ dirs.grafana_data }}"]
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert: cert.cer
@@ -257,10 +260,6 @@ common_env: "{{_common_env|combine(_common_env_extra|default({}))}}"
 container_env: "{{ {}|combine( common_env, _containers_env[service]|default({}), _containers_env_extra[service]|default({}) ) }}"
 
 # ########## NGINX COMMONS ##########
-# configuration extra params
-_nginx_proxy_params_extra: []
-_nginx_sites_extra: {}
-_nginx_front_extra: []
 # common blocks
 _nginx_listen: 
   - "listen 443 ssl http2"
@@ -274,20 +273,17 @@ _nginx_nocache:
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
-_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"
-_nginx_le_challenge:
-  - "location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }"
+_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"  
 # specific configurations
 _nginx_forward_vh:
   - server_name {sd}.{{_domain}}
-  - "{{_nginx_le_challenge}}"
   - location / { proxy_pass http://u{sd}; }
   - "{{_nginx_auth}}"
   - "{{_nginx_base_vh}}"
 _nginx_defvh_http:
   - server_name _http
   - listen 80 default_server
-  - "{{_nginx_le_challenge}}"
+  - location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }
   - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
   - location / { return 301 https://$host$request_uri; }
 _nginx_defvh_https:
@@ -295,28 +291,28 @@ _nginx_defvh_https:
   - "{{_nginx_listen.0}} default_server"
   - "{{_nginx_ssl}}"
   - "root {{dirs.splash}}"
-  - "{{_nginx_le_challenge}}"
   - "location / { try_files $uri /index.html; }"
-_nginx_front:
-  - server_name {{_domain}}
-  - "{{_nginx_base_vh}}"
-  - "root {{dirs.splash}}"
-  - "{{_nginx_le_challenge}}"
-  - location / { try_files $uri $uri/index.html @upstream; }
-  - location @upstream { proxy_pass http://ufront; }
-  - location /wss { proxy_pass http://ufront_ws; }
-  - "{{_nginx_front_extra}}"
+_nginx_upload_loc:
   - location /upload {
       client_max_body_size 10m;
       client_body_buffer_size 128K; 
       limit_except POST { deny all; }
       proxy_pass http://uheavyload; }
+_nginx_front:
+  - server_name {{_domain}}
+  - "{{_nginx_base_vh}}"
+  - "root {{dirs.splash}}"
+  - location / { try_files $uri $uri/index.html @upstream; }
+  - location /public { alias {{ dirs.public }}; }
+  - location /wss { proxy_pass http://ufront_ws; }
+  - "{{_nginx_upload_loc}}"
+  - "{{_nginx_front_extra|default([])}}"
+  - location @upstream { proxy_pass http://ufront; }
 _nginx_dashboard:
   - server_name app.{{_domain}}
   - "{{_nginx_base_vh}}"
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
-  - "{{_nginx_le_challenge}}"
   - location /api/ { proxy_pass http://udirector/; }
   - location /ws { proxy_pass http://uebaloger; }
   - location / { try_files $uri /index.html; }

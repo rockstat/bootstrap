@@ -42,6 +42,7 @@ set -e
 ################################################################################
 
 umask 022
+export DEBIAN_FRONTEND=noninteractive
 
 if test -t 1; then # if terminal
     ncolors=$(which tput > /dev/null && tput colors) # supports color
@@ -105,7 +106,6 @@ if [[ ! -f /etc/debian_version ]]; then print_error "Target OS is Ubutu 16.04"; 
 ## System deps
 ################################################################################
 
-export DEBIAN_FRONTEND=noninteractive
 update_bootstrap() {
   set -e
   if [[ -d "$BOOTSTRAP_DIR" ]]; then
@@ -133,6 +133,7 @@ setup_langvars() {
 }
 
 setup_locale() {
+  export DEBIAN_FRONTEND=noninteractive
   set -e
   print_status "Setting en_US.UTF-8 locale"
   echo -e 'LANGUAGE=en_US.UTF-8\nLANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\nLC_TYPE=en_US.UTF-8' > /etc/default/locale
@@ -143,12 +144,14 @@ setup_locale() {
 }
 
 update_apt_repo(){
+  export DEBIAN_FRONTEND=noninteractive
   print_status "Updating packages registry"
   apt-get -yqq update \
     && print_ok
 }
 
 setup_system_packages() {
+  export DEBIAN_FRONTEND=noninteractive
   print_status "Installing requirements"
   apt-get -yqq install apt-utils > $INSTALL_LOG \
     && apt-get -yqq install dialog whiptail nano \
