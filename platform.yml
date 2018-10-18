@@ -482,8 +482,8 @@
         file:
           state: directory
           path: "{{dirs.grafana_data}}"
-          owner: 472 # grafana container ids
-          group: 472
+          owner: _uid # grafana container ids
+          group: _gid
 
       - name: Running Grafana cointainer
         docker_container:
