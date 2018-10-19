@@ -86,12 +86,12 @@
     - name: Starting Ebaloger logs streamer container
       block:
 
-      - name: Removing Logspout cointainer
+      - name: Removing Logspout container
         docker_container:
           name: logspout
           state: absent
       
-      - name: Running ebaloger cointainer
+      - name: Running ebaloger container
         docker_container:
           name: ebaloger
           hostname: ebaloger
@@ -270,7 +270,7 @@
     - name: Redis setup
       block:
 
-      - name: Running Redis cointainer
+      - name: Running Redis container
         docker_container:
           name: redis
           hostname: redis
@@ -304,7 +304,7 @@
           accept_hostkey: yes
           force: yes
 
-      - name: Running Director cointainer
+      - name: Running Director container
         docker_container:
           name: director
           hostname: director
@@ -334,7 +334,7 @@
     - block:
       - docker_container: name=frontier state=absent
 
-      - name: Running Front cointainer
+      - name: Running Front container
         docker_container:
           name: front
           hostname: front
@@ -377,7 +377,7 @@
           src: 'chproxy/config.yml.j2'
           dest: '{{chproxy_config}}'
 
-      - name: Running Chproxy cointainer
+      - name: Running Chproxy container
         docker_container:
           name: chproxy
           hostname: chproxy
@@ -404,7 +404,7 @@
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Running ChWriter cointainer
+      - name: Running ChWriter container
         docker_container:
           name: chwriter
           hostname: chwriter
@@ -453,7 +453,7 @@
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
-      - name: Running Anaconda cointainer
+      - name: Running Anaconda container
         docker_container:
           name: anaconda
           hostname: anaconda
@@ -485,7 +485,7 @@
           owner: "{{_uid}}" # grafana container ids
           group: "{{_gid}}"
 
-      - name: Running Grafana cointainer
+      - name: Running Grafana container
         docker_container:
           name: grafana
           hostname: grafana
@@ -507,7 +507,7 @@
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
 
-      - name: Running Theia cointainer
+      - name: Running Theia container
         docker_container:
           name: theia
           hostname: theia
