@@ -1,7 +1,0 @@
-amail_ovpn_keys_dir: ~/ovpn_keys
-amail_sender:
-amail_subj_key: 'Alcolytics | vpn keys'
-amail_subj_snip: 'Alcolytics | snippet'
-amail_enabled: false
-amail_mailgun_key:
-amail_to:
