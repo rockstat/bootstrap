@@ -26,13 +26,6 @@ remote_user: "{{ support_user }}"
 #key for update manager to access server
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
-# ########## Repos ##########
-git_account: https://github.com/rockstat
-repos:
-  band_set: "{{git_account}}/band-services-set"
-  dashboard: "{{git_account}}/dashboard.git"
-  theia: "{{git_account}}/theia-ide-image.git"
-  splash: "{{git_account}}/splash.git"
 # ########## emitting configuration ##########
 _local_config: "{{(ansible_local.config|default({})).general|default({})}}"
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
@@ -51,6 +44,13 @@ _domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list 
 domains_ssl:
   - email: '{{email}}'
     domains: "{{[_domain] + _domains.values()|list|unique}}"
+# ########## Repos ##########
+_git_organization: https://github.com/rockstat
+repos:
+  band_set: "{{_git_organization}}/band-services-set"
+  dashboard: "{{_git_organization}}/dashboard.git"
+  theia: "{{_git_organization}}/theia-ide-image.git"
+  splash: "{{_git_organization}}/splash.git"
 # ########## Images ##########
 _images:
   band: "rockstat/band-base-py:{{_tag}}"
