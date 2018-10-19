@@ -42,7 +42,7 @@ _admin_password: "{{admin_password|default(_local_config.admin_password|default(
 _enable_support: "{{enable_support|default(_local_config.enable_support|default('1')|bool)}}"
 _dns_challenge: "{{_local_config.dns_challenge|default('http')}}"
 _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
-_tag: "{{ branch == 'master' and 'latest' or branch }}"
+_tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
 _subdomains: [app, web, grafana, jupyter, theia, netdata, demo]
