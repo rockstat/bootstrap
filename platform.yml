@@ -19,7 +19,6 @@
 
       ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
 
-
     - block:
         - include_tasks: tasks/check_dns.yml
       vars:
@@ -29,14 +28,14 @@
       ##### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
 
-    - name: Checking python interpreter
+    - name: Checking python version is 3
       assert:
         that: 
           - "ansible_python_interpreter == '/usr/bin/python3'"
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
 
-    - name: Creating dirs
+    - name: Creating directories
       file: 
         state: directory
         path: "{{item}}"
@@ -48,7 +47,7 @@
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
     - block:
-      - name: Including Base Server role
+      - name: BaseServer role execution
         include_role:
           name: dr.server
         vars:
@@ -66,7 +65,7 @@
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Including Docker role
+      - name: Docker role execution
         include_role:
           name: dr.docker
         vars: 
@@ -86,12 +85,9 @@
     - name: Starting Ebaloger logs streamer container
       block:
 
-      - name: Removing Logspout container
-        docker_container:
-          name: logspout
-          state: absent
+      - docker_container: name=logspout state=absent
       
-      - name: Running ebaloger container
+      - name: Starting container for service Ebaloger
         docker_container:
           name: ebaloger
           hostname: ebaloger
@@ -124,7 +120,7 @@
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
 
-    - name: Cloning dashboard content
+    - name: Cloning Dashboard content
       git:
         repo: '{{repos.dashboard}}'
         version: HEAD
@@ -136,7 +132,7 @@
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Cloning splash screen repo
+      - name: Cloning Splash content
         git:
           repo: "{{repos.splash}}"
           dest: "{{dirs.splash}}"
@@ -154,7 +150,7 @@
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Including Exposeur role
+      - name: Exposeur role execution
         include_role:
           name: dr.exposeur
         vars:
@@ -167,7 +163,7 @@
 
     - block:
           
-        - name: Including LetsEncrypt AcmeDNS role
+        - name: LetsEncrypt role execution
           include_role:
             name: dr.letsencrypt.wildcard.auto
           vars:
@@ -201,7 +197,7 @@
 
     - block:
       - include_vars: vars/nginx.yml
-      - name: Including Nginx role
+      - name: Nginx role execution
         include_role:
           name: jdauphant.nginx
         vars:
@@ -230,7 +226,7 @@
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Including Netdata role
+      - name: Netdata role execution
         include_role:
           name: dr.netdata
         vars:
@@ -249,7 +245,7 @@
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
 
     - block: 
-      - name: Including ClickHouse role
+      - name: ClickHouse role execution
         include_role:
           name: AlexeySetevoi.clickhouse
         vars:
@@ -270,7 +266,7 @@
     - name: Redis setup
       block:
 
-      - name: Running Redis container
+      - name: Starting container for service Redis
         docker_container:
           name: redis
           hostname: redis
@@ -296,7 +292,7 @@
           pull: yes
           force: yes
 
-      - name: Cloning Band-set repo
+      - name: Cloning BandSet content
         git:
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
@@ -304,7 +300,7 @@
           accept_hostkey: yes
           force: yes
 
-      - name: Running Director container
+      - name: Starting container for service Director
         docker_container:
           name: director
           hostname: director
@@ -334,7 +330,7 @@
     - block:
       - docker_container: name=frontier state=absent
 
-      - name: Running Front container
+      - name: Starting container for service Front
         docker_container:
           name: front
           hostname: front
@@ -377,7 +373,7 @@
           src: 'chproxy/config.yml.j2'
           dest: '{{chproxy_config}}'
 
-      - name: Running Chproxy container
+      - name: Starting container for service Chproxy
         docker_container:
           name: chproxy
           hostname: chproxy
@@ -404,7 +400,7 @@
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Running ChWriter container
+      - name: Starting container for service ChWriter
         docker_container:
           name: chwriter
           hostname: chwriter
@@ -420,6 +416,7 @@
           memory: "300m"
           volumes:
             - "{{dirs.chwriter_custom_config}}:/app/config/custom"
+            - "{{dirs.chwriter_custom_migrations}}:/app/migrations/custom"
             - "{{dirs.chwriter_emergency}}:/app/emergency"
       vars:
         service: chwriter
@@ -429,7 +426,7 @@
 
 
     - block:
-      - name: Including Docker container role for Heavyload service
+      - name: Starting container for service Heavyload
         docker_container:
           name: heavyload
           hostname: heavyload
@@ -453,7 +450,7 @@
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
-      - name: Running Anaconda container
+      - name: Starting container for service Jupyter
         docker_container:
           name: anaconda
           hostname: anaconda
@@ -485,7 +482,7 @@
           owner: "{{_uid}}" # grafana container ids
           group: "{{_gid}}"
 
-      - name: Running Grafana container
+      - name: Starting container for service Grafana
         docker_container:
           name: grafana
           hostname: grafana
@@ -507,7 +504,7 @@
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
 
-      - name: Running Theia container
+      - name: Starting container for service Theia
         docker_container:
           name: theia
           hostname: theia
@@ -529,6 +526,7 @@
             - "{{dirs.band_set}}:{{base_dir}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{base_dir}}/sources_ro/skeletons:ro"
             - "{{dirs.chwriter_custom_config}}:{{custom_config_dir}}/chwriter:cached"
+            - "{{dirs.chwriter_custom_migrations}}:{{base_dir}}/migrations:cached"
             - "{{dirs.front_custom_config}}:{{custom_config_dir}}/front:cached"
       vars:
         base_dir: /home/theia/project
@@ -557,7 +555,7 @@
             name: http_debug
             state: absent
 
-        - name: HTTP debug service
+        - name: Starting container for service HTTP-Debug
           docker_container:
             name: httpdebug
             state: "{{_state}}"
@@ -582,7 +580,7 @@
   
 
     - block:
-      - name: Pulling and starting Fake-Shop
+      - name: Starting container for service Fake-Shop
         docker_container:
           name: "{{service}}"
           hostname: "{{service}}"
@@ -597,4 +595,4 @@
             - "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}"
       vars:
         service: fakeshop
-      tags: ['never', 'fakeshop']
+      tags: ['never', 'fakeshop', 'platform', 'pservice', 'docker-container', 'full']

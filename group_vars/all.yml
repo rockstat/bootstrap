@@ -83,6 +83,7 @@ images_dir: "{{home_dir}}/images"
 dirs:
   front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
+  chwriter_custom_migrations: "{{data_dir}}/chwriter_custom_migrations"
   chwriter_emergency: "{{data_dir}}/chwriter_emergency"
   band: "{{images_dir}}/band_base"
   band_set: "{{images_dir}}/band_set"
