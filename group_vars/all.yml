@@ -110,7 +110,7 @@ create_dirs:
   - ["{{ images_dir }}", "{{ build_dir }}", "{{ data_dir }}", "{{ etc_dir }}", ]
   - ["{{ dirs.well_known }}","{{ dirs.certs }}", "{{ dirs.user_images }}"]
   - ["{{ dirs.workspace }}", "{{ dirs.public }}", "{{ dirs.grafana_data }}"]
-  - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}"]
+  - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}", "{{dirs.chwriter_custom_migrations}}"]
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert: cert.cer

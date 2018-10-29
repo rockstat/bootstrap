@@ -501,8 +501,12 @@
             - '{{dirs.grafana_data}}:/var/lib/grafana'
       tags: ['never', 'grafana', 'platform', 'pservice', 'docker-container', 'full']
 
+
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
+
+      - name: Fix permissions
+        command: "chown -R {{_uid}}:{{_gid}} {{dirs.workspace}}"
 
       - name: Starting container for service Theia
         docker_container:
@@ -518,19 +522,19 @@
           pull: yes
           restart: yes
           recreate: yes
-          memory: "2g"
+          memory: "1g"
           volumes:
-            - "{{dirs.workspace}}:{{base_dir}}/:cached"
-            - "{{dirs.user_images}}:{{base_dir}}/my_images:cached"
-            - "{{dirs.public}}:{{base_dir}}/public:cached"
-            - "{{dirs.band_set}}:{{base_dir}}/sources_ro/band_set:ro"
-            - "{{dirs.band_set}}/__skeletons:{{base_dir}}/sources_ro/skeletons:ro"
+            - "{{dirs.workspace}}:{{project_dir}}:cached"
+            - "{{dirs.user_images}}:{{project_dir}}/my_images:cached"
+            - "{{dirs.public}}:{{project_dir}}/public:cached"
+            - "{{dirs.chwriter_custom_migrations}}:{{project_dir}}/config/migrations:cached"
+            - "{{dirs.band_set}}:{{project_dir}}/sources_ro/band_set:ro"
+            - "{{dirs.band_set}}/__skeletons:{{project_dir}}/sources_ro/skeletons:ro"
             - "{{dirs.chwriter_custom_config}}:{{custom_config_dir}}/chwriter:cached"
-            - "{{dirs.chwriter_custom_migrations}}:{{base_dir}}/migrations:cached"
             - "{{dirs.front_custom_config}}:{{custom_config_dir}}/front:cached"
       vars:
-        base_dir: /home/theia/project
-        custom_config_dir: /home/theia/project/config/custom
+        project_dir: /home/theia/project
+        custom_config_dir: "{{project_dir}}/config/custom"
         service: theia
       when: 'setup_theia == True'
       tags: ['theia', 'platform', 'pservice', 'band', 'docker-container', 'full']
