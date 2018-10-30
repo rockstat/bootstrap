@@ -241,7 +241,6 @@
           drn_bind_to: "{{if_inner}}"
       tags: ['never', 'netdata', 'system', 'full']
 
-
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
 
     - block: 
@@ -265,7 +264,6 @@
 
     - name: Redis setup
       block:
-
       - name: Starting container for service Redis
         docker_container:
           name: redis
@@ -349,6 +347,7 @@
           memory: "300m"
           volumes:
             - "{{dirs.front_custom_config}}:/app/config/custom"
+
       vars:
         service: "front"
       tags: ['front', 'platform', 'ppart', 'rockme', 'docker-container', 'full']
@@ -446,7 +445,6 @@
       vars:
         service: heavyload
       tags: ['heavyload', 'platform', 'pservice', 'docker-container', 'full']
-
 
     ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
     - block:
