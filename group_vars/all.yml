@@ -58,7 +58,7 @@ _images:
   front: "rockstat/front:{{_tag}}"
   chwriter: "rockstat/chwriter:{{_tag}}"
   ebaloger: rockstat/ebaloger
-  theia: rockstat/theia-ide
+  theia: "rockstat/theia-ide:{{_tag}}"
   heavyload: rockstat/heavyload
   anaconda: rockstat/anaconda
   httpdebug: rockstat/httpdebug
