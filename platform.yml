@@ -19,11 +19,11 @@
 
       ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
 
-    - block:
-        - include_tasks: tasks/check_dns.yml
-      vars:
-        check_domains: "{{_domains + [_domain]}}"
-      tags: ['never', 'ssl', 'full']
+    # - block:
+    #     - include_tasks: tasks/check_dns.yml
+    #   vars:
+    #     check_domains: "{{_domains + [_domain]}}"
+    #   tags: ['never', 'ssl', 'full']
 
       ##### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
