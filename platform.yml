@@ -17,16 +17,17 @@
           ssl_wildcard: "{{_ssl_wildcard}}"
       tags: ['always']
 
+
       ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
 
-    # - block:
-    #     - include_tasks: tasks/check_dns.yml
-    #   vars:
-    #     check_domains: "{{_domains + [_domain]}}"
-    #   tags: ['never', 'ssl', 'full']
+    - block:
+        - include_tasks: tasks/check_dns.yml
+      vars:
+        check_domains: "{{_domains + [_domain]}}"
+      tags: ['never', 'ssl', 'full']
 
-      ##### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
+      #### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
     - name: Checking python version is 3
       assert:
@@ -43,6 +44,7 @@
         group: "{{_gid}}"
       with_items: "{{ create_dirs|flatten }}"
       tags: ["never", "full", "platform", "dirs"]
+
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
@@ -79,6 +81,7 @@
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
       tags: ['never', 'system', 'docker', 'full']
+
 
     ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
 
@@ -118,6 +121,7 @@
             SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
       tags: ['never', 'ebaloger', 'logger', 'monitoring', 'platform', 'ppart', 'docker-container', 'full']
 
+
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
 
     - name: Cloning Dashboard content
@@ -128,6 +132,7 @@
         accept_hostkey: yes
         dest: '{{dirs.dashboard}}'
       tags: ['dashboard', 'platform', 'ppart', 'band', 'static', 'full']
+
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
