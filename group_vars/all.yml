@@ -80,6 +80,7 @@ data_dir: '{{home_dir}}/data'
 etc_dir: '{{home_dir}}/etc'
 build_dir: '{{home_dir}}/build'
 images_dir: "{{home_dir}}/images"
+libraries_dir: "{{home_dir}}/libraries"
 dirs:
   front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
@@ -88,8 +89,10 @@ dirs:
   band: "{{images_dir}}/band_base"
   band_set: "{{images_dir}}/band_set"
   rockme_set: "{{images_dir}}/rockme_set"
-  director_data: "{{data_dir}}/director_data"
+  director_data: "{{data_dir}}/director"
+  environments: "{{data_dir}}/environments"
   user_images: "{{images_dir}}/user"
+  user_libraries: "{{libraries_dir}}/user"
   workspace: "{{data_dir}}/workspace"
   notebooks: "{{data_dir}}/notebooks"
   uploads: "{{data_dir}}/uploads"
@@ -110,7 +113,9 @@ create_dirs:
   - ["{{ images_dir }}", "{{ build_dir }}", "{{ data_dir }}", "{{ etc_dir }}", ]
   - ["{{ dirs.well_known }}","{{ dirs.certs }}", "{{ dirs.user_images }}"]
   - ["{{ dirs.workspace }}", "{{ dirs.public }}", "{{ dirs.grafana_data }}"]
-  - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}", "{{dirs.chwriter_custom_migrations}}"]
+  - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}"]
+  - ["{{ dirs.chwriter_custom_migrations }}", "{{ dirs.environments }}"]
+  - ["{{ dirs.user_libraries }}"]
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert: cert.cer

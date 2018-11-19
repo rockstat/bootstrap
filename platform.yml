@@ -36,14 +36,24 @@
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
 
-    - name: Creating directories
-      file: 
-        state: directory
-        path: "{{item}}"
-        owner: "{{_uid}}"
-        group: "{{_gid}}"
-      with_items: "{{ create_dirs|flatten }}"
+    - block:
+      - name: Creating directories
+        command: "mkdir -p {{ create_dirs|flatten|join(' ') }}"
+        warn: False
+
+      - name: Setting permissions
+        command: "chown {{_uid}}:{{_gid}} {{ create_dirs|flatten|join(' ') }}"
+        warn: False
+
       tags: ["never", "full", "platform", "dirs"]
+
+    #   file: 
+    #     state: directory
+    #     path: "{{item}}"
+    #     owner: "{{_uid}}"
+    #     group: "{{_gid}}"
+    #   with_items: ""
+      
 
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
@@ -323,6 +333,7 @@
             - "{{dirs.rockme_set}}:/images/rockme_set"
             - "{{dirs.user_images}}:/images/user"
             - "{{dirs.director_data}}:/data" # containers configs
+            - "{{dirs.environments}}:/data/environments"
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
         service: director
@@ -529,15 +540,18 @@
           volumes:
             - "{{dirs.workspace}}:{{project_dir}}:cached"
             - "{{dirs.user_images}}:{{project_dir}}/my_images:cached"
+            - "{{dirs.user_libraries}}:{{project_dir}}/my_libraries:cached"
             - "{{dirs.public}}:{{project_dir}}/public:cached"
             - "{{dirs.chwriter_custom_migrations}}:{{project_dir}}/config/migrations:cached"
             - "{{dirs.band_set}}:{{project_dir}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{project_dir}}/sources_ro/skeletons:ro"
             - "{{dirs.chwriter_custom_config}}:{{custom_config_dir}}/chwriter:cached"
             - "{{dirs.front_custom_config}}:{{custom_config_dir}}/front:cached"
+            - "{{dirs.environments}}:{{config_dir}}/environments:cached"
       vars:
         project_dir: /home/theia/project
-        custom_config_dir: "{{project_dir}}/config/custom"
+        config_dir: "{{project_dir}}/config"
+        custom_config_dir: "{{config_dir}}/custom"
         service: theia
       when: 'setup_theia == True'
       tags: ['theia', 'platform', 'pservice', 'band', 'docker-container', 'full']
