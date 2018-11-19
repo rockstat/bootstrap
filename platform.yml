@@ -39,11 +39,13 @@
     - block:
       - name: Creating directories
         command: "mkdir -p {{ create_dirs|flatten|join(' ') }}"
-        warn: False
+        args:
+          warn: False
 
       - name: Setting permissions
         command: "chown {{_uid}}:{{_gid}} {{ create_dirs|flatten|join(' ') }}"
-        warn: False
+        args:
+          warn: False
 
       tags: ["never", "full", "platform", "dirs"]
 

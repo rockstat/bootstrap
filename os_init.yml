@@ -13,6 +13,11 @@
         timeout: 300
       when: "wait_server is defined and wait_server|bool == True"
 
+
+    - name: Wait apt ready
+      raw: bash -c "while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 1; done;"
+      changed_when: false
+
     - name: Install python for Ansible
       register: output
       raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy {{packages}})"

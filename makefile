@@ -45,10 +45,7 @@ hz_stage_rebuild:
 		-X POST "https://api.hetzner.cloud/v1/servers/$${HETZNET_STAGE_SRV}/actions/rebuild" | jq
 	sleep 60
 
-test_rebuild:
-	make hz_test_rebuild
-	ansible-playbook os_init.yml --limit=test -e wait_server=1
-	ansible-playbook platform.yml --limit=test --tags=full -e branch=dev
+
 
 playbook_stage_init:
 	ansible-playbook os_init.yml --limit=stage -e wait_server=1
