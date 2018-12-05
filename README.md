@@ -126,6 +126,20 @@ _containers_env_extra:
 enable_support: no
 ```
 
+### Configuring Google Compute Clound
+
+- https://cloud.google.com/compute/docs/disks/add-persistent-disk
+
+sudo lsblk
+mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+mount -o discard,defaults /dev/sdb1 /srv
+mount -o discard,defaults /dev/sdb /srv
+cp /etc/fstab /etc/fstab.backup
+blkid /dev/sdb
+echo "UUID=[UUID_VALUE] /mnt/disks/[MNT_DIR] ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
+chmod a+w /srv
+
+
 ### IPv6
 
 By default setup tool disabling IPv6 support.
