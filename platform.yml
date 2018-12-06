@@ -479,7 +479,10 @@
           pull: yes
           recreate: yes
           memory: "2g"
-          volumes: [ '{{dirs.notebooks}}:/opt/notebooks' ]
+          volumes:
+            - "{{dirs.notebooks}}:/opt/notebooks:cached"
+            - "{{dirs.public}}:/opt/notebooks/public:cached"
+
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
       vars:
