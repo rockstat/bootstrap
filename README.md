@@ -132,12 +132,16 @@ enable_support: no
 
 sudo lsblk
 mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
-mount -o discard,defaults /dev/sdb1 /srv
 mount -o discard,defaults /dev/sdb /srv
 cp /etc/fstab /etc/fstab.backup
 blkid /dev/sdb
 echo "UUID=[UUID_VALUE] /mnt/disks/[MNT_DIR] ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
 chmod a+w /srv
+
+
+echo "UUID=d544e85c-acd5-4a23-ad55-dbb7ee572986 /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
+
+
 
 
 ### IPv6
