@@ -15,10 +15,11 @@ fi
 SDBID=`blkid $DISK |  cut -d' ' -f2 | cut -d\" -f2`
 
 if grep $DISK /etc/mtab > /dev/null 2>&1; then
-    echo "Disk already mounted."
+    echo "Disk already mounted. Skip formatting"
 else
     mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard $DISK
     chmod a+w /srv
+    echo "Disk formatted."
 fi
 
 
@@ -27,6 +28,7 @@ if grep $SDBID /etc/fstab > /dev/null 2>&1; then
 else
     cp /etc/fstab /etc/fstab.backup
     echo -e "UUID=$SDBID /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
+    echo "Record added to fstab."
 fi
 
 
