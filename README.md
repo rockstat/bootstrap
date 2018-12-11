@@ -126,13 +126,13 @@ _containers_env_extra:
 enable_support: no
 ```
 
-### Configuring Google Compute Clound
+### Google Cloud Compute Engine instance configuration
 
 You need to configure additional persistent SSD disk.
 
 Use docs at https://cloud.google.com/compute/docs/disks/add-persistent-disk
 
-Or execute prepared script that configures `/dev/sdb` (Dandger! Script will erase disk! )
+Or execute prepared script that configure `/dev/sdb` disk. **Danger! If disk currently not mounted it will be formatted!**
 
 ```
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/gcloud_sdb | sudo bash -
