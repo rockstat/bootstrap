@@ -128,18 +128,15 @@ enable_support: no
 
 ### Configuring Google Compute Clound
 
-Docs at https://cloud.google.com/compute/docs/disks/add-persistent-disk
+You need to configure additional persistent SSD disk.
 
-or use script
+Use docs at https://cloud.google.com/compute/docs/disks/add-persistent-disk
+
+Or execute prepared script that configures `/dev/sdb` (Dandger! Script will erase disk! )
 
 ```
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/gcloud_sdb | sudo bash -
 ```
-
-
-echo "UUID=d544e85c-acd5-4a23-ad55-dbb7ee572986 /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
-
-
 
 
 ### IPv6
