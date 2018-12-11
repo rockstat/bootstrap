@@ -1,0 +1,13 @@
+#!/bin/sh
+# Usage: curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/gcloud_sdb | sudo bash -
+
+set -ex
+
+mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
+mount -o discard,defaults /dev/sdb /srv
+cp /etc/fstab /etc/fstab.backup
+SDBID=`blkid /dev/sdb |  cut -d' ' -f2 | cut -d\" -f2`
+echo -e "UUID=$SDBID /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
+chmod a+w /srv
+
+echo "Done!"
