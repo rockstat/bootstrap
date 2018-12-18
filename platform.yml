@@ -574,6 +574,14 @@
     #     openvpnc_key: '{{s2s_vpn_key}}'
     #   when: s2s_vpn_connect is defined and s2s_vpn_connect == True and vpn_id is defined
     #   tags: ['s2s-ovpn-client', 's2s-ovpn']
+
+
+
+    # Using:
+    # cd /srv/platform/bootstrap
+    # ansible-playbook platform.yml --connection=local --tags=httpdebug -e bind=0.0.0.0:80
+    # to remove
+    # ansible-playbook platform.yml --connection=local --tags=httpdebug -e bind=absent
     - block:
         - debug: msg="Binding http debug to {{_bind}}. Container state {{_state}}"
 
