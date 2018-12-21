@@ -562,6 +562,9 @@
       tags: ['theia', 'platform', 'pservice', 'band', 'docker-container', 'full']
 
 
+    ##### ##### ##### ##### #####    VPN Server    ##### ##### ##### ##### ##### 
+
+
     - import_tasks: tasks/setup_vpn_server.yml
       tags: ['never', 'ovpn-server']
 
@@ -576,7 +579,7 @@
     #   tags: ['s2s-ovpn-client', 's2s-ovpn']
 
 
-
+    ##### ##### ##### ##### #####    HTTP debug    ##### ##### ##### ##### ##### 
     # Using:
     # cd /srv/platform/bootstrap
     # ansible-playbook platform.yml --connection=local --tags=httpdebug -e bind=0.0.0.0:80
@@ -612,6 +615,8 @@
         _bind: "{{ _bind_dirty + ':' + ports.httpdebug.1|string if ':' in _bind_dirty else _bind_default }}"
       tags: ['never', 'httpdebug']
   
+    ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
+
 
     - block:
       - name: Starting container for service Fake-Shop
@@ -630,3 +635,16 @@
       vars:
         service: fakeshop
       tags: ['never', 'fakeshop', 'platform', 'pservice', 'docker-container', 'full']
+
+
+    ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
+
+
+    - name: Including tasks 
+      include_tasks: "{{item}}"
+      with_fileglob:
+        - "tasks/custom_*"
+      vars:
+        _customs: "{{customs}}"
+      tags: ['never', 'custom']
+
