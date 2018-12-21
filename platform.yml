@@ -645,6 +645,6 @@
       with_fileglob:
         - "tasks/custom_*"
       vars:
-        _customs: "{{customs}}"
+        _customs: "{{ customs|default({}) }}"
       tags: ['never', 'custom']
 
