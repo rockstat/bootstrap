@@ -71,6 +71,8 @@
           drs_pub_key_file: '{{support_key_file}}'
           drs_disable_ipv6: "{{disable_ipv6}}"
           drs_extra_hosts: "{{etc_hosts}}"
+          drs_uid: "{{_gid}}"
+          drs_gid: "{{_uid}}"
           r_authorized_key_remove: "{{ not _enable_support }}"
       when: 'setup_server == True'
       tags: ['never', 'os', 'network', 'system', 'full']
