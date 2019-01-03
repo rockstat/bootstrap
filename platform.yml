@@ -304,12 +304,13 @@
 
     - block:
 
-      - docker_image:
+      - name: Pulling latest Band framework base image from docker hub
+        docker_image:
           name: "{{images.band}}"
           pull: yes
           force: yes
 
-      - name: Cloning BandSet content
+      - name: Pulling BandSet services collection content from git
         git:
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
