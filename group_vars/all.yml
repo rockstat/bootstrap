@@ -27,7 +27,7 @@ remote_user: "{{ support_user }}"
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
 # ########## emitting configuration ##########
-_local_config: "{{(ansible_local.config|default({})).general|default({})}}"
+_local_config: "{{ (ansible_local.config|default({})).general|default({}) }}"
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
 _fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
 _email: "{{ email|default(_local_config.email|default('hello@example.com'))}}"
@@ -321,7 +321,7 @@ _nginx_dashboard:
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
   - location /api/ { proxy_pass http://udirector/; }
-  - location /ws { proxy_pass http://uebaloger; }
+  # - location /ws { proxy_pass http://uebaloger; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
   - "{{_nginx_forward_vh}}"
