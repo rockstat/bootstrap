@@ -1,0 +1,34 @@
+
+##### ##### ##### ##### #####    HTTP debug    ##### ##### ##### ##### ##### 
+
+- block:
+    - debug: msg="Binding http debug to {{_bind}}. Container state {{_state}}"
+
+    - docker_container:
+        name: http_debug
+        state: absent
+
+    - name: Starting container for service HTTP-Debug
+      docker_container:
+        name: httpdebug
+        state: "{{_state}}"
+        hostname: httpdebug
+        image: "{{images.httpdebug}}"
+        labels: "{{docker_band_lbls}}"
+        networks: [ { name: "{{docker_net_name}}" } ]
+        etc_hosts: "{{etc_hosts}}"
+        restart_policy: "{{_restart_policy}}"
+        restart: yes
+        pull: yes
+        recreate: yes
+        memory: "100m"
+        ports:
+          - "{{_bind}}"
+  vars:
+    _state: "{{ (bind|default('') == 'absent')|ternary('absent', 'started') }}"
+    _bind_default: "{{if_inner}}:{{ports.httpdebug.0}}:{{ports.httpdebug.1}}"
+    _bind_dirty: "{{bind|default(_bind_default)}}"
+    _bind: "{{ _bind_dirty + ':' + ports.httpdebug.1|string if ':' in _bind_dirty else _bind_default }}"
+  tags: ['never', 'httpdebug']
+
+

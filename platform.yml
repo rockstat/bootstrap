@@ -4,9 +4,6 @@
   become: yes
   tasks:
 
-    # - debug: msg={{_local_config}}
-    #   tags: ["always"]
-    
     - debug:
         msg: 
           email: "{{_email}}"
@@ -15,7 +12,7 @@
           admin_password: "{{_admin_password}}"
           enable_support: "{{_enable_support}}"
           ssl_wildcard: "{{_ssl_wildcard}}"
-      tags: ['always']
+      tags: ['never']
 
 
       ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
@@ -36,26 +33,20 @@
         msg: "Required python 3. Details: https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html"
       tags: ["always"]
 
-    - block:
+    - name: Build and set permissions for required dirs
+      block:
       - name: Creating directories
-        command: "mkdir -p {{ create_dirs|flatten|join(' ') }}"
+        command: "mkdir -p {{ dirs }}"
         args:
           warn: False
 
       - name: Setting permissions
-        command: "chown {{_uid}}:{{_gid}} {{ create_dirs|flatten|join(' ') }}"
+        command: "chown {{_uid}}:{{_gid}} {{ dirs }}"
         args:
           warn: False
-
+      vars:
+        dirs: "{{ create_dirs|flatten|join(' ') }}"
       tags: ["never", "full", "platform", "dirs"]
-
-    #   file: 
-    #     state: directory
-    #     path: "{{item}}"
-    #     owner: "{{_uid}}"
-    #     group: "{{_gid}}"
-    #   with_items: ""
-      
 
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
@@ -95,45 +86,6 @@
           drd_net: '{{docker_net}}'
           drd_mtu: '1400'
       tags: ['never', 'system', 'docker', 'full']
-
-
-    ##### ##### ##### ##### #####    Logspout    ##### ##### ##### ##### ##### 
-
-    - name: Starting Ebaloger logs streamer container
-      block:
-
-      - docker_container: name=logspout state=absent
-      
-      - name: Starting container for service Ebaloger
-        docker_container:
-          name: ebaloger
-          hostname: ebaloger
-          image: "{{images.ebaloger}}"
-          labels: "{{docker_band_lbls}}"
-          networks: [ { name: "{{docker_net_name}}" } ]
-          etc_hosts: "{{etc_hosts}}"
-          restart_policy: "{{_restart_policy}}"
-          restart: yes
-          pull: yes
-          recreate: yes
-          memory: "100m"
-          env: "{{ container_env }}"
-          volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
-          ports:
-            - "{{if_inner}}:{{ports.ebaloger_http.0}}:{{ports.ebaloger_http.1}}"
-            - "{{if_inner}}:{{ports.ebaloger_udp.0}}:{{ports.ebaloger_udp.1}}"
-      vars:
-        service: ebaloger
-        endpoints:
-          loggly: "syslog+tcp://{{_loggly_hostname}}"
-          papertrail: "syslog+tls://{{_papertrail_hostname}}"
-        env:
-          common:
-            SYSLOG_HOSTNAME: "{{hostname}}"
-            TAIL: 100
-          loggly:
-            SYSLOG_STRUCTURED_DATA: "{{_loggly_api_key}}@41058 tag=\"Logspout\""
-      tags: ['never', 'ebaloger', 'logger', 'monitoring', 'platform', 'ppart', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Dashboard    ##### ##### ##### ##### ##### 
@@ -571,53 +523,20 @@
     - import_tasks: tasks/setup_vpn_server.yml
       tags: ['never', 'ovpn-server']
 
-    # - import_tasks: extensions/metrics_server.yml
-    #   when: 'metrics_server == True'
 
-    # - import_role:
-    #     name: dr.openvpn-client
-    #   vars:
-    #     openvpnc_key: '{{s2s_vpn_key}}'
-    #   when: s2s_vpn_connect is defined and s2s_vpn_connect == True and vpn_id is defined
-    #   tags: ['s2s-ovpn-client', 's2s-ovpn']
+    ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
 
 
-    ##### ##### ##### ##### #####    HTTP debug    ##### ##### ##### ##### ##### 
-    # Using:
-    # cd /srv/platform/bootstrap
-    # ansible-playbook platform.yml --connection=local --tags=httpdebug -e bind=0.0.0.0:80
-    # to remove
-    # ansible-playbook platform.yml --connection=local --tags=httpdebug -e bind=absent
-    - block:
-        - debug: msg="Binding http debug to {{_bind}}. Container state {{_state}}"
-
-        - docker_container:
-            name: http_debug
-            state: absent
-
-        - name: Starting container for service HTTP-Debug
-          docker_container:
-            name: httpdebug
-            state: "{{_state}}"
-            hostname: httpdebug
-            image: "{{images.httpdebug}}"
-            labels: "{{docker_band_lbls}}"
-            networks: [ { name: "{{docker_net_name}}" } ]
-            etc_hosts: "{{etc_hosts}}"
-            restart_policy: "{{_restart_policy}}"
-            restart: yes
-            pull: yes
-            recreate: yes
-            memory: "100m"
-            ports:
-              - "{{_bind}}"
+    - name: Including tasks 
+      include_tasks: "{{item}}"
+      with_fileglob:
+        - "tasks/custom_*"
       vars:
-        _state: "{{ (bind|default('') == 'absent')|ternary('absent', 'started') }}"
-        _bind_default: "{{if_inner}}:{{ports.httpdebug.0}}:{{ports.httpdebug.1}}"
-        _bind_dirty: "{{bind|default(_bind_default)}}"
-        _bind: "{{ _bind_dirty + ':' + ports.httpdebug.1|string if ':' in _bind_dirty else _bind_default }}"
-      tags: ['never', 'httpdebug']
-  
+        _customs: "{{ customs|default({}) }}"
+      tags: ['never', 'custom']
+
+
+
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
 
 
@@ -639,15 +558,8 @@
         service: fakeshop
       tags: ['never', 'fakeshop', 'platform', 'pservice', 'docker-container', 'full']
 
+    - docker_container: name=ebaloger state=absent
+      tags: ['never', 'ebaloger', 'system', 'platform', 'pservice', 'docker-container', 'full']
 
-    ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
-
-
-    - name: Including tasks 
-      include_tasks: "{{item}}"
-      with_fileglob:
-        - "tasks/custom_*"
-      vars:
-        _customs: "{{ customs|default({}) }}"
-      tags: ['never', 'custom']
-
+    - docker_container: name=ebaloger state=absent
+      tags: ['never', 'httpdebug', 'system', 'full']

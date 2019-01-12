@@ -128,10 +128,10 @@ ports:
   front_ws: [10002, 8082]
   heavyload: [10010, 8080]
   httpdebug: [8089,8080]
-  ebaloger_http: [8085, 8080]
-  ebaloger_udp: [5055, 8090]
   # tools
-  logspout: [8088, 80]
+  logspout:
+    http: [8085, 8080]
+    udp: [5055, 8090]
   grafana: [3000, 3000]
   jupyter: [8888, 8080]
   theia: [8887, 8000]
@@ -321,7 +321,7 @@ _nginx_dashboard:
   - "{{_nginx_auth}}"
   - "root {{dirs.dashboard}}/dist"
   - location /api/ { proxy_pass http://udirector/; }
-  # - location /ws { proxy_pass http://uebaloger; }
+  - location /ws { proxy_pass http://udirector; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
   - "{{_nginx_forward_vh}}"
@@ -341,18 +341,15 @@ _nginx_sites:
   demo: "{{_nginx_forward_vh|flatten|map('replace','{sd}','demo')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
-  httpdebug: "{{_nginx_forward_vh|flatten|map('replace','{sd}','httpdebug')|list}}"
 _nginx_upstreams:
   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}}; }'
   - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}};  }'
   - 'upstream udirector { server {{if_inner}}:{{ports.director.0}};  }'
   - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}};  }'
   - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}}; }'
-  - 'upstream uebaloger { server {{if_inner}}:{{ports.ebaloger_http.0}};}' # used at dashboard
   - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}}; }'
   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}}; }'
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
-  - 'upstream uhttpdebug { server {{if_inner}}:{{ports.httpdebug.0}}; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
   - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
 
