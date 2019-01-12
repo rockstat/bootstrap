@@ -36,16 +36,16 @@
     - name: Build and set permissions for required dirs
       block:
       - name: Creating directories
-        command: "mkdir -p {{ dirs }}"
+        command: "mkdir -p {{ block_dirs }}"
         args:
           warn: False
 
       - name: Setting permissions
-        command: "chown {{_uid}}:{{_gid}} {{ dirs }}"
+        command: "chown {{_uid}}:{{_gid}} {{ block_dirs }}"
         args:
           warn: False
       vars:
-        dirs: "{{ create_dirs|flatten|join(' ') }}"
+        block_dirs: "{{ create_dirs|flatten|join(' ') }}"
       tags: ["never", "full", "platform", "dirs"]
 
 
@@ -479,9 +479,11 @@
     ##### ##### ##### ##### #####    Theia    ##### ##### ##### ##### ##### 
     - block:
 
-      - name: Fix permissions
+      - name: Fix workspace permissions
         command: "chown -R {{_uid}}:{{_gid}} {{dirs.workspace}}"
-
+        args:
+          warn: False
+      
       - name: Starting container for service Theia
         docker_container:
           name: theia
