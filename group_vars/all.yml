@@ -245,7 +245,7 @@ _containers_env:
     PORT_THEIA: "{{ports.theia.1}}"
     PORT_DEV: "{{ports.theia_dev.1}}"
   heavyload:
-    WEBHOOK: "http://front:{{ports.front.1}}/upload/{{ '{{.service}}' }}/{{ '.name' }}"
+    WEBHOOK: "http://front:{{ports.front.1}}/upload/{{ '{{.service}}' }}/{{ '{{.name}}' }}"
 # for user overrides
 _containers_env_extra: {}
 # ########## Common Envs ##########
@@ -302,7 +302,7 @@ _nginx_defvh_https:
   - "location / { try_files $uri /index.html; }"
 _nginx_upload_loc:
   - location /upload {
-      client_max_body_size 10m;
+      client_max_body_size 500m;
       client_body_buffer_size 128K; 
       limit_except POST { deny all; }
       proxy_pass http://uheavyload; }
