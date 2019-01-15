@@ -38,7 +38,7 @@ _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 _tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
-_subdomains: [app, web, grafana, jupyter, theia, netdata, demo]
+_subdomains: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
 _domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 # ########## SSL ##########
 domains_ssl:
@@ -281,11 +281,24 @@ _nginx_nocache:
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
+_nginx_cors_loc_common: |
+  add_header 'Access-Control-Allow-Origin' '*';
+  add_header 'Access-Control-Allow-Headers' 'Cache-Control';
+_nginx_cors_loc: |
+  if ($request_method = 'OPTIONS') {
+      {{ _nginx_cors_loc_common }}
+      add_header 'Access-Control-Max-Age' 1728000;
+      add_header 'Content-Type' 'text/plain; charset=utf-8';
+      add_header 'Content-Length' 0;
+      return 204;
+  }
+  if ($request_method = 'POST') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
+  if ($request_method = 'GET') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
 _nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"  
 # specific configurations
 _nginx_forward_vh:
   - server_name {sd}.{{_domain}}
-  - location / { proxy_pass http://u{sd}; }
+  - location / { {{_nginx_cors_loc }} proxy_pass http://u{sd}; }
   - "{{_nginx_auth}}"
   - "{{_nginx_base_vh}}"
 _nginx_defvh_http:
@@ -311,7 +324,7 @@ _nginx_front:
   - "{{_nginx_base_vh}}"
   - "root {{dirs.splash}}"
   - location / { try_files $uri $uri/index.html @upstream; }
-  - location /public { alias {{ dirs.public }}; }
+  - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
   - location /wss { proxy_pass http://ufront_ws; }
   - "{{_nginx_upload_loc}}"
   - "{{_nginx_front_extra|default([])}}"
@@ -340,6 +353,7 @@ _nginx_sites:
   grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   demo: "{{_nginx_forward_vh|flatten|map('replace','{sd}','demo')|list}}"
+  chproxy: "{{_nginx_forward_vh|flatten|map('replace','{sd}','chproxy')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
 _nginx_upstreams:
@@ -353,6 +367,7 @@ _nginx_upstreams:
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
   - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
+  - 'upstream uchproxy { server {{if_inner}}:{{ports.chproxy.0}}; }'
 
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
