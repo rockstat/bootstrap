@@ -39,7 +39,7 @@ _tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
 _subdomains: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
-_domains: "{{ _subdomains|map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
+_domains: "{{ (_subdomains + _subdomains_extra|default([])) | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 # ########## SSL ##########
 domains_ssl:
   - email: '{{email}}'
@@ -121,7 +121,7 @@ _ssl_cert_fullchain: fullchain.cer
 _ssl_cert: cert.cer
 _ssl_cert_key: priv.key
 # ########## ports ##########
-ports:
+_ports:
   # services
   director: [10000, 8080]
   front: [10001, 8080]
@@ -151,6 +151,7 @@ ports:
   chronograf: [18888]
   influxhttp: [18086]
   influxtsb: [4242]
+ports: "{{_ports|combine(_ports_extra|default({}))}}"
 # Mem limits
 anaconda_mem_limit: 2g
 # ########## Docker ##########
@@ -326,6 +327,7 @@ _nginx_front:
   - location / { try_files $uri $uri/index.html @upstream; }
   - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
   - location /wss { proxy_pass http://ufront_ws; }
+  - location /lomtix-tabix { proxy_pass http://ufront_ws/; }
   - "{{_nginx_upload_loc}}"
   - "{{_nginx_front_extra|default([])}}"
   - location @upstream { proxy_pass http://ufront; }
@@ -353,7 +355,6 @@ _nginx_sites:
   grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
   theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
   demo: "{{_nginx_forward_vh|flatten|map('replace','{sd}','demo')|list}}"
-  chproxy: "{{_nginx_forward_vh|flatten|map('replace','{sd}','chproxy')|list}}"
   jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
 _nginx_upstreams:
@@ -367,7 +368,6 @@ _nginx_upstreams:
   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
   - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
-  - 'upstream uchproxy { server {{if_inner}}:{{ports.chproxy.0}}; }'
 
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"

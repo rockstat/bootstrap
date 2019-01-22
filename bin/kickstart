@@ -267,7 +267,7 @@ run_full_setup_to_apply_dialog(){
 ################################################################################
 
 ANS_PY="-e ansible_python_interpreter=/usr/bin/python3"
-ANS_FORCE_SSL="-e ansible_python_interpreter=/usr/bin/python3"
+ANS_FORCE_SSL="-e ssl_force=1"
 ANS_BRANCH="-e branch=${BOOTSTRAP_BRANCH}"
 
 

@@ -182,7 +182,7 @@
             upgrade: '{{_nginx_proto_upgrade}}'
             gzip: '{{_nginx_gzip_params}}'
             proxy: '{{_nginx_proxy_params + _nginx_proxy_params_extra|default([])}}'
-            upstream: '{{_nginx_upstreams}}'
+            upstream: '{{_nginx_upstreams + _nginx_upstreams_extra|default([]) }}'
             ssl: '{{_nginx_ssl_params}}'
       vars:
         # local_config: "{{ansible_local.config|default({})}}"
@@ -528,16 +528,7 @@
 
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
 
-
-    - name: Including tasks 
-      include_tasks: "{{item}}"
-      with_fileglob:
-        - "tasks/custom_*"
-      vars:
-        _customs: "{{ customs|default({}) }}"
-      tags: ['never', 'custom']
-
-
+    - import_tasks: tasks/custom.yml
 
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
 

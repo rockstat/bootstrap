@@ -14,4 +14,4 @@ __pycache__
 /files/*
 /sync*
 /.env
-/tasks/custom_*
+/tasks/custom*
