@@ -527,7 +527,10 @@
 
 
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
-
+    - name: touch tasks/custom.yml
+      command: touch tasks/custom.yml
+      args:
+        creates: tasks/custom.yml
     - import_tasks: tasks/custom.yml
 
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
