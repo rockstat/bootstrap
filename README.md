@@ -76,7 +76,7 @@ Rockstat is on active development stage. Lookat at page [What's new](https://roc
 
 To run setup tool just type `rockstat`
 
-### Remote setup
+### Direct ansible usage
 
 configure inventory
 
@@ -91,6 +91,15 @@ Generate password using `make password`. Execute playbook
  APASS='$apr1$G2B2.GYy$QiBhuOZeRC03moZTPsB561'
 ansible-playbook platform.yml --limit=$AHOST --tags=ssl,full -e admin_password=$APASS
 ```
+
+#### Custom tasks
+
+You should create `tasks/custom.yml`. Possible to be an empty file.
+
+```shell
+touch tasks/custom.yml
+```
+
 ## Params
 
 To force SSL `-e ssl_force=1`
