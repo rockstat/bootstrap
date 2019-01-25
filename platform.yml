@@ -15,15 +15,6 @@
       tags: ['never']
 
 
-      ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
-
-    - block:
-        - include_tasks: tasks/check_dns.yml
-      vars:
-        check_domains: "{{_domains + [_domain]}}"
-      tags: ['never', 'ssl', 'full']
-
-
       #### ##### ##### ##### #####    Check is python 3    ##### ##### ##### ##### ##### 
 
     - name: Checking python version is 3
@@ -67,6 +58,15 @@
           r_authorized_key_remove: "{{ not _enable_support }}"
       when: 'setup_server == True'
       tags: ['never', 'os', 'network', 'system', 'full']
+
+      ##### ##### ##### ##### #####    Check DNS configuration    ##### ##### ##### ##### ##### 
+      # Should be after server configuration role that ensure dns utils is installed
+
+    - block:
+        - include_tasks: tasks/check_dns.yml
+      vars:
+        check_domains: "{{_domains + [_domain]}}"
+      tags: ['never', 'ssl', 'full']
 
 
     ##### ##### ##### ##### #####    Docker server     ##### ##### ##### ##### ##### 
