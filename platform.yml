@@ -528,11 +528,8 @@
 
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
 
-    - stat: path=tasks/custom.yml
-      register: custom_exists
-
     - import_tasks: tasks/custom.yml
-      when: custom_exists.stat.exists
+      when: "load_custom_tasks|default(False) == True"
 
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
 
