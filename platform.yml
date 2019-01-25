@@ -529,7 +529,6 @@
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
 
     - import_tasks: tasks/custom.yml
-      when: "load_custom_tasks|default(False) == True"
 
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
 

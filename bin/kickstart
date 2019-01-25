@@ -12,6 +12,7 @@ BINALIAS=/usr/local/bin/rockstat
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
 FACT_CONF=/etc/ansible/facts.d/config.fact
+CUSTOM_TASKS_FILE=tasks/custom.yml
 
 # state vars
 DOMAIN=""
@@ -181,6 +182,7 @@ setup_playbook() {
   print_status "Updating ansible roles" \
   && cd $BOOTSTRAP_DIR \
   && ansible-galaxy install -r install_roles.yml --force > $INSTALL_LOG \
+  && touch $CUSTOM_TASKS_FILE \
   && print_ok \
   && ROLES_UPDATED=1
 }
