@@ -527,11 +527,12 @@
 
 
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 
-    - name: touch tasks/custom.yml
-      command: touch tasks/custom.yml
-      args:
-        creates: tasks/custom.yml
+
+    - stat: path=tasks/custom.yml
+      register: custom_exists
+
     - import_tasks: tasks/custom.yml
+      when: custom_exists.stat.exists
 
     ##### ##### ##### ##### #####    Fake Shop    ##### ##### ##### ##### ##### 
 
