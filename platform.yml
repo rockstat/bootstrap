@@ -430,7 +430,6 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
-          restart: yes
           pull: yes
           recreate: yes
           memory: "2g"
