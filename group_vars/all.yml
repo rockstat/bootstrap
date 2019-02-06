@@ -27,6 +27,7 @@ remote_user: "{{ support_user }}"
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
 # ########## emitting configuration ##########
+customs: "{{_customs|default({})}}"
 _local_config: "{{ (ansible_local.config|default({})).general|default({}) }}"
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
 _fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
