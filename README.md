@@ -147,6 +147,16 @@ Or execute prepared script that configure `/dev/sdb` disk. **Danger! If disk cur
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/gcloud_sdb | sudo bash -
 ```
 
+### Yandex Cloud instance configuration
+
+Prepating additional drive
+
+Or execute prepared script that configure `/dev/vdb` disk. **Danger! If disk currently not mounted it will be formatted!**
+
+```
+curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/ycloud_vdb | sudo bash -
+```
+
 
 ### IPv6
 

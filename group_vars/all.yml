@@ -41,6 +41,7 @@ _tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 _domain: "{{_local_config.domain|default(ansible_host)}}"
 _subdomains: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
 _domains: "{{ (_subdomains + _subdomains_extra|default([])) | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
+_domains_extra: [ ]
 # ########## SSL ##########
 domains_ssl:
   - email: '{{email}}'
