@@ -62,12 +62,16 @@ Then run:
 
 ```bash
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
+
+sudo reboot
 ```
 
 For **development** version
 
 ```
 curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E BRANCH=dev bash -
+
+sudo reboot
 ```
 
  #### Upgrade / reconfigure installation
