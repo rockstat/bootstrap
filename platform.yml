@@ -193,7 +193,7 @@
           - "admin:{{_admin_password}}"
           # - "{{local_general.users}}"
       when: "setup_nginx == True"
-      tags: ['never', 'nginx', 'system', 'full']
+      tags: ['never', 'nginx', 'httpd', 'system', 'full']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
