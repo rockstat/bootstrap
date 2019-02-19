@@ -276,7 +276,9 @@ ANS_BRANCH="-e branch=${BOOTSTRAP_BRANCH}"
 run_platform_playbook() { # (tags, custom)
   setup_playbook
   print_status "Starting ansible"
-  ansible-playbook platform.yml --connection=local --tags=${1} $ANS_PY $ANS_BRANCH ${2}
+  cmd="platform.yml --connection=local --tags=${1} $ANS_PY $ANS_BRANCH ${2}"
+  echo "executing ansible-playbook ${cmd}"
+  ansible-playbook $cmd
   if [ $? -eq 0 ]; then print_status "Done"; else print_error "FAILED"; exit 1; fi
   greate_success_dialog
 }
