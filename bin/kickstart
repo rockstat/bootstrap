@@ -434,7 +434,7 @@ menu() {
     "15") request_fullname ;;
     "20") run_platform_playbook nginx ;;
     "30") run_platform_playbook ovpn-server ;;
-    "31") run_platform_playbook ssl $ANS_FORCE_SSL ;;
+    "31") run_platform_playbook ssl "${ANS_FORCE_SSL}" ;;
     "32") switch_support_value ;;
     "33") switch_ssl_challenge ;;
     "34") run_platform_playbook fakeshop ;;
