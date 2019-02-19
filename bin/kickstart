@@ -269,7 +269,6 @@ run_full_setup_to_apply_dialog(){
 ################################################################################
 
 ANS_PY="-e ansible_python_interpreter=/usr/bin/python3"
-ANS_FORCE_SSL="-e ssl_force=1"
 ANS_BRANCH="-e branch=${BOOTSTRAP_BRANCH}"
 
 
@@ -434,7 +433,7 @@ menu() {
     "15") request_fullname ;;
     "20") run_platform_playbook nginx ;;
     "30") run_platform_playbook ovpn-server ;;
-    "31") run_platform_playbook ssl,httpd "${ANS_FORCE_SSL}" ;;
+    "31") run_platform_playbook "ssl,httpd" "-e ssl_force=1" ;;
     "32") switch_support_value ;;
     "33") switch_ssl_challenge ;;
     "34") run_platform_playbook fakeshop ;;
