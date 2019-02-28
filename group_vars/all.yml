@@ -84,6 +84,7 @@ build_dir: '{{home_dir}}/build'
 images_dir: "{{home_dir}}/images"
 libraries_dir: "{{home_dir}}/libraries"
 dirs:
+  etc_dir: "{{etc_dir}}"
   front_custom_config: "{{data_dir}}/front_custom_config"
   chwriter_custom_config: "{{data_dir}}/chwriter_custom_config"
   chwriter_custom_migrations: "{{data_dir}}/chwriter_custom_migrations"
@@ -118,6 +119,8 @@ create_dirs:
   - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}"]
   - ["{{ dirs.chwriter_custom_migrations }}", "{{ dirs.environments }}"]
   - ["{{ dirs.user_libraries }}"]
+in_dirs:
+  etc: /usr/platform/etc
 # ssl files
 _ssl_cert_fullchain: fullchain.cer
 _ssl_cert: cert.cer

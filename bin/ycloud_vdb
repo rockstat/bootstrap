@@ -3,16 +3,12 @@
 
 set -e
 
-
 DISK=/dev/vdb
-
 
 if [ ! -e $DISK ] ; then
     echo "Device $DISK not exists. Break."
     exit 1
 fi
-
-SDBID=`blkid $DISK |  cut -d' ' -f2 | cut -d\" -f2`
 
 if grep $DISK /etc/mtab > /dev/null 2>&1; then
     echo "Disk already mounted. Skip formatting"
@@ -22,14 +18,18 @@ else
     echo "Disk formatted."
 fi
 
+SDBID=`blkid $DISK |  cut -d' ' -f2 | cut -d\" -f2`
 
 if grep $SDBID /etc/fstab > /dev/null 2>&1; then
-    echo "Record already in fstab."
-else
-    cp /etc/fstab /etc/fstab.backup
-    echo -e "UUID=$SDBID /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
-    echo "Record added to fstab."
+    echo "Record already in fstab. Removing..."
+    grep -v "/srv" /etc/fstab > temp && mv temp /etc/fstab
+    chmod 0744 /etc/fstab
+    chown root:root /etc/fstab
 fi
+
+cp /etc/fstab /etc/fstab.backup
+echo -e "UUID=$SDBID /srv ext4 defaults,nofail 0 2\n" >> /etc/fstab
+echo "Record added to fstab."
 
 
 echo "Done!"

@@ -293,6 +293,7 @@
             - "{{dirs.user_images}}:/images/user"
             - "{{dirs.director_data}}:/data" # containers configs
             - "{{dirs.environments}}:/data/environments"
+            - "{{dirs.etc_dir}}:/srv/platform/etc"
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
         service: director
