@@ -34,5 +34,4 @@ cp /etc/fstab /etc/fstab.backup
 echo -e "UUID=$SDBID /srv ext4 discard,defaults,nofail 0 2\n" >> /etc/fstab
 echo "Record added to fstab."
 
-
-echo "Done!"
+echo "Done! You HAVE TO reboot server. Type 'sudo reboot' and press enter"

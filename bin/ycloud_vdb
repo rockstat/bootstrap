@@ -32,4 +32,4 @@ echo -e "UUID=$SDBID /srv ext4 defaults,nofail 0 2\n" >> /etc/fstab
 echo "Record added to fstab."
 
 
-echo "Done!"
+echo "Done! You HAVE TO reboot server. Type 'sudo reboot' and press enter"

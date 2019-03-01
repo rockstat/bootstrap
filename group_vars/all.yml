@@ -332,7 +332,6 @@ _nginx_front:
   - location / { try_files $uri $uri/index.html @upstream; }
   - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
   - location /wss { proxy_pass http://ufront_ws; }
-  - location /lomtix-tabix { proxy_pass http://ufront_ws/; }
   - "{{_nginx_upload_loc}}"
   - "{{_nginx_front_extra|default([])}}"
   - location @upstream { proxy_pass http://ufront; }
