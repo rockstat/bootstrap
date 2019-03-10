@@ -302,11 +302,13 @@ _nginx_cors_loc: |
   if ($request_method = 'GET') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
 _nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"  
 # specific configurations
-_nginx_forward_vh:
+_nginx_proxy_vh:
   - server_name {sd}.{{_domain}}
   - location / { {{_nginx_cors_loc }} proxy_pass http://u{sd}; }
-  - "{{_nginx_auth}}"
   - "{{_nginx_base_vh}}"
+_nginx_private_proxy_vh:
+  - "{{_nginx_auth}}"
+  - "{{_nginx_proxy_vh}}"
 _nginx_defvh_http:
   - server_name _http
   - listen 80 default_server
@@ -344,22 +346,22 @@ _nginx_dashboard:
   - location /ws { proxy_pass http://udirector; }
   - location / { try_files $uri /index.html; }
 _nginx_grafana:
-  - "{{_nginx_forward_vh}}"
+  - "{{_nginx_private_proxy_vh}}"
   - location /public/ { auth_basic off; proxy_pass http://u{sd}; }
   - proxy_set_header X-WEBAUTH-USER $remote_user
   - proxy_hide_header Authorization
 _nginx_netdata:
   - access_log off
-  - "{{_nginx_forward_vh|flatten|map('replace','{sd}','netdata')|list}}"
+  - "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','netdata')|list}}"
 _nginx_sites:
   def_https: "{{_nginx_defvh_https|flatten }}"
   def_http: "{{_nginx_defvh_http|flatten }}"
   front: "{{_nginx_front|flatten }}"
   dashboard: "{{_nginx_dashboard|flatten }}"
   grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
-  theia: "{{_nginx_forward_vh|flatten|map('replace','{sd}','theia')|list}}"
-  demo: "{{_nginx_forward_vh|flatten|map('replace','{sd}','demo')|list}}"
-  jupyter: "{{_nginx_forward_vh|flatten|map('replace','{sd}','jupyter')|list}}"
+  theia: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','theia')|list}}"
+  demo: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','demo')|list}}"
+  jupyter: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','jupyter')|list}}"
   netdata: "{{_nginx_netdata|flatten}}"
 _nginx_upstreams:
   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}}; }'
