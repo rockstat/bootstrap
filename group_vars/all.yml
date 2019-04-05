@@ -309,7 +309,7 @@ _nginx_proxy_vh:
 _nginx_private_proxy_vh:
   - "{{_nginx_auth}}"
   - "{{_nginx_proxy_vh}}"
-  - client_max_body_size 100M;
+  - client_max_body_size 100M
 _nginx_defvh_http:
   - server_name _http
   - listen 80 default_server
