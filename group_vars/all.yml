@@ -284,6 +284,8 @@ _nginx_ssl:
 _nginx_nocache:
   - add_header 'Cache-Control' 'no-store; must-revalidate'
   - expires off
+_nginx_deny_dots:
+  - location ~ /\. { deny all; return 404; }
 _nginx_auth:
   - 'auth_basic "Restricted"'
   - "auth_basic_user_file auth_basic/common"
@@ -331,6 +333,7 @@ _nginx_upload_loc:
 _nginx_front:
   - server_name {{_domain}}
   - "{{_nginx_base_vh}}"
+  - "{{_nginx_deny_dots}}"
   - "root {{dirs.splash}}"
   - location / { try_files $uri $uri/index.html @upstream; }
   - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
