@@ -201,10 +201,40 @@
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
 
     - block:
+
+
+      - name: Netdata container
+        docker_container:
+          name: netdata
+          hostname: netdata
+          image: "{{images.netdata}}"
+          labels: "{{docker_band_lbls}}"
+          ports: 
+            - "{{if_inner}}:{{ports.netdata.0}}:{{ports.netdata.1}}"
+            - "{{if_inner}}:8125:8125/udp"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
+          pull: yes
+          env:
+            PGID: 999
+          restart: yes
+          # recreate: yes
+          memory: "200m"
+          capabilities:
+            - SYS_PTRACE
+          security_opts:
+            - apparmor:unconfined
+          volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+
       - name: Netdata role execution
         include_role:
           name: dr.netdata
         vars:
+          drn_action: remove
           drn_allow:
             dashboard_from: "*"
             badges_from: "*"

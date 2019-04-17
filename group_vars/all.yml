@@ -67,6 +67,7 @@ _images:
   logspout: gliderlabs/logspout
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
+  netdata: netdata/netdata
   grafana: rockstat/grafana
   fakeshop: madiedinro/fake-shop
 images: "{{_images|combine(_images_extra|default({}))}}"
@@ -141,7 +142,7 @@ _ports:
   jupyter: [8888, 8080]
   theia: [8887, 8000]
   theia_dev: [8886, 8080]
-  netdata: [19999]
+  netdata: [19999, 19999]
   fakeshop: [8087, 8080]
   # servers
   http: [80]
