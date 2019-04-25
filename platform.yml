@@ -535,8 +535,8 @@
           memory: "1g"
           volumes:
             - "{{dirs.workspace}}:{{project_dir}}:cached"
-            - "{{dirs.user_images}}:{{project_dir}}/my_images:cached"
-            - "{{dirs.user_libraries}}:{{project_dir}}/my_libraries:cached"
+            - "{{dirs.user_images}}:{{project_dir}}/images:cached"
+            - "{{dirs.user_libraries}}:{{project_dir}}/libraries:cached"
             - "{{dirs.public}}:{{project_dir}}/public:cached"
             - "{{dirs.chwriter_custom_migrations}}:{{project_dir}}/config/migrations:cached"
             - "{{dirs.band_set}}:{{project_dir}}/sources_ro/band_set:ro"
