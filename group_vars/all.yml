@@ -157,6 +157,7 @@ _ports:
   chronograf: [18888]
   influxhttp: [18086]
   influxtsb: [4242]
+  statsd: [8125, 8125]
 ports: "{{_ports|combine(_ports_extra|default({}))}}"
 # Mem limits
 anaconda_mem_limit: 2g

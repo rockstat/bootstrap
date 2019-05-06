@@ -211,7 +211,7 @@
           labels: "{{docker_band_lbls}}"
           ports: 
             - "{{if_inner}}:{{ports.netdata.0}}:{{ports.netdata.1}}"
-            - "{{if_inner}}:8125:8125/udp"
+            - "{{if_inner}}:{{ports.statsd.0}}:{{ports.statsd.1}}/udp"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
