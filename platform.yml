@@ -216,8 +216,7 @@
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
-          env:
-            PGID: 999
+          env: "{{container_env}}"
           restart: yes
           # recreate: yes
           memory: "200m"
@@ -244,6 +243,9 @@
           drn_stream: '{{netdata_stream_config|default({})}}'
           drn_backend: '{{netdata_backend_config|default({})}}'
           drn_bind_to: "{{if_inner}}"
+      vars:
+        container_env:
+          PGID: "999"
       tags: ['never', 'netdata', 'system', 'full']
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 

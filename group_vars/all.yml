@@ -258,7 +258,7 @@ _containers_env:
 _containers_env_extra: {}
 # ########## Common Envs ##########
 _common_env:
-  JSON_LOGS: 1
+  JSON_LOGS: "1"
   LOG_LEVEL: "info"
   DOMAIN: "{{_domain}}"
   HOST_ADDR: "{{if_inner}}"
