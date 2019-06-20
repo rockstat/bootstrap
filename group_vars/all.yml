@@ -39,8 +39,9 @@ _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 _tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
-_subdomains: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
-_domains: "{{ (_subdomains + _subdomains_extra|default([])) | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
+_subdomains_default: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
+_subdomains: "{{ (_subdomains_default + _subdomains_extra|default([])) }}"
+_domains: "{{ _subdomains | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
 _domains_extra: [ ]
 # ########## SSL ##########
 domains_ssl:
