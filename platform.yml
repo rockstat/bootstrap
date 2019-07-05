@@ -227,7 +227,7 @@
           volumes:
             - /proc:/host/proc:ro
             - /sys:/host/sys:ro
-            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /var/run/docker.sock:/var/run/docker.sock
 
       - name: Netdata role execution
         include_role:
@@ -274,7 +274,7 @@
           name: redis
           hostname: redis
           image: "{{images.redis}}"
-          labels: "{{docker_band_lbls}}"
+          # labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
