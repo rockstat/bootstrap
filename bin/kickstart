@@ -404,24 +404,24 @@ menu() {
   esac
   OPTION=$(whiptail --title "Rockstat Shell Script Menu" --menu "${MENU_TEXT}" 30 60 18 \
   "01" "    Upgrade OS" \
-  "03" "    Full Install/Upgrade" \
-  "04" "    Platform Upgrade" \
+  "03" "    Install/Upgrade [Full]" \
+  "04" "    Upgrade [Platform Services]" \
   "11" "    Change admin Password" \
   "12" "    Change domain '${DOMAIN}'" \
   "13" "    Change host alias '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
   "15" "    Change full name '${FULLNAME}'" \
   "20" "    Apply admin password to webserver" \
-  "30" "    Setup OpenVPN server" \
   "34" "    Setup Demo-site" \
-  "31" "    Request SSL certificate with force option" \
-  "32" "    $SUPPORT_STATE remote upgrade and support access" \
+  "31" "    Re-request SSL certificate with force option" \
+  "32" "    Support access and remote upgrade: $SUPPORT_STATE" \
   "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
   "00"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
   [[ "$EXITCODE" = 255 ]] && break;
   # echo "exitcode: $EXITCODE"
+  # "30" "    Setup OpenVPN server" \
 
   case "$OPTION" in
     "01") update_reboot_dialog; run_upgrade_playbook ;;
