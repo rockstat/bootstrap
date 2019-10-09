@@ -12,6 +12,7 @@ setup_theia: yes
 metrics_server: no
 # will runned by director at first start
 _initial_startup: [mmgeo, sxgeo, uaparser]
+tz: UTC
 # sysuser
 rsys_creds: [ "rsys", "" ]
 ruser_creds: [ "ruser", "" ]
@@ -56,18 +57,20 @@ repos:
   splash: "{{_git_organization}}/splash.git"
 # ########## Images ##########
 _images:
-  band: "rockstat/band-base-py:{{_tag}}"
+  band: "rockstat/band-base-py:{{ (branch == 'master')|ternary('3.7', '3.7-' + branch) }}"
   director: "rockstat/director:{{_tag}}"
+  caddy: "rockstat/caddy"
   front: "rockstat/front:{{_tag}}"
   chwriter: "rockstat/chwriter:{{_tag}}"
   ebaloger: rockstat/ebaloger
   theia: "rockstat/theia-ide:{{_tag}}"
   heavyload: rockstat/heavyload
-  anaconda: rockstat/anaconda
+  jupyter: rockstat/jupyter
   httpdebug: rockstat/httpdebug
   logspout: gliderlabs/logspout
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
+  postgrest: postgrest/postgrest
   netdata: netdata/netdata
   grafana: rockstat/grafana
   fakeshop: madiedinro/fake-shop
@@ -159,9 +162,11 @@ _ports:
   influxhttp: [18086]
   influxtsb: [4242]
   statsd: [8125, 8125]
+  postgres: [5432, 5432]
+  postgrest: [18080, 3000]
 ports: "{{_ports|combine(_ports_extra|default({}))}}"
 # Mem limits
-anaconda_mem_limit: 2g
+jupyter_mem_limit: 2g
 # ########## Docker ##########
 # user defined docker network
 docker_net_name: custom
@@ -202,8 +207,8 @@ firewall_rules:
   - { to_port: '{{ports.http.0}}'}
   - { to_port: '{{ports.https.0}}'}
   - { to_port: '{{ports.openvpn.0}}'}
-# ########## Jupyter/anaconda packages ##########
-# install libs to python containers: anaconda and theia
+# ########## Jupyter/jupyter packages ##########
+# install libs to python containers: jupyter and theia
 _dev_py_libs: ["msgpack", "ujson", "prodict", "arrow", "simplech", "asimplech"]
 dev_py_libs: "{{_dev_env_py_libs|combine(_dev_py_libs_extra|default({})) }}"
 # ########## ClickHouse ##########  
@@ -272,6 +277,8 @@ _common_env:
   CH_DSN: "{{_chp_dsn}}"
   CHP_DSN: "{{_chp_dsn}}"
   CHS_DSN: "{{_chs_dsn}}"
+  TZ: "{{tz}}"
+
 # for user overrides `_common_env_extra`
 common_env: "{{_common_env|combine(_common_env_extra|default({}))}}"
 container_env: "{{ {}|combine( common_env, _containers_env[service]|default({}), _containers_env_extra[service]|default({}) ) }}"

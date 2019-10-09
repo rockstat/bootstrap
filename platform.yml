@@ -171,6 +171,57 @@
     ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
 
     - block:
+      - name: 'Creating build directory for caddy image'
+        file:
+          state: directory
+          path: "{{caddy_build_dir}}"
+          owner: "{{_uid|string}}"
+          group: "{{_gid|string}}"
+
+
+      - name: 'Templating {{item}}'
+        template:
+          src: "{{item}}"
+          dest: "{{ caddy_build_dir }}/{{ (item|basename|splitext).0 }}"
+        with_fileglob: 'templates/caddy/*.j2'
+      
+      - name: 'Creating container'
+        docker_container:
+          name: caddy
+          hostname: caddy
+          image: "{{images.caddy}}"
+          labels: "{{docker_band_lbls}}"
+          ports: 
+            - "0.0.0.0:{{ports.http.0}}:{{ports.http.0}}"
+            - "0.0.0.0:{{ports.https.0}}:{{ports.https.0}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
+          pull: yes
+          env: "{{container_env}}"
+          restart: yes
+          # recreate: yes
+          memory: "200m"
+          volumes:
+            - "{{caddy_build_dir}}/Caddyfile:/etc/caddy/Caddyfile:ro"
+            - "{{caddy_build_dir}}/htpasswd:/etc/caddy/htpasswd:ro"
+            - "{{dirs.public}}:/public:ro"
+            - /var/run/docker.sock:/var/run/docker.sock
+      vars:
+        container_env:
+          ACME_AGREE: 'true'
+          ENABLE_TELEMETRY: 'false'
+          
+        caddy_build_dir: "{{build_dir}}/caddy"
+        tmpl:
+          email: "{{email}}"
+          domain: "{{_domain}}"
+          http_to: "front:{{ports.front.1}}"
+          ws_to: "front:{{ports.front_ws.1}}"
+      tags: ['never', 'caddy']
+
+    - block:
+
       - include_vars: vars/nginx.yml
       - name: Nginx role execution
         include_role:
@@ -191,6 +242,7 @@
       vars:
         # local_config: "{{ansible_local.config|default({})}}"
         # local_general: "{{local_config.general|default({})}}"
+        
         common_users:
           - "admin:{{_admin_password}}"
           # - "{{local_general.users}}"
@@ -201,8 +253,6 @@
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
 
     - block:
-
-
       - name: Netdata container
         docker_container:
           name: netdata
@@ -251,7 +301,7 @@
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
 
     - block: 
-      - name: ClickHouse role execution
+      - name: Executing ClickHouse setup role
         include_role:
           name: AlexeySetevoi.clickhouse
         vars:
@@ -267,7 +317,7 @@
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
 
-    - name: Redis setup
+    - name: Executing Redis setup role
       block:
       - name: Starting container for service Redis
         docker_container:
@@ -288,15 +338,16 @@
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
 
-    - block:
+    - name: Band director block
+      block:
 
-      - name: Pulling latest Band framework base image from docker hub
+      - name: Pulling latest Band image
         docker_image:
           name: "{{images.band}}"
           pull: yes
           force: yes
 
-      - name: Pulling BandSet services collection content from git
+      - name: Git pulling BandSet
         git:
           repo: "{{repos.band_set}}"
           dest: "{{dirs.band_set}}"
@@ -304,7 +355,7 @@
           accept_hostkey: yes
           force: yes
 
-      - name: Starting container for service Director
+      - name: Building docker container with Director service
         docker_container:
           name: director
           hostname: director
@@ -336,7 +387,7 @@
     - block:
       - docker_container: name=frontier state=absent
 
-      - name: Starting container for service Front
+      - name: Starting container with Front service
         docker_container:
           name: front
           hostname: front
@@ -380,7 +431,7 @@
           src: 'chproxy/config.yml.j2'
           dest: '{{chproxy_config}}'
 
-      - name: Starting container for service Chproxy
+      - name: Starting container with Chproxy service
         docker_container:
           name: chproxy
           hostname: chproxy
@@ -407,7 +458,7 @@
     ##### ##### ##### ##### #####    ClickHouse Writer    ##### ##### ##### ##### ##### 
 
     - block:
-      - name: Starting container for service ChWriter
+      - name: Starting container with ChWriter service
         docker_container:
           name: chwriter
           hostname: chwriter
@@ -431,9 +482,8 @@
 
     ##### ##### ##### ##### #####    Heavyload    ##### ##### ##### ##### ##### 
 
-
     - block:
-      - name: Starting container for service Heavyload
+      - name: Starting container with Heavyload service
         docker_container:
           name: heavyload
           hostname: heavyload
@@ -454,31 +504,43 @@
         service: heavyload
       tags: ['heavyload', 'platform', 'pservice', 'docker-container', 'full']
 
-    ##### ##### ##### ##### #####    Anaconda    ##### ##### ##### ##### ##### 
+    ##### ##### ##### ##### #####    jupyter    ##### ##### ##### ##### ##### 
     - block:
+      - docker_container:
+          name: anaconda
+          state: absent
+
       - name: Starting container for service Jupyter
         docker_container:
-          name: anaconda
-          hostname: anaconda
-          image: "{{images.anaconda}}"
-          labels: "{{docker_band_lbls}}"
+          name: jupyter
+          hostname: jupyter
+          image: "{{images.jupyter}}"
+          labels: "{{container_lbls|combine(docker_band_lbls)}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
-          pull: yes
+          # pull: yes
           recreate: yes
-          memory: "{{ anaconda_mem_limit|default('2g') }}"
+          memory: "{{ jupyter_mem_limit|default('2g') }}"
           volumes:
-            - "{{dirs.notebooks}}:/opt/notebooks:cached"
-            - "{{dirs.public}}:/opt/notebooks/public:cached"
+            - "{{dirs.notebooks}}:{{nb_dir}}:cached"
+            - "{{dirs.public}}:{{nb_dir}}/public:cached"
 
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
       vars:
-        service: anaconda
+        service: jupyter
+        nb_dir: "{{jupyter_notebooks_dir|default('/opt/notebooks')}}"
         cmd_parts:
+        container_lbls:
+          "caddy.address": "jupyter.{{_domain}}"
+          "caddy.targetprotocol": "http"
+          "caddy.targetport": "{{ports.jupyter.1}}"
+          "caddy.import": "back"
+          "caddy.proxy.websocket": "{{'{{nil}}'}}"
+          "caddy.proxy.transparent": "{{'{{nil}}'}}"
       when: 'setup_jupyter == True'
-      tags: ['never', 'anaconda', 'jupyter', 'platform', 'pservice', 'docker-container', 'full']
+      tags: ['never', 'jupyter', 'jupyter', 'platform', 'pservice', 'docker-container', 'full']
 
 
     ##### ##### ##### ##### #####    Grafana    ##### ##### ##### ##### ##### 
@@ -556,8 +618,8 @@
     ##### ##### ##### ##### #####    VPN Server    ##### ##### ##### ##### ##### 
 
 
-    - import_tasks: tasks/setup_vpn_server.yml
-      tags: ['never', 'ovpn-server']
+    # - import_tasks: tasks/setup_vpn_server.yml
+      # tags: ['never', 'ovpn-server']
 
 
     ##### ##### ##### ##### #####    Custom tasks    ##### ##### ##### ##### ##### 

@@ -1,0 +1,68 @@
+(cert) {
+    tls {{tmpl.email}}
+}
+
+(cert_h11) {
+    tls {
+        alpn http1.1
+    }
+}
+
+
+(login) {
+    login {
+        success_url /
+        cookie_http_only true
+        cookie_expiry 2400h
+        redirect_check_referer false
+        htpasswd file=/etc/caddy/htpasswd
+        login-path /rockstat_login
+        template /etc/caddy/form.html
+        cookie-domain ".{{tmpl.domain}}"
+    }
+}
+
+(back) {
+    jwt {
+        path /
+#        redirect /login
+#        except /letmein
+        allow sub dr
+        allow sub admin
+    }
+    header / Cache-Control "no-cache, no-store, must-revalidate"
+
+}
+
+https://wss.{{tmpl.domain}} {
+    import cert
+    import cert_h11
+    proxy / http://{{tmpl.ws_to}} {
+        websocket 
+        transparent
+    }
+}
+
+{{tmpl.domain}} {
+    import cert
+    proxy / http://{{tmpl.http_to}} {
+        transparent
+    }
+    proxy /wss http://{{tmpl.ws_to}} {
+        transparent
+        websocket 
+    }
+}
+
+
+{{tmpl.domain}}/public {
+    import cert
+    root /public
+}
+
+app.{{tmpl.domain}} {
+    import cert
+    import login
+    import back
+}
+
