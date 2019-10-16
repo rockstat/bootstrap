@@ -1,5 +1,9 @@
 (cert) {
-    tls {{tmpl.email}}
+    tls {{tmpl.email}} {# {
+        {{ tmpl.dns_provider|ternary('dns ' + tmpl.dns_provider, '') }}
+        {{ tmpl.caddy_wildcard|default(False)|ternary('wildcard', '') }}
+    } #}
+
 }
 
 (cert_h11) {
@@ -9,45 +13,44 @@
 }
 
 
+
 (login) {
     login {
         success_url /
+        jwt_expiry 720h
         cookie_http_only true
         cookie_expiry 2400h
         redirect_check_referer false
         htpasswd file=/etc/caddy/htpasswd
-        login-path /rockstat_login
+        login-path /__login__
         template /etc/caddy/form.html
         cookie-domain ".{{tmpl.domain}}"
     }
 }
 
+
 (back) {
     jwt {
         path /
-#        redirect /login
-#        except /letmein
         allow sub dr
         allow sub admin
     }
     header / Cache-Control "no-cache, no-store, must-revalidate"
-
 }
 
-https://wss.{{tmpl.domain}} {
-    import cert
-    import cert_h11
-    proxy / http://{{tmpl.ws_to}} {
-        websocket 
-        transparent
-    }
-}
 
-{{tmpl.domain}} {
+{{ tmpl.domain }} {% for d in tmpl.extra_domains %}, {{d}}{% endfor %} {
     import cert
+    root /wwwroot
+    log / stdout
+    cors /
+    gzip
+
     proxy / http://{{tmpl.http_to}} {
         transparent
+        except /public /wss
     }
+
     proxy /wss http://{{tmpl.ws_to}} {
         transparent
         websocket 
@@ -55,14 +58,26 @@ https://wss.{{tmpl.domain}} {
 }
 
 
-{{tmpl.domain}}/public {
-    import cert
-    root /public
-}
-
 app.{{tmpl.domain}} {
     import cert
     import login
     import back
+
+#    log / stdout
+    proxy /ws http://{{tmpl.director_to}} {
+        websocket
+        transparent
+    }
+    proxy /api {{tmpl.director_to}} {
+        without /api
+        transparent
+    }
+    root /dashboard
+    rewrite {
+        if {path} not_starts_with /__login__ 
+        if {path} not_starts_with /ws
+        if {path} not_starts_with /api
+        to {path} {path}/ /index.html
+    }
 }
 

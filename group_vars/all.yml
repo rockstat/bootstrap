@@ -21,15 +21,17 @@ main_user: default
 main_user_password: default
 # system users
 support_user: 'x011'
-_uid: 472
-_gid: 472
+_uid: "472"
+_gid: "472"
 remote_user: "{{ support_user }}"
 #key for update manager to access server
 support_key_file: './keys/support.pub'
 support_key: "{{ lookup('file', support_key_file) }}"
 # ########## emitting configuration ##########
+local_facts_dir: /etc/ansible/facts.d/
 customs: "{{_customs|default({})}}"
 _local_config: "{{ (ansible_local.config|default({})).general|default({}) }}"
+
 _random_pass: "{{ lookup('lines', 'sh -c \"openssl rand -base64 18 | openssl passwd -apr1 -stdin\"') }}"
 _fullname: "{{ realname|default(_local_config.fullname|default('Aldous Huxley'))}}"
 _email: "{{ email|default(_local_config.email|default('hello@example.com'))}}"
@@ -40,14 +42,12 @@ _ssl_wildcard: "{{ssl_wildcard|default(_dns_challenge == 'dns')|bool}}"
 _tag: "{{ (branch == 'master')|ternary('latest', branch) }}"
 # ########## Domains ##########
 _domain: "{{_local_config.domain|default(ansible_host)}}"
-_subdomains_default: [app, web, grafana, jupyter, theia, netdata, demo, chproxy]
-_subdomains: "{{ (_subdomains_default + _subdomains_extra|default([])) }}"
-_domains: "{{ _subdomains | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
-_domains_extra: [ ]
-# ########## SSL ##########
-domains_ssl:
-  - email: '{{email}}'
-    domains: "{{[_domain] + _domains.values()|list|unique}}"
+_subdomains_prefixes_default: [app, wss, web, grafana, jupyter, theia, netdata, demo]
+_subdomains_prefixes: "{{ (_subdomains_prefixes_default + _subdomains_prefixes_extra|default([])) }}"
+_subdomains: "{{ _subdomains_prefixes | map('regex_replace', '^(.*)$', '\\1.' + _domain)|list }}"
+_extra_domains: []
+_domains: "{{ [_domain] +  _extra_domains|default([]) }}"
+
 # ########## Repos ##########
 _git_organization: https://github.com/rockstat
 repos:
@@ -248,6 +248,8 @@ _chp_dsn: "http://{{main_user}}:{{main_user_password}}@host:{{ports.chproxy.0}}/
 _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Services env ##########
 _containers_env:
+  # https://caddyserver.com/docs/automatic-https#wildcards
+  caddy: {}
   director:
     #ENCODED_ENV will be set in playbook
     PORT: "{{ports.director.1}}"
@@ -283,114 +285,121 @@ _common_env:
 common_env: "{{_common_env|combine(_common_env_extra|default({}))}}"
 container_env: "{{ {}|combine( common_env, _containers_env[service]|default({}), _containers_env_extra[service]|default({}) ) }}"
 
+# ########## CADDY COMMONS ##########
+_caddy_container_lbls:
+  "caddy.targetprotocol": "http"
+  "caddy.import": "back"
+  "caddy.proxy.websocket": "{{'{{nil}}'}}"
+  "caddy.proxy.transparent": "{{'{{nil}}'}}"
+
 # ########## NGINX COMMONS ##########
 # common blocks
-_nginx_listen: 
-  - "listen 443 ssl http2"
-_nginx_ssl:
-  - ssl_certificate_key     {{dirs.certs}}/{{_domain}}/{{_ssl_cert_key}}
-  - ssl_certificate         {{dirs.certs}}/{{_domain}}/{{_ssl_cert_fullchain}}
-  - ssl_trusted_certificate {{dirs.certs}}/{{_domain}}/{{_ssl_cert}}
-_nginx_nocache:
-  - add_header 'Cache-Control' 'no-store; must-revalidate'
-  - expires off
-_nginx_deny_dots:
-  - location ~ /\. { deny all; return 404; }
-_nginx_auth:
-  - 'auth_basic "Restricted"'
-  - "auth_basic_user_file auth_basic/common"
-_nginx_cors_loc_common: |
-  add_header 'Access-Control-Allow-Origin' '*';
-  add_header 'Access-Control-Allow-Headers' 'Cache-Control';
-_nginx_cors_loc: |
-  if ($request_method = 'OPTIONS') {
-      {{ _nginx_cors_loc_common }}
-      add_header 'Access-Control-Max-Age' 1728000;
-      add_header 'Content-Type' 'text/plain; charset=utf-8';
-      add_header 'Content-Length' 0;
-      return 204;
-  }
-  if ($request_method = 'POST') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
-  if ($request_method = 'GET') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
-_nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"  
+# _nginx_listen: 
+#   - "listen 443 ssl http2"
+# _nginx_ssl:
+#   - ssl_certificate_key     {{dirs.certs}}/{{_domain}}/{{_ssl_cert_key}}
+#   - ssl_certificate         {{dirs.certs}}/{{_domain}}/{{_ssl_cert_fullchain}}
+#   - ssl_trusted_certificate {{dirs.certs}}/{{_domain}}/{{_ssl_cert}}
+# _nginx_nocache:
+#   - add_header 'Cache-Control' 'no-store; must-revalidate'
+#   - expires off
+# _nginx_deny_dots:
+#   - location ~ /\. { deny all; return 404; }
+# _nginx_auth:
+#   - 'auth_basic "Restricted"'
+#   - "auth_basic_user_file auth_basic/common"
+# _nginx_cors_loc_common: |
+#   add_header 'Access-Control-Allow-Origin' '*';
+#   add_header 'Access-Control-Allow-Headers' 'Cache-Control';
+# _nginx_cors_loc: |
+#   if ($request_method = 'OPTIONS') {
+#       {{ _nginx_cors_loc_common }}
+#       add_header 'Access-Control-Max-Age' 1728000;
+#       add_header 'Content-Type' 'text/plain; charset=utf-8';
+#       add_header 'Content-Length' 0;
+#       return 204;
+#   }
+#   if ($request_method = 'POST') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
+#   if ($request_method = 'GET') { {{ _nginx_cors_loc_common }} add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range'; }
+# _nginx_base_vh: "{{ _nginx_listen + _nginx_ssl }}"  
 # specific configurations
-_nginx_proxy_vh:
-  - server_name {sd}.{{_domain}}
-  - location / { {{_nginx_cors_loc }} proxy_pass http://u{sd}; }
-  - "{{_nginx_base_vh}}"
-_nginx_private_proxy_vh:
-  - "{{_nginx_auth}}"
-  - "{{_nginx_proxy_vh}}"
-  - client_max_body_size 100M
-_nginx_defvh_http:
-  - server_name _http
-  - listen 80 default_server
-  - location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }
-  - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
-  - location / { return 301 https://$host$request_uri; }
-_nginx_defvh_https:
-  - "server_name _https"
-  - "{{_nginx_listen.0}} default_server"
-  - "{{_nginx_ssl}}"
-  - "root {{dirs.splash}}"
-  - "location / { try_files $uri /index.html; }"
-_nginx_upload_loc:
-  - location /upload {
-      client_max_body_size 500m;
-      client_body_buffer_size 128K; 
-      limit_except POST { deny all; }
-      proxy_pass http://uheavyload; }
-_nginx_front:
-  - server_name {{_domain}}
-  - "{{_nginx_base_vh}}"
-  - "{{_nginx_deny_dots}}"
-  - "root {{dirs.splash}}"
-  - location / { try_files $uri $uri/index.html @upstream; }
-  - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
-  - location /wss { proxy_pass http://ufront_ws; }
-  - "{{_nginx_upload_loc}}"
-  - "{{_nginx_front_extra|default([])}}"
-  - location @upstream { proxy_pass http://ufront; }
-_nginx_dashboard:
-  - server_name app.{{_domain}}
-  - "{{_nginx_base_vh}}"
-  - "{{_nginx_auth}}"
-  - "root {{dirs.dashboard}}/dist"
-  - location /api/ { proxy_pass http://udirector/; }
-  - location /ws { proxy_pass http://udirector; }
-  - location / { try_files $uri /index.html; }
-_nginx_grafana:
-  - "{{_nginx_private_proxy_vh}}"
-  - location /public/ { auth_basic off; proxy_pass http://u{sd}; }
-  - proxy_set_header X-WEBAUTH-USER $remote_user
-  - proxy_hide_header Authorization
-_nginx_netdata:
-  - access_log off
-  - "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','netdata')|list}}"
-_nginx_sites:
-  def_https: "{{_nginx_defvh_https|flatten }}"
-  def_http: "{{_nginx_defvh_http|flatten }}"
-  front: "{{_nginx_front|flatten }}"
-  dashboard: "{{_nginx_dashboard|flatten }}"
-  grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
-  theia: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','theia')|list}}"
-  demo: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','demo')|list}}"
-  jupyter: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','jupyter')|list}}"
-  netdata: "{{_nginx_netdata|flatten}}"
-_nginx_upstreams:
-  - 'upstream ufront { server {{if_inner}}:{{ports.front.0}}; }'
-  - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}};  }'
-  - 'upstream udirector { server {{if_inner}}:{{ports.director.0}};  }'
-  - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}};  }'
-  - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}}; }'
-  - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}}; }'
-  - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}}; }'
-  - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
-  - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
-  - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
+# _nginx_proxy_vh:
+#   - server_name {sd}.{{_domain}}
+#   - location / { {{_nginx_cors_loc }} proxy_pass http://u{sd}; }
+#   - "{{_nginx_base_vh}}"
+# _nginx_private_proxy_vh:
+#   - "{{_nginx_auth}}"
+#   - "{{_nginx_proxy_vh}}"
+#   - client_max_body_size 100M
+# _nginx_defvh_http:
+#   - server_name _http
+#   - listen 80 default_server
+#   - location /.well-known/ { auth_basic off; proxy_pass http://uletsencrypt; }
+#   - location /stub_status { stub_status; allow 127.0.0.1; deny all; access_log off;}
+#   - location / { return 301 https://$host$request_uri; }
+# _nginx_defvh_https:
+#   - "server_name _https"
+#   - "{{_nginx_listen.0}} default_server"
+#   - "{{_nginx_ssl}}"
+#   - "root {{dirs.splash}}"
+#   - "location / { try_files $uri /index.html; }"
+# _nginx_upload_loc:
+#   - location /upload {
+#       client_max_body_size 500m;
+#       client_body_buffer_size 128K; 
+#       limit_except POST { deny all; }
+#       proxy_pass http://uheavyload; }
+# _nginx_front:
+#   - server_name {{_domain}}
+#   - "{{_nginx_base_vh}}"
+#   - "{{_nginx_deny_dots}}"
+#   - "root {{dirs.splash}}"
+#   - location / { try_files $uri $uri/index.html @upstream; }
+#   - location /public { {{_nginx_cors_loc}} alias {{ dirs.public }}; }
+#   - location /wss { proxy_pass http://ufront_ws; }
+#   - "{{_nginx_upload_loc}}"
+#   - "{{_nginx_front_extra|default([])}}"
+#   - location @upstream { proxy_pass http://ufront; }
+# _nginx_dashboard:
+#   - server_name app.{{_domain}}
+#   - "{{_nginx_base_vh}}"
+#   - "{{_nginx_auth}}"
+#   - "root {{dirs.dashboard}}/dist"
+#   - location /api/ { proxy_pass http://udirector/; }
+#   - location /ws { proxy_pass http://udirector; }
+#   - location / { try_files $uri /index.html; }
+# _nginx_grafana:
+#   - "{{_nginx_private_proxy_vh}}"
+#   - location /public/ { auth_basic off; proxy_pass http://u{sd}; }
+#   - proxy_set_header X-WEBAUTH-USER $remote_user
+#   - proxy_hide_header Authorization
+# _nginx_netdata:
+#   - access_log off
+#   - "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','netdata')|list}}"
+# _nginx_sites:
+#   def_https: "{{_nginx_defvh_https|flatten }}"
+#   def_http: "{{_nginx_defvh_http|flatten }}"
+#   front: "{{_nginx_front|flatten }}"
+#   dashboard: "{{_nginx_dashboard|flatten }}"
+#   grafana: "{{_nginx_grafana|flatten|map('replace','{sd}','grafana')|list}}"
+#   theia: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','theia')|list}}"
+#   demo: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','demo')|list}}"
+#   jupyter: "{{_nginx_private_proxy_vh|flatten|map('replace','{sd}','jupyter')|list}}"
+#   netdata: "{{_nginx_netdata|flatten}}"
+# _nginx_upstreams:
+#   - 'upstream ufront { server {{if_inner}}:{{ports.front.0}}; }'
+#   - 'upstream ufront_ws { server {{if_inner}}:{{ports.front_ws.0}};  }'
+#   - 'upstream udirector { server {{if_inner}}:{{ports.director.0}};  }'
+#   - 'upstream uheavyload { server {{if_inner}}:{{ports.heavyload.0}};  }'
+#   - 'upstream ugrafana { server {{if_inner}}:{{ports.grafana.0}}; }'
+#   - 'upstream ujupyter { server {{if_inner}}:{{ports.jupyter.0}}; }'
+#   - 'upstream unetdata { server {{if_inner}}:{{ports.netdata.0}}; }'
+#   - 'upstream utheia { server {{if_inner}}:{{ports.theia.0}}; }'
+#   - 'upstream uletsencrypt { server {{if_inner}}:{{ports.letsencrypt.0}}; }'
+#   - 'upstream udemo { server {{if_inner}}:{{ports.fakeshop.0}}; }'
 
 # ########## Other things ##########
 hostname: "{{inventory_hostname_short|default(inventory_hostname)}}"
 # ########## Mailer config ##########
-mailer_subj_key: "Ваши ключи OpenVPN ({{ _domain }}) v{{ playbook_version }}"
-mailer_subj_snip: "Сниппет для сайта ({{ _domain }}) v{{ playbook_version }}"
+# mailer_subj_key: "Ваши ключи OpenVPN ({{ _domain }}) v{{ playbook_version }}"
+# mailer_subj_snip: "Сниппет для сайта ({{ _domain }}) v{{ playbook_version }}"

@@ -134,43 +134,51 @@
 
     ##### ##### ##### ##### #####    Lets encrypt - acme.sh    ##### ##### ##### ##### ##### 
 
+
+
+
+    # - block:
+        # - name: LetsEncrypt role execution
+        #   include_role:
+        #     name: dr.letsencrypt.wildcard.auto
+        #   vars:
+        #     _r_domain: "{{_domain}}"
+        #     _r_subdomains: "{{_subdomains}}"
+        #     _r_webroot: "{{dirs.well_known}}"
+        #     _r_force: "{{ssl_force|default(False)|bool}}"
+        #     _r_wildcard: "{{_ssl_wildcard}}"
+        #     _r_docker_networks: [ { name: "{{docker_net_name}}" } ]
+        #     _r_docker_labels: "{{ {}|combine(labels, docker_band_lbls) }}"
+        #     _r_check_addr: "{{if_inner}}:{{ports.http.0}}"
+        #     _r_bind_addr: "{{if_inner}}:{{ports.letsencrypt.0}}"
+        #     _r_cert_root: "{{dirs.certs}}"
+        #     _r_dns_provider: "{{_ssl_dns_provider|default('dns_acmedns')}}" 
+        #     _r_dns_envs: "{{_ssl_dns_envs|default({})}}"
+        #     _r_debug: yes
+        #     _r_log: no
+
+      #   - shell: nginx -t && nginx -s reload || /bin/true
+
+      # vars:
+      #   oldloc: "/etc/letsencrypt/live/{{_domain}}"
+      #   labels:
+      #     band.service.title: "SSL Renewer"
+    #   #     band.service.def_position: "0x6"
+
+
+    #   when: "_setup_ssl == True"
+    #   tags: ['never', 'full', 'system', 'ssl']
+
+    ##### ##### ##### ##### #####    Caddy    ##### ##### ##### ##### ##### 
+
+
     - block:
-          
-        - name: LetsEncrypt role execution
-          include_role:
-            name: dr.letsencrypt.wildcard.auto
-          vars:
-            _r_domain: "{{_domain}}"
-            _r_subdomains: "{{_subdomains}}"
-            _r_webroot: "{{dirs.well_known}}"
-            _r_force: "{{ssl_force|default(False)|bool}}"
-            _r_wildcard: "{{_ssl_wildcard}}"
-            _r_docker_networks: [ { name: "{{docker_net_name}}" } ]
-            _r_docker_labels: "{{ {}|combine(labels, docker_band_lbls) }}"
-            _r_check_addr: "{{if_inner}}:{{ports.http.0}}"
-            _r_bind_addr: "{{if_inner}}:{{ports.letsencrypt.0}}"
-            _r_cert_root: "{{dirs.certs}}"
-            _r_dns_provider: "{{_ssl_dns_provider|default('dns_acmedns')}}" 
-            _r_dns_envs: "{{_ssl_dns_envs|default({})}}"
-            _r_debug: yes
-            _r_log: no
 
-        - shell: nginx -t && nginx -s reload || /bin/true
+      - name: Removing old renew daemon if present
+        docker_container:
+          name: acmesh-daemon
+          state: absent
 
-      vars:
-        oldloc: "/etc/letsencrypt/live/{{_domain}}"
-        labels:
-          band.service.title: "SSL Renewer"
-          band.service.def_position: "0x6"
-
-
-      when: "_setup_ssl == True"
-      tags: ['never', 'full', 'system', 'ssl']
-
-
-    ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
-
-    - block:
       - name: 'Creating build directory for caddy image'
         file:
           state: directory
@@ -178,8 +186,12 @@
           owner: "{{_uid|string}}"
           group: "{{_gid|string}}"
 
+      - name: 'Templating Facts'
+        template:
+          src: "templates/facts.d/config.fact.j2"
+          dest: "{{ local_facts_dir }}/jwt.fact"
 
-      - name: 'Templating {{item}}'
+      - name: 'Templating Caddy configs'
         template:
           src: "{{item}}"
           dest: "{{ caddy_build_dir }}/{{ (item|basename|splitext).0 }}"
@@ -198,56 +210,71 @@
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
-          env: "{{container_env}}"
+          env: "{{container_env|combine(extra_env)}}"
           restart: yes
-          # recreate: yes
+          recreate: yes
           memory: "200m"
           volumes:
             - "{{caddy_build_dir}}/Caddyfile:/etc/caddy/Caddyfile:ro"
             - "{{caddy_build_dir}}/htpasswd:/etc/caddy/htpasswd:ro"
-            - "{{dirs.public}}:/public:ro"
+            - "{{dirs.public}}:/wwwroot/public:ro"
+            - "{{dirs.dashboard}}/dist:/dashboard:ro"
             - /var/run/docker.sock:/var/run/docker.sock
+            - "{{dirs.certs}}/.caddy:/root/.caddy"
+            - "{{dirs.certs}}/bolt.rstat.org:/bolt.rstat.org:ro"
       vars:
-        container_env:
+        service: caddy
+        s_jwt_config: "{{(ansible_local.jwt|default({})).general|default({}) }}"
+        s_jwt_secret: "{{ jwt_secret|default(s_jwt_config.secret|default(64|token_urlsafe)) }}"
+        _facts_dict: 
+          secret: "{{ s_jwt_secret }}"
+        extra_env:
           ACME_AGREE: 'true'
           ENABLE_TELEMETRY: 'false'
-          
+          JWT_SECRET: "{{s_jwt_secret}}"
+        common_users:
+          - "admin:{{_admin_password}}"
         caddy_build_dir: "{{build_dir}}/caddy"
         tmpl:
           email: "{{email}}"
           domain: "{{_domain}}"
+          extra_domains: "{{_extra_domains}}"
+          domains: "{{_domains}}"
           http_to: "front:{{ports.front.1}}"
           ws_to: "front:{{ports.front_ws.1}}"
-      tags: ['never', 'caddy']
+          director_to: "director:{{ports.director.1}}"
+          dns_provider: "{{dns_provider|default(None)}}"
+      tags: ['never', 'caddy', 'httpd', 'system', 'full']
 
-    - block:
+    # - block:
+    ##### ##### ##### ##### #####    Nginx    ##### ##### ##### ##### ##### 
 
-      - include_vars: vars/nginx.yml
-      - name: Nginx role execution
-        include_role:
-          name: jdauphant.nginx
-        vars:
-          nginx_official_repo: no
-          keep_only_specified: yes
-          nginx_http_params: '{{_nginx_http_params}}'
-          nginx_sites: "{{_nginx_sites|combine(_nginx_sites_extra|default({}))}}"
-          nginx_auth_basic_files:
-            common: "{{ common_users|flatten }}"
-          nginx_configs:
-            upgrade: '{{_nginx_proto_upgrade}}'
-            gzip: '{{_nginx_gzip_params}}'
-            proxy: '{{_nginx_proxy_params + _nginx_proxy_params_extra|default([])}}'
-            upstream: '{{_nginx_upstreams + _nginx_upstreams_extra|default([]) }}'
-            ssl: '{{_nginx_ssl_params}}'
-      vars:
-        # local_config: "{{ansible_local.config|default({})}}"
-        # local_general: "{{local_config.general|default({})}}"
+      # - include_vars: vars/nginx.yml
+      # - name: Nginx role execution
+      #   include_role:
+      #     name: jdauphant.nginx
+      #   vars:
+      #     nginx_official_repo: no
+      #     keep_only_specified: yes
+      #     nginx_http_params: '{{_nginx_http_params}}'
+      #     nginx_sites: "{{_nginx_sites|combine(_nginx_sites_extra|default({}))}}"
+      #     nginx_auth_basic_files:
+      #       common: "{{ common_users|flatten }}"
+      #     nginx_configs:
+      #       upgrade: '{{_nginx_proto_upgrade}}'
+      #       gzip: '{{_nginx_gzip_params}}'
+      #       proxy: '{{_nginx_proxy_params + _nginx_proxy_params_extra|default([])}}'
+      #       upstream: '{{_nginx_upstreams + _nginx_upstreams_extra|default([]) }}'
+      #       ssl: '{{_nginx_ssl_params}}'
+      # vars:
+      #   local_config: "{{ansible_local.config|default({})}}"
+      #   local_general: "{{local_config.general|default({})}}"
         
-        common_users:
-          - "admin:{{_admin_password}}"
-          # - "{{local_general.users}}"
-      when: "setup_nginx == True"
-      tags: ['never', 'nginx', 'httpd', 'system', 'full']
+      #   common_users:
+      #     - "admin:{{_admin_password}}"
+      #     - "{{local_general.users}}"
+      # when: "setup_nginx == True"
+      # tags: ['never', 'nginx', 'httpd', 'system', 'full']
 
 
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
@@ -258,7 +285,7 @@
           name: netdata
           hostname: netdata
           image: "{{images.netdata}}"
-          labels: "{{docker_band_lbls}}"
+          labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           ports: 
             - "{{if_inner}}:{{ports.netdata.0}}:{{ports.netdata.1}}"
             - "{{if_inner}}:{{ports.statsd.0}}:{{ports.statsd.1}}/udp"
@@ -294,6 +321,10 @@
           drn_backend: '{{netdata_backend_config|default({})}}'
           drn_bind_to: "{{if_inner}}"
       vars:
+        service: netdata
+        container_lbls:
+          "caddy.address": "netdata.{{_domain}}"
+          "caddy.targetport": "{{ports.netdata.1}}"
         container_env:
           PGID: "999"
       tags: ['never', 'netdata', 'system', 'full']
@@ -515,7 +546,7 @@
           name: jupyter
           hostname: jupyter
           image: "{{images.jupyter}}"
-          labels: "{{container_lbls|combine(docker_band_lbls)}}"
+          labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
@@ -525,20 +556,16 @@
           volumes:
             - "{{dirs.notebooks}}:{{nb_dir}}:cached"
             - "{{dirs.public}}:{{nb_dir}}/public:cached"
-
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
       vars:
         service: jupyter
         nb_dir: "{{jupyter_notebooks_dir|default('/opt/notebooks')}}"
         cmd_parts:
+        # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
         container_lbls:
           "caddy.address": "jupyter.{{_domain}}"
-          "caddy.targetprotocol": "http"
           "caddy.targetport": "{{ports.jupyter.1}}"
-          "caddy.import": "back"
-          "caddy.proxy.websocket": "{{'{{nil}}'}}"
-          "caddy.proxy.transparent": "{{'{{nil}}'}}"
       when: 'setup_jupyter == True'
       tags: ['never', 'jupyter', 'jupyter', 'platform', 'pservice', 'docker-container', 'full']
 
@@ -549,15 +576,15 @@
         file:
           state: directory
           path: "{{dirs.grafana_data}}"
-          owner: "{{_uid}}" # grafana container ids
-          group: "{{_gid}}"
+          owner: "{{_uid|string}}" # grafana container ids
+          group: "{{_gid|string}}"
 
       - name: Starting container for service Grafana
         docker_container:
           name: grafana
           hostname: grafana
           image: "{{images.grafana}}"
-          labels: "{{docker_band_lbls}}"
+          labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
@@ -569,6 +596,13 @@
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
             - '{{dirs.grafana_data}}:/var/lib/grafana'
+      vars:
+        # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
+        container_lbls:
+          "caddy.address": "grafana.{{_domain}}"
+          "caddy.targetport": "{{ports.grafana.1}}"
+          "caddy.proxy.header_upstream": "X-WEBAUTH-USER admin"
+          
       tags: ['never', 'grafana', 'platform', 'pservice', 'docker-container', 'full']
 
 
@@ -585,7 +619,7 @@
           name: theia
           hostname: theia
           image: "{{images.theia}}"
-          labels: "{{docker_band_lbls}}"
+          labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
@@ -607,6 +641,11 @@
             - "{{dirs.front_custom_config}}:{{custom_config_dir}}/front:cached"
             - "{{dirs.environments}}:{{config_dir}}/environments:cached"
       vars:
+        # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
+        container_lbls:
+          "caddy.address": "theia.{{_domain}}"
+          "caddy.targetport": "{{ports.theia.1}}"
+
         project_dir: /home/theia/project
         config_dir: "{{project_dir}}/config"
         custom_config_dir: "{{config_dir}}/custom"
@@ -635,7 +674,7 @@
           name: "{{service}}"
           hostname: "{{service}}"
           image: "{{images[service]}}"
-          labels: "{{docker_band_lbls}}"
+          labels: "{{ labels|combine(docker_band_lbls, _caddy_container_lbls)}}"
           env: "{{container_env}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
@@ -645,6 +684,10 @@
             - "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}"
       vars:
         service: fakeshop
+        service_addr: 
+        labels:
+          caddy.address: "demo.{{_domain}}"
+          caddy.targetport: "{{ ports[service].1 }}"
       tags: ['never', 'fakeshop', 'platform', 'pservice', 'docker-container', 'full']
 
     - docker_container: name=ebaloger state=absent
