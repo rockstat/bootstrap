@@ -70,6 +70,7 @@ _images:
   logspout: gliderlabs/logspout
   chproxy: rockstat/chproxy
   redis: redis:4-alpine
+  clickhouse: yandex/clickhouse-server
   postgrest: postgrest/postgrest
   netdata: netdata/netdata
   grafana: rockstat/grafana
@@ -155,8 +156,8 @@ _ports:
   openvpn: [8080, 1194]
   redis: [6379, 6379]
   s2svpn: [8079]
-  clickhouse_tcp: [9000]
-  clickhouse: [8123]
+  clickhouse_tcp: [9000, 9000]
+  clickhouse: [8123, 8123]
   chproxy: [9090, 9090]
   chronograf: [18888]
   influxhttp: [18086]
@@ -166,7 +167,9 @@ _ports:
   postgrest: [18080, 3000]
 ports: "{{_ports|combine(_ports_extra|default({}))}}"
 # Mem limits
-jupyter_mem_limit: 2g
+mem_limit_clickhouse:  "{{ (ansible_memtotal_mb/2)|int }}m"
+mem_limit_redis: "{{ (ansible_memtotal_mb/8)|int }}m"
+mem_limit_jupyter: "{{ (ansible_memtotal_mb/8)|int }}m"
 # ########## Docker ##########
 # user defined docker network
 docker_net_name: custom
@@ -184,6 +187,9 @@ docker_defnet_pattern: 172.17.*
 docker_defnet_net: "{{docker_defnet_pattern|ip_p2n}}"
 # other params
 docker_band_lbls: { inband: system }
+docker_sysctls: { }
+docker_log_driver: json-file
+docker_log_options: { }
 _label_band_managed: { role: managed }
 _restart_policy: unless-stopped
 # ########## Clients VPN ##########
@@ -249,7 +255,10 @@ _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 # ########## Services env ##########
 _containers_env:
   # https://caddyserver.com/docs/automatic-https#wildcards
-  caddy: {}
+  caddy: 
+    CADDY_DOCKER_POLLING_INTERVAL: 300s
+    # CADDY_DOCKER_LABEL_PREFIX: caddy
+    # CADDY_DOCKER_PROXY_SERVICE_TASKS: no
   director:
     #ENCODED_ENV will be set in playbook
     PORT: "{{ports.director.1}}"

@@ -35,10 +35,29 @@
         command: "chown {{_uid}}:{{_gid}} {{ block_dirs }}"
         args:
           warn: False
+
       vars:
         block_dirs: "{{ create_dirs|flatten|join(' ') }}"
       tags: ["never", "full", "platform", "dirs"]
 
+
+      ##### ##### ##### ##### #####    Checking system reqs    ##### ##### ##### ##### ##### 
+    - block:
+      - name: Checking server total mem
+        assert:
+          that:
+            - ansible_memtotal_mb >= 4000
+          msg: "Required mem >= 4GB"
+
+      - debug: var=msg
+            
+      vars:
+        msg:
+          memtotal_mb: "{{ansible_memtotal_mb}}"
+          clickhouse_memory_limit: "{{mem_limit_clickhouse}}"
+          redis_memory_limit: "{{mem_limit_redis}}"
+          jupyter_memory_limit: "{{mem_limit_jupyter}}"
+      tags: ['always']
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
       
@@ -173,6 +192,12 @@
 
 
     - block:
+      - name: disable service nginx on debian, if running
+        systemd:
+          name: nginx
+          state: stopped
+          enabled: no
+          masked: yes
 
       - name: Removing old renew daemon if present
         docker_container:
@@ -213,7 +238,10 @@
           env: "{{container_env|combine(extra_env)}}"
           restart: yes
           recreate: yes
-          memory: "200m"
+          sysctls: "{{docker_sysctls}}"
+          log_options: "{{docker_log_options}}"
+          log_driver: "{{ }}"
+          memory: "500m"
           volumes:
             - "{{caddy_build_dir}}/Caddyfile:/etc/caddy/Caddyfile:ro"
             - "{{caddy_build_dir}}/htpasswd:/etc/caddy/htpasswd:ro"
@@ -297,6 +325,7 @@
           restart: yes
           # recreate: yes
           memory: "200m"
+          sysctls: "{{docker_sysctls}}"
           capabilities:
             - SYS_PTRACE
           security_opts:
@@ -331,24 +360,59 @@
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
 
-    - block: 
-      - name: Executing ClickHouse setup role
-        include_role:
-          name: AlexeySetevoi.clickhouse
-        vars:
-          clickhouse_listen_host_default: ["127.0.0.1", "::1", "{{if_inner}}"]
-          clickhouse_networks_default: ["127.0.0.1", "::1", "{{docker_net}}"]
-          clickhouse_profiles_custom: "{{_clickhouse_profiles_custom}}"
-          clickhouse_users_custom: "{{_clickhouse_users_custom}}"
-          clickhouse_logger: "{{_clickhouse_logger}}"
-          clickhouse_dbs_custom: [ {name: '{{ch_db}}'} ]
-          clickhouse_path_data: "{{dirs.clickhouse}}"
-          clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
+
+
+
+    - block:
+      - name: Disabling service nginx on debian, if running
+        systemd:
+          name: clickhouse-server
+          state: stopped
+          enabled: no
+          masked: yes
+
+      - name: Starting ClickHouse container
+        docker_container:
+          name: clickhouse
+          hostname: clickhouse
+          image: "{{images.clickhouse}}"
+          # labels: "{{docker_band_lbls}}"
+          networks: [ { name: "{{docker_net_name}}" } ]
+          etc_hosts: "{{etc_hosts}}"
+          restart_policy: "{{_restart_policy}}"
+          ulimits:
+            - "nofile:262144:262144"
+          memory: "{{ mem_limit_clickhouse|default('2g') }}"
+          # restart: yes
+          # pull: yes
+          # recreate: yes
+          sysctls: "{{docker_sysctls}}"
+          ports: 
+            - "{{if_inner}}:{{ports.clickhouse.0}}:{{ports.clickhouse.1}}"
+            - "{{if_inner}}:{{ports.clickhouse_tcp.0}}:{{ports.clickhouse_tcp.1}}"
+          volumes:
+            - "{{dirs.clickhouse}}:/var/lib/clickhouse"
+            - "{{dirs.clickhouse_log}}:/var/log/clickhouse-server"
+            - "{{dirs.clickhouse_tmp}}:/var/lib/clickhouse/tmp"
+
+    # - block: 
+    #   - name: Executing ClickHouse setup role
+    #     include_role:
+    #       name: AlexeySetevoi.clickhouse
+    #     vars:
+    #       clickhouse_listen_host_default: ["127.0.0.1", "::1", "{{if_inner}}"]
+    #       clickhouse_networks_default: ["127.0.0.1", "::1", "{{docker_net}}"]
+    #       clickhouse_profiles_custom: "{{_clickhouse_profiles_custom}}"
+    #       clickhouse_users_custom: "{{_clickhouse_users_custom}}"
+    #       clickhouse_logger: "{{_clickhouse_logger}}"
+    #       clickhouse_dbs_custom: [ {name: '{{ch_db}}'} ]
+    #       clickhouse_path_data: "{{dirs.clickhouse}}"
+    #       clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
       tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full']
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
 
-    - name: Executing Redis setup role
+    - name: Redis setup
       block:
       - name: Starting container for service Redis
         docker_container:
@@ -360,9 +424,10 @@
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
           restart: yes
-          pull: yes
-          recreate: yes
-          memory: "300m"
+          # pull: yes
+          # recreate: yes
+          memory: "{{ mem_limit_redis|default('500m') }}"
+          sysctls: "{{docker_sysctls}}"
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
       tags: ['never', 'redis', 'system', 'docker-container', 'full']
@@ -396,6 +461,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{ container_env|combine({'ENCODED_ENV': container_env|to_json }) }}"
+          sysctls: "{{docker_sysctls}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -430,6 +496,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{container_env}}"
+          sysctls: "{{docker_sysctls}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -470,6 +537,7 @@
           labels: "{{docker_band_lbls}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
+          sysctls: "{{docker_sysctls}}"
           restart_policy: "{{_restart_policy}}"
           restart: yes
           pull: yes
@@ -498,6 +566,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{container_env}}"
+          sysctls: "{{docker_sysctls}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -523,6 +592,7 @@
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{container_env}}"
+          sysctls: "{{docker_sysctls}}"
           restart_policy: "{{_restart_policy}}"
           pull: yes
           restart: yes
@@ -552,12 +622,13 @@
           restart_policy: "{{_restart_policy}}"
           # pull: yes
           recreate: yes
-          memory: "{{ jupyter_mem_limit|default('2g') }}"
+          memory: "{{ mem_limit_jupyter|default('2g') }}"
           volumes:
             - "{{dirs.notebooks}}:{{nb_dir}}:cached"
             - "{{dirs.public}}:{{nb_dir}}/public:cached"
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
+          sysctls: "{{docker_sysctls}}"
       vars:
         service: jupyter
         nb_dir: "{{jupyter_notebooks_dir|default('/opt/notebooks')}}"
