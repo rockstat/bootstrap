@@ -123,20 +123,20 @@
 
     ##### ##### ##### ##### #####    Splash screen    ##### ##### ##### ##### ##### 
 
-    - block:
-      - name: Cloning Splash content
-        git:
-          repo: "{{repos.splash}}"
-          dest: "{{dirs.splash}}"
-          accept_hostkey: yes
-          force: yes
+    # - block:
+    #   - name: Cloning Splash content
+    #     git:
+    #       repo: "{{repos.splash}}"
+    #       dest: "{{dirs.splash}}"
+    #       accept_hostkey: yes
+    #       force: yes
         
-      - template:
-          src: google-webmaster.j2
-          dest: "{{dirs.splash}}/{{_google_webmaster}}"
-        when: "_google_webmaster is defined and _google_webmaster != ''"
+    #   - template:
+    #       src: google-webmaster.j2
+    #       dest: "{{dirs.splash}}/{{_google_webmaster}}"
+    #     when: "_google_webmaster is defined and _google_webmaster != ''"
       
-      tags: ['splash', 'platform', 'ppart', 'band', 'static', 'full']
+    #   tags: ['splash', 'platform', 'ppart', 'band', 'static', 'full']
 
 
     ##### ##### ##### ##### #####    Exposeur (UFW, iptables)    ##### ##### ##### ##### ##### 
@@ -198,6 +198,8 @@
           state: stopped
           enabled: no
           masked: yes
+        failed_when: False
+        when: ansible_service_mgr == 'systemd'
 
       - name: Removing old renew daemon if present
         docker_container:
@@ -227,7 +229,7 @@
           name: caddy
           hostname: caddy
           image: "{{images.caddy}}"
-          labels: "{{docker_band_lbls}}"
+          # labels: "{{docker_band_lbls}}"
           ports: 
             - "0.0.0.0:{{ports.http.0}}:{{ports.http.0}}"
             - "0.0.0.0:{{ports.https.0}}:{{ports.https.0}}"
@@ -239,8 +241,8 @@
           restart: yes
           recreate: yes
           sysctls: "{{docker_sysctls}}"
-          log_options: "{{docker_log_options}}"
-          log_driver: "{{ }}"
+          log_options: "{{ docker_log_options }}"
+          log_driver: "{{ docker_log_driver }}"
           memory: "500m"
           volumes:
             - "{{caddy_build_dir}}/Caddyfile:/etc/caddy/Caddyfile:ro"
@@ -308,12 +310,23 @@
     ##### ##### ##### ##### #####    Netdata    ##### ##### ##### ##### ##### 
 
     - block:
+
+      - name: disabling netdata service
+        systemd:
+          state: stopped
+          daemon_reload: yes
+          enabled: no
+          masked: yes
+          name: netdata
+        when: ansible_service_mgr == 'systemd'
+        failed_when: False
+          
       - name: Netdata container
         docker_container:
           name: netdata
           hostname: netdata
           image: "{{images.netdata}}"
-          labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
+          labels: "{{container_lbls|combine(_caddy_container_lbls)}}" # docker_band_lbls, 
           ports: 
             - "{{if_inner}}:{{ports.netdata.0}}:{{ports.netdata.1}}"
             - "{{if_inner}}:{{ports.statsd.0}}:{{ports.statsd.1}}/udp"
@@ -335,28 +348,30 @@
             - /sys:/host/sys:ro
             - /var/run/docker.sock:/var/run/docker.sock
 
-      - name: Netdata role execution
-        include_role:
-          name: dr.netdata
-        vars:
-          drn_action: remove
-          drn_allow:
-            dashboard_from: "*"
-            badges_from: "*"
-            conf_from: "*"
-            connections_from: "*"
-            streaming_from: "*"
-          drn_stream: '{{netdata_stream_config|default({})}}'
-          drn_backend: '{{netdata_backend_config|default({})}}'
-          drn_bind_to: "{{if_inner}}"
-      vars:
-        service: netdata
-        container_lbls:
-          "caddy.address": "netdata.{{_domain}}"
-          "caddy.targetport": "{{ports.netdata.1}}"
-        container_env:
-          PGID: "999"
-      tags: ['never', 'netdata', 'system', 'full']
+      # - name: Netdata role execution
+      #   include_role:
+      #     name: dr.netdata
+      #   vars:
+      #     drn_action: remove
+      #     drn_allow:
+      #       dashboard_from: "*"
+      #       badges_from: "*"
+      #       conf_from: "*"
+      #       connections_from: "*"
+      #       streaming_from: "*"
+      #     drn_stream: '{{netdata_stream_config|default({})}}'
+      #     drn_backend: '{{netdata_backend_config|default({})}}'
+      #     drn_bind_to: "{{if_inner}}"
+      # vars:
+      #   service: netdata
+      #   container_lbls:
+      #     "caddy.address": "netdata.{{_domain}}"
+      #     "caddy.targetport": "{{ports.netdata.1}}"
+      #   container_env:
+      #     PGID: "999"
+      # tags: ['never', 'netdata', 'system', 'full']
+
+  
 
     ##### ##### ##### ##### #####    Clickhouse    ##### ##### ##### ##### ##### 
 
@@ -364,12 +379,14 @@
 
 
     - block:
-      - name: Disabling service nginx on debian, if running
+      - name: Disabling clickhouse systemd service
         systemd:
           name: clickhouse-server
           state: stopped
           enabled: no
           masked: yes
+        failed_when: False
+        when: ansible_service_mgr == 'systemd'
 
       - name: Starting ClickHouse container
         docker_container:
@@ -431,6 +448,7 @@
           ports: ["{{if_inner}}:{{ports.redis.0}}:{{ports.redis.1}}"]
           volumes: ["{{dirs.redis}}:/data"]
       tags: ['never', 'redis', 'system', 'docker-container', 'full']
+
 
     ##### ##### ##### ##### #####    Band Director    ##### ##### ##### ##### ##### 
 
@@ -626,6 +644,7 @@
           volumes:
             - "{{dirs.notebooks}}:{{nb_dir}}:cached"
             - "{{dirs.public}}:{{nb_dir}}/public:cached"
+            - "{{dirs.shared}}:{{nb_dir}}/shared:cached"
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
           sysctls: "{{docker_sysctls}}"
@@ -705,6 +724,8 @@
             - "{{dirs.user_images}}:{{project_dir}}/images:cached"
             - "{{dirs.user_libraries}}:{{project_dir}}/libraries:cached"
             - "{{dirs.public}}:{{project_dir}}/public:cached"
+            - "{{dirs.shared}}:{{project_dir}}/shared:cached"
+            - "{{dirs.notebooks}}:{{project_dir}}/notebooks:cached"
             - "{{dirs.chwriter_custom_migrations}}:{{project_dir}}/config/migrations:cached"
             - "{{dirs.band_set}}:{{project_dir}}/sources_ro/band_set:ro"
             - "{{dirs.band_set}}/__skeletons:{{project_dir}}/sources_ro/skeletons:ro"

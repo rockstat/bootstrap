@@ -108,6 +108,7 @@ dirs:
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   public: "{{data_dir}}/public"
+  shared: "{{data_dir}}/shared"
   well_known: "{{home_dir}}/well_known"
   dashboard: "{{home_dir}}/dashboard"
   ovpnkeys: "{{home_dir}}/ovpn_keys"
@@ -124,7 +125,7 @@ create_dirs:
   - ["{{ dirs.workspace }}", "{{ dirs.public }}", "{{ dirs.grafana_data }}"]
   - ["{{ dirs.front_custom_config }}", "{{ dirs.chwriter_custom_config }}"]
   - ["{{ dirs.chwriter_custom_migrations }}", "{{ dirs.environments }}"]
-  - ["{{ dirs.user_libraries }}"]
+  - ["{{ dirs.user_libraries }}", "{{ dirs.shared }}"]
 in_dirs:
   etc: /usr/platform/etc
 # ssl files
