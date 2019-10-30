@@ -43,14 +43,24 @@
     import cert
     root /wwwroot
     log / stdout
-    cors /
+#    cors / {
+#        allow_credentials true
+#        max_age 3600
+#        allowed_headers Content-Type,X-Requested-With,Authorization,Accept
+#        exposed_headers Content-Type
+#    }
+
     gzip
 
     proxy / http://{{tmpl.http_to}} {
         transparent
+        header_upstream Origin {>Origin}
         except /public /wss
     }
 
+    header / {
+        X-Content-Type-Options nosniff
+    }
     proxy /wss http://{{tmpl.ws_to}} {
         transparent
         websocket 
