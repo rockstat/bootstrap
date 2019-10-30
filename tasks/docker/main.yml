@@ -1,0 +1,78 @@
+---
+
+# docker_distribution_cleanup
+# 
+# 
+# 
+# 
+# 
+
+
+- import_tasks: "tasks/stable.yml"
+  when: drd_version == 'stable'
+  tags: [always]
+
+- import_tasks: "tasks/edge.yml"
+  when: drd_version == 'edge'
+  tags: ["always", "docker-edge"]
+
+- file:
+    state: directory
+    path: /etc/docker
+
+- template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify:
+  - restart docker
+
+- meta: flush_handlers
+
+- block:
+  - name: Removing installed libs
+    apt:
+      state: absent
+      name: 
+        - docker 
+        - docker-engine
+        - docker.io
+        - containerd
+        - runc
+  - name: Removing old libs
+    pip:
+      state: absent
+      name:
+        - docker-py
+        - docker-pycreds
+        - docker
+  when: "{{docker_distribution_cleanup}}"
+
+- name: Installing docker lib
+  pip:
+    name: docker
+    version: '2.7.0'
+    
+- name: Installing docker-compose
+  pip:
+    name: docker-compose
+
+
+- name: Creating docker network
+  docker_network:
+    name: '{{ drd_net_name }}'
+    driver_options:
+      com.docker.network.bridge.name: '{{ drd_interface }}'
+      com.docker.network.bridge.host_binding_ipv4: "{{ drd_bind_ip }}"
+      com.docker.network.driver.mtu: '{{ drd_mtu }}'
+    ipam_config:
+      - subnet: "{{ drd_net }}"
+  when: drd_create_network == True
+
+
+- name: Adding users to docker group
+  user:
+    name: "{{item}}"
+    groups:
+      - docker
+    append: yes
+  with_items: "{{drd_users + drd_user|ternary([drd_user], [])}}"
