@@ -266,7 +266,7 @@
           - "admin:{{_admin_password}}"
         caddy_build_dir: "{{build_dir}}/caddy"
         tmpl:
-          email: "{{email}}"
+          email: "{{_email}}"
           domain: "{{_domain}}"
           extra_domains: "{{_extra_domains}}"
           domains: "{{_domains}}"

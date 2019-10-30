@@ -7,10 +7,6 @@
   version: master
   name: dr.exposeur
 
-- src: https://github.com/madiedinro/ansible-netdata-role
-  version: master
-  name: dr.netdata
-
 - src: https://github.com/madiedinro/ansible-docker-role
   version: master
   name: dr.docker
@@ -27,21 +23,11 @@
   version: master
   name: dr.chronograf
 
-- src: https://github.com/AlexeySetevoi/ansible-clickhouse
-  version: master
-  name: AlexeySetevoi.clickhouse
-
-- src: https://github.com/jdauphant/ansible-role-nginx
-  version: master
-  name: jdauphant.nginx
 
 - src: https://github.com/madiedinro/ansible-influxdb-role.git
   version: master
   name: dr.influxdb
 
-- src: https://github.com/madiedinro/ansible-letsencrypt-wildcatd-dns-auto.git
-  version: master
-  name: dr.letsencrypt.wildcard.auto
 
 - src: https://github.com/madiedinro/ansible-openvpn-client-role
   version: master
