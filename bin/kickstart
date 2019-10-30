@@ -414,7 +414,7 @@ menu() {
   "20" "    Apply admin password to webserver" \
   "34" "    Setup Demo-site" \
   "31" "    Re-request SSL certificate with force option" \
-  "32" "    Support access and remote upgrade: $SUPPORT_STATE" \
+  "32" "    Toggle support access and remote upgrade (currently $SUPPORT_STATES) " \
   "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
   "00"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
