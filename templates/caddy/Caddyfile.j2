@@ -36,21 +36,21 @@
         allow sub admin
     }
     header / Cache-Control "no-cache, no-store, must-revalidate"
+    gzip
 }
 
 
 {{ tmpl.domain }} {% for d in tmpl.extra_domains %}, {{d}}{% endfor %} {
     import cert
     root /wwwroot
-    log / stdout
+    log stdout
+    errors stdout
 #    cors / {
 #        allow_credentials true
 #        max_age 3600
 #        allowed_headers Content-Type,X-Requested-With,Authorization,Accept
 #        exposed_headers Content-Type
 #    }
-
-    gzip
 
     proxy / http://{{tmpl.http_to}} {
         transparent
