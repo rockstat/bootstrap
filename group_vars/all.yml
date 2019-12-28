@@ -65,7 +65,7 @@ _images:
   ebaloger: rockstat/ebaloger
   theia: "rockstat/theia-ide:{{_tag}}"
   heavyload: rockstat/heavyload
-  jupyter: rockstat/jupyter
+  jupyter: rockstat/jupyter:{{_tag}}"
   httpdebug: rockstat/httpdebug
   logspout: gliderlabs/logspout
   chproxy: rockstat/chproxy
