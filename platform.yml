@@ -656,7 +656,7 @@
 
       vars:
         service: jupyter
-        nb_dir: "{{jupyter_notebooks_dir|default('/opt/notebooks')}}"
+        nb_dir: "{{jupyter_notebooks_dir|default('/home/user/notebooks')}}"
         cmd_parts:
         # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
         container_lbls:
