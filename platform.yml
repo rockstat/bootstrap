@@ -648,6 +648,12 @@
           ports: [ "{{if_inner}}:{{ports.jupyter.0}}:{{ports.jupyter.1}}" ]
           env: "{{ container_env }}"
           sysctls: "{{docker_sysctls}}"
+
+      - name: Fix notebooks permissions
+        command: "chown -R {{_uid}}:{{_gid}} {{dirs.notebooks}}"
+        args:
+          warn: False
+
       vars:
         service: jupyter
         nb_dir: "{{jupyter_notebooks_dir|default('/opt/notebooks')}}"
