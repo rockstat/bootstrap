@@ -633,12 +633,12 @@
         docker_container:
           name: jupyter
           hostname: jupyter
-          image: "{{images.jupyter}}"
+          image: "{{image}}"
           labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
-          # pull: yes
+          pull: "{{ '/' in  image}}"
           recreate: yes
           memory: "{{ mem_limit_jupyter|default('2g') }}"
           volumes:
@@ -656,6 +656,7 @@
 
       vars:
         service: jupyter
+        image: "{{ images[service] }}"
         nb_dir: "{{jupyter_notebooks_dir|default('/home/user/notebooks')}}"
         cmd_parts:
         # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
