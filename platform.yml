@@ -458,8 +458,7 @@
       - name: Pulling latest Band image
         docker_image:
           name: "{{images.band}}"
-          pull: yes
-          force: yes
+          source: pull
 
       - name: Git pulling BandSet
         git:
@@ -473,9 +472,9 @@
         docker_container:
           name: director
           hostname: director
-          image: "{{images.director}}"
+          image: "{{ image }}"
           labels: "{{docker_band_lbls}}"
-          ports: [ "{{if_inner}}:{{ports.director.0}}:{{ports.director.1}}" ]
+          ports: [ "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}" ]
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{ container_env|combine({'ENCODED_ENV': container_env|to_json }) }}"
@@ -495,6 +494,7 @@
             - "/var/run/docker.sock:/var/run/docker.sock"
       vars:
         service: director
+        image: "{{ images[service] }}"
       tags: ['band', 'platform', 'ppart', 'director', 'docker-container', 'full']
 
     ##### ##### ##### ##### #####    Front    ##### ##### ##### ##### ##### 
