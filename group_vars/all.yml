@@ -199,6 +199,7 @@ covpn_keys_dir: '{{home_dir}}/ovpn_keys'
 s2s_vpn_connect: false
 s2s_vpn_key: 'ovpn_keys/node{{vpn_id}}.ovpn'
 s2s_vpn_net_pattern: 192.168.222.*
+#                    192.168.222.0/24
 s2s_vpn_net: "{{s2s_vpn_net_pattern|ip_p2n}}"
 s2s_vpn_host_ip: "{{s2s_vpn_net|net_gw}}"
 # ########## Interfaces ##########
