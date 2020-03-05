@@ -390,8 +390,8 @@
 
       - name: Copy default clickhouse migrations
         copy:
-          src: clickhouse_scripts
-          dest: "{{dirs.clickhouse_scripts}}"
+          src: "{{dirs.clickhouse_scripts}}/"
+          dest: "{{init_dir}}"
           owner: "{{_uid}}"
           group: "{{_gid}}"
           mode: "0644"
