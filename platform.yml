@@ -390,8 +390,8 @@
 
       - name: Copy default clickhouse migrations
         copy:
-          src: "{{dirs.clickhouse_scripts}}/"
-          dest: "{{init_dir}}"
+          src: "clickhouse_scripts/"
+          dest: "{{dirs.clickhouse_scripts}}"
           owner: "{{_uid}}"
           group: "{{_gid}}"
           mode: "0644"
@@ -430,20 +430,6 @@
             - "{{dirs.clickhouse_scripts}}:{{init_dir}}"
             - "{{dirs.clickhouse_log}}:/var/log/clickhouse-server"
             - "{{dirs.clickhouse_tmp}}:/var/lib/clickhouse/tmp"
-
-    # - block: 
-    #   - name: Executing ClickHouse setup role
-    #     include_role:
-    #       name: AlexeySetevoi.clickhouse
-    #     vars:
-    #       clickhouse_listen_host_default: ["127.0.0.1", "::1", "{{if_inner}}"]
-    #       clickhouse_networks_default: ["127.0.0.1", "::1", "{{docker_net}}"]
-    #       clickhouse_profiles_custom: "{{_clickhouse_profiles_custom}}"
-    #       clickhouse_users_custom: "{{_clickhouse_users_custom}}"
-    #       clickhouse_logger: "{{_clickhouse_logger}}"
-    #       clickhouse_dbs_custom: [ {name: '{{ch_db}}'} ]
-    #       clickhouse_path_data: "{{dirs.clickhouse}}"
-    #       clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
       vars:
         conf_dir: /etc/clickhouse-server/config.d/
         init_dir: /docker-entrypoint-initdb.d

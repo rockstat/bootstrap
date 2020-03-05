@@ -46,7 +46,7 @@ Required steps depends of
 
 Open Terminal application (On Windows know as `cmd`)  Type following connection command:
 
-```bash
+```shell
 ssh root@yourdomain
 ```
 
@@ -54,23 +54,22 @@ ssh root@yourdomain
 
 You need to setup curl only once
 
-```bash
+```shell
 sudo apt -qqy update && sudo apt -qqy install curl
 ```
 
 Then run:
 
-```bash
-curl -s https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart | sudo -E bash -
+```shell
+curl -s "https://raw.githubusercontent.com/rockstat/bootstrap/master/bin/kickstart?$(date '+%s')" | sudo -E bash -
 
 sudo reboot
 ```
 
 For **development** version
 
-```
-curl -s https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart | sudo -E BRANCH=dev bash -
-
+```shell
+curl -s "https://raw.githubusercontent.com/rockstat/bootstrap/dev/bin/kickstart?$(date '+%s')" | sudo -E BRANCH=dev bash -
 sudo reboot
 ```
 
