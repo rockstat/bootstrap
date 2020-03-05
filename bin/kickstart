@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 TIMESTAMP=$(date '+%s')
-VERSION=3.10.19
+VERSION=3.10.20
 PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=${BRANCH:-master}
 BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
