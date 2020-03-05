@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+TIMESTAMP=$(date '+%s')
 VERSION=3.10.15
 PLATFORM_HOME=/srv/platform
 BOOTSTRAP_BRANCH=${BRANCH:-master}
@@ -7,7 +8,7 @@ BOOTSTRAP_REPO=https://github.com/rockstat/bootstrap.git
 BOOTSTRAP_DIR=/srv/platform/bootstrap
 BOOTSTRAP_BINDIR=${BOOTSTRAP_DIR}/bin
 KICKSTART=${BOOTSTRAP_BINDIR}/kickstart
-KICKSTART_CMD="curl -s https://raw.githubusercontent.com/rockstat/bootstrap/${BOOTSTRAP_BRANCH}/bin/kickstart | sudo -E bash -\n"
+KICKSTART_CMD="curl -s https://raw.githubusercontent.com/rockstat/bootstrap/${BOOTSTRAP_BRANCH}/bin/kickstart?$TIMESTAMP | sudo -E bash -\n"
 BINALIAS=/usr/local/bin/rockstat
 REPORT_COLLECTOR=https://bolt.rstat.org/upload
 INSTALL_LOG=$(mktemp /tmp/platform-setup.XXXXXXXX)
