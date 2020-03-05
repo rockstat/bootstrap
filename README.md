@@ -110,7 +110,7 @@ To force SSL `-e ssl_force=1`
 
 ## Overriding configuration
 
-Create configuration for your hosts group `groupvars/private.yml`
+Create configuration for your hosts group `group_vars/private.yml`
 You can override configuration by specifing alternative values.
 
 Configurations has a parts prepared for easy overriding/extending:

@@ -27,6 +27,14 @@ push:
 	git push origin master
 	git push origin dev
 
+
+hz_images:
+	@echo "quering images list"
+	@source .env && curl -s \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $${HETZNER_API_KEY}" https://api.hetzner.cloud/v1/images \
+		| jq '.images | .[] | {id: .id, name: .name}'
+
 hz_servers:
 	@echo "quering servers list"
 	@source .env && curl -s \
@@ -36,7 +44,7 @@ hz_servers:
 
 hz_test_rebuild:
 	@source .env && curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $${HETZNER_API_KEY}" \
-		-d '{"image": "ubuntu-16.04"}' \
+		-d '{"image": "ubuntu-18.04"}' \
 		-X POST "https://api.hetzner.cloud/v1/servers/$${HETZNER_TEST_SRV}/actions/rebuild" | jq
 
 playbook_test_init:

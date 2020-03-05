@@ -116,6 +116,8 @@ dirs:
   acmesh: "{{home_dir}}/acmesh"
   certs: "{{data_dir}}/certs"
   clickhouse: "/srv/clickhouse"
+  clickhouse_config: "{{data_dir}}/clickhouse_config"
+  clickhouse_scripts: "{{data_dir}}/clickhouse_scripts"
   clickhouse_tmp: "/srv/clickhouse_tmp"
   clickhouse_log: "/var/log/clickhouse-server"
   redis: "/srv/redis"
@@ -258,9 +260,11 @@ _chs_dsn: "http://{{main_user}}@host:{{ports.clickhouse.0}}/{{ch_db}}"
 _containers_env:
   # https://caddyserver.com/docs/automatic-https#wildcards
   caddy: 
-    CADDY_DOCKER_POLLING_INTERVAL: 300s
+    CADDY_DOCKER_POLLING_INTERVAL: 60s
     # CADDY_DOCKER_LABEL_PREFIX: caddy
     # CADDY_DOCKER_PROXY_SERVICE_TASKS: no
+  chwriter:
+    CH_DSN: "{{_chs_dsn}}"
   director:
     #ENCODED_ENV will be set in playbook
     PORT: "{{ports.director.1}}"

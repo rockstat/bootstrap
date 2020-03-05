@@ -388,6 +388,22 @@
         failed_when: False
         when: ansible_service_mgr == 'systemd'
 
+      - name: Copy default clickhouse migrations
+        copy:
+          src: clickhouse_scripts
+          dest: "{{dirs.clickhouse_scripts}}"
+          owner: "{{_uid}}"
+          group: "{{_gid}}"
+          mode: "0644"
+
+      - name: Copying custom configs
+        copy:
+          src: templates/clickhouse/config.d
+          dest: "{{dirs.clickhouse_config}}"
+          owner: "{{_uid}}"
+          group: "{{_gid}}"
+          mode: "0644"
+
       - name: Starting ClickHouse container
         docker_container:
           name: clickhouse
@@ -409,6 +425,9 @@
             - "{{if_inner}}:{{ports.clickhouse_tcp.0}}:{{ports.clickhouse_tcp.1}}"
           volumes:
             - "{{dirs.clickhouse}}:/var/lib/clickhouse"
+            - "{{dirs.clickhouse_config}}/001_server.xml:{{conf_dir}}/001_server.xml"
+            - "{{dirs.clickhouse_config}}/002_users.xml:{{conf_dir}}/002_users.xml"
+            - "{{dirs.clickhouse_scripts}}:{{init_dir}}"
             - "{{dirs.clickhouse_log}}:/var/log/clickhouse-server"
             - "{{dirs.clickhouse_tmp}}:/var/lib/clickhouse/tmp"
 
@@ -425,6 +444,9 @@
     #       clickhouse_dbs_custom: [ {name: '{{ch_db}}'} ]
     #       clickhouse_path_data: "{{dirs.clickhouse}}"
     #       clickhouse_path_tmp: "{{dirs.clickhouse_tmp}}"
+      vars:
+        conf_dir: /etc/clickhouse-server/config.d/
+        init_dir: /docker-entrypoint-initdb.d
       tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full']
 
     ##### ##### ##### ##### #####    Redis server    ##### ##### ##### ##### ##### 
@@ -659,7 +681,6 @@
         image: "{{ images[service] }}"
         nb_dir: "{{jupyter_notebooks_dir|default('/home/user/notebooks')}}"
         cmd_parts:
-        # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
         container_lbls:
           "caddy.address": "jupyter.{{_domain}}"
           "caddy.targetport": "{{ports.jupyter.1}}"
