@@ -425,13 +425,14 @@
             - "{{if_inner}}:{{ports.clickhouse_tcp.0}}:{{ports.clickhouse_tcp.1}}"
           volumes:
             - "{{dirs.clickhouse}}:/var/lib/clickhouse"
-            - "{{dirs.clickhouse_config}}/001_server.xml:{{conf_dir}}/001_server.xml"
-            - "{{dirs.clickhouse_config}}/002_users.xml:{{conf_dir}}/002_users.xml"
+            - "{{dirs.clickhouse_config}}/001_server.xml:{{conf_dir}}/server.xml"
+            - "{{dirs.clickhouse_config}}/002_users.xml:{{users_dir}}/readonly.xml"
             - "{{dirs.clickhouse_scripts}}:{{init_dir}}"
             - "{{dirs.clickhouse_log}}:/var/log/clickhouse-server"
             - "{{dirs.clickhouse_tmp}}:/var/lib/clickhouse/tmp"
       vars:
         conf_dir: /etc/clickhouse-server/config.d/
+        users_dir: /etc/clickhouse-server/users.d/
         init_dir: /docker-entrypoint-initdb.d
       tags: ['never', 'clickhouse', 'clickhouse-server', 'system', 'full']
 

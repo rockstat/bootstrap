@@ -252,6 +252,7 @@ request_fullname(){
 
 request_password(){
   whiptailInput "ADMIN_PASSWORD" "Admin password" "Provide secret password for admin user." 8 78
+  show_dialog "Password changed. In order to apply it you have to run complete update process."
 }
 
 update_reboot_dialog(){
@@ -412,11 +413,8 @@ menu() {
   "13" "    Change host alias '${HOSTALIAS}'" \
   "14" "    Change Email '${EMAIL}'" \
   "15" "    Change full name '${FULLNAME}'" \
-  "20" "    Apply admin password to webserver" \
-  "34" "    Setup Demo-site" \
-  "31" "    Re-request SSL certificate with force option" \
+  "20" "    Change admin password" \
   "32" "    Toggle support access and remote upgrade (currently $SUPPORT_STATES) " \
-  "33" "    SSL challenge: ${SSL_CHALLENGE_STATE}" \
   "00"  "    Exit"  3>&1 1>&2 2>&3)
   EXITCODE=$?
   [[ "$EXITCODE" = 1 ]] && break;
@@ -434,11 +432,7 @@ menu() {
     "14") request_email ;;
     "15") request_fullname ;;
     "20") run_platform_playbook nginx ;;
-    "30") run_platform_playbook ovpn-server ;;
-    "31") run_platform_playbook "ssl,httpd" "-e ssl_force=1" ;;
     "32") switch_support_value ;;
-    "33") switch_ssl_challenge ;;
-    "34") run_platform_playbook fakeshop ;;
     "00") exit 0 ;;
     *) echo "Unknown action '${OPTION}'" ;;	
   esac
