@@ -398,7 +398,7 @@
 
       - name: Copying custom configs
         copy:
-          src: templates/clickhouse/config.d
+          src: templates/clickhouse/config.d/
           dest: "{{dirs.clickhouse_config}}"
           owner: "{{_uid}}"
           group: "{{_gid}}"
