@@ -410,6 +410,8 @@
           hostname: clickhouse
           image: "{{images.clickhouse}}"
           # labels: "{{docker_band_lbls}}"
+          purge_networks: yes
+          networks_cli_compatible: no
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           restart_policy: "{{_restart_policy}}"
