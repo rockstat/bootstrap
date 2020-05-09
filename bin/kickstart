@@ -80,6 +80,17 @@ print_ok() {
   echo "${cyan}${bold}>> ${normal}Ok"
 }
 
+
+### DEPRECATED
+
+# check credentials
+print_error "Master version is too old and deprecated. Switch to 'dev' branch then README.md for more information"; 
+print_status "https://github.com/rockstat/bootstrap/tree/dev"; 
+exit 1;
+
+
+
+
 ################################################################################
 ## Request root and banner
 ################################################################################
