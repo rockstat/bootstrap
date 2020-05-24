@@ -431,7 +431,6 @@ menu() {
     "13") request_hostalias ;;
     "14") request_email ;;
     "15") request_fullname ;;
-    "20") run_platform_playbook nginx ;;
     "32") switch_support_value ;;
     "00") exit 0 ;;
     *) echo "Unknown action '${OPTION}'" ;;	

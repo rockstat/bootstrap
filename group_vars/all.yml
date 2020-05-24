@@ -108,6 +108,7 @@ dirs:
   grafana_data: "{{home_dir}}/grafana"
   splash: "{{home_dir}}/splash"
   public: "{{data_dir}}/public"
+  sources: "{{data_dir}}/sources"
   shared: "{{data_dir}}/shared"
   well_known: "{{home_dir}}/well_known"
   dashboard: "{{home_dir}}/dashboard"
