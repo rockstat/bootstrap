@@ -57,6 +57,7 @@
           clickhouse_memory_limit: "{{mem_limit_clickhouse}}"
           redis_memory_limit: "{{mem_limit_redis}}"
           jupyter_memory_limit: "{{mem_limit_jupyter}}"
+          theia_memory_limit: "{{mem_limit_theia}}"
       tags: ['always']
 
       ##### ##### ##### ##### #####    Server configuration    ##### ##### ##### ##### ##### 
@@ -269,6 +270,7 @@
           email: "{{_email}}"
           domain: "{{_domain}}"
           extra_domains: "{{_extra_domains}}"
+          extra_conf: "{{_caddy_extra_conf|default('')}}"
           domains: "{{_domains}}"
           http_to: "front:{{ports.front.1}}"
           ws_to: "front:{{ports.front_ws.1}}"
@@ -348,28 +350,12 @@
             - /sys:/host/sys:ro
             - /var/run/docker.sock:/var/run/docker.sock
 
-      # - name: Netdata role execution
-      #   include_role:
-      #     name: dr.netdata
-      #   vars:
-      #     drn_action: remove
-      #     drn_allow:
-      #       dashboard_from: "*"
-      #       badges_from: "*"
-      #       conf_from: "*"
-      #       connections_from: "*"
-      #       streaming_from: "*"
-      #     drn_stream: '{{netdata_stream_config|default({})}}'
-      #     drn_backend: '{{netdata_backend_config|default({})}}'
-      #     drn_bind_to: "{{if_inner}}"
-      # vars:
-      #   service: netdata
-      #   container_lbls:
-      #     "caddy.address": "netdata.{{_domain}}"
-      #     "caddy.targetport": "{{ports.netdata.1}}"
-      #   container_env:
-      #     PGID: "999"
-      # tags: ['never', 'netdata', 'system', 'full']
+      vars:
+        service: netdata
+        container_lbls:
+          "caddy.address": "netdata.{{_domain}}"
+          "caddy.targetport": "{{ports.netdata.1}}"
+      tags: ['never', 'netdata', 'system', 'full']
 
   
 
@@ -698,7 +684,7 @@
           pull: yes
           restart: yes
           recreate: yes
-          memory: "300m"
+          memory: "{{mem_limit_grafana|default('500m')}}"
           ports:
             - "{{if_inner}}:{{ports.grafana.0}}:{{ports.grafana.1}}"
           volumes:
@@ -728,6 +714,8 @@
           image: "{{images.theia}}"
           labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
           ports: [ "{{if_inner}}:{{ports.theia.0}}:{{ports.theia.1}}" ]
+          purge_networks: yes
+          networks_cli_compatible: no
           networks: [ { name: "{{docker_net_name}}" } ]
           etc_hosts: "{{etc_hosts}}"
           env: "{{ container_env }}"
@@ -735,7 +723,7 @@
           pull: yes
           restart: yes
           recreate: yes
-          memory: "1g"
+          memory: "{{theia_memory_limit|default('2g')}}"
           volumes:
             - "{{dirs.workspace}}:{{project_dir}}:cached"
             - "{{dirs.user_images}}:{{project_dir}}/images:cached"
@@ -753,7 +741,6 @@
         # labels: "{{container_lbls|combine(docker_band_lbls, _caddy_container_lbls)}}"
         container_lbls:
           "caddy.address": "theia.{{_domain}}"
-          "caddy.targetport": "{{ports.theia.1}}"
 
         project_dir: /home/theia/project
         config_dir: "{{project_dir}}/config"
@@ -790,18 +777,10 @@
           pull: yes
           restart: yes
           memory: "50m"
-          ports:
-            - "{{if_inner}}:{{ports[service].0}}:{{ports[service].1}}"
       vars:
         service: fakeshop
         service_addr: 
         labels:
           caddy.address: "demo.{{_domain}}"
-          caddy.targetport: "{{ ports[service].1 }}"
       tags: ['never', 'fakeshop', 'platform', 'pservice', 'docker-container', 'full']
 
-    - docker_container: name=ebaloger state=absent
-      tags: ['never', 'ebaloger', 'system', 'platform', 'pservice', 'docker-container', 'full']
-
-    - docker_container: name=ebaloger state=absent
-      tags: ['never', 'httpdebug', 'system', 'full']

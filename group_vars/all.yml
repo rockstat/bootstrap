@@ -152,7 +152,6 @@ _ports:
   theia: [8887, 8000]
   theia_dev: [8886, 8080]
   netdata: [19999, 19999]
-  fakeshop: [8087, 8080]
   # servers
   http: [80]
   https: [443]
@@ -172,8 +171,10 @@ _ports:
 ports: "{{_ports|combine(_ports_extra|default({}))}}"
 # Mem limits
 mem_limit_clickhouse:  "{{ (ansible_memtotal_mb/2)|int }}m"
-mem_limit_redis: "{{ (ansible_memtotal_mb/8)|int }}m"
-mem_limit_jupyter: "{{ (ansible_memtotal_mb/8)|int }}m"
+mem_limit_redis: "{{ (ansible_memtotal_mb/4)|int }}m"
+mem_limit_jupyter: "{{ (ansible_memtotal_mb/6)|int }}m"
+mem_limit_theia: "{{ (ansible_memtotal_mb/4)|int }}m"
+mem_limit_grafana: "{{ (ansible_memtotal_mb/4)|int }}m"
 # ########## Docker ##########
 # user defined docker network
 docker_net_name: custom

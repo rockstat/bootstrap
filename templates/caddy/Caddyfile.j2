@@ -40,7 +40,7 @@
 }
 
 
-{{ tmpl.domain }} {% for d in tmpl.extra_domains %}, {{d}}{% endfor %} {
+{{ tmpl.domains|join(', ') }} {
     import cert
     root /wwwroot
     log stdout
@@ -51,6 +51,9 @@
 #        allowed_headers Content-Type,X-Requested-With,Authorization,Accept
 #        exposed_headers Content-Type
 #    }
+
+    
+    {{tmpl.extra_conf|default('')}}
 
     proxy / http://{{tmpl.http_to}} {
         transparent
